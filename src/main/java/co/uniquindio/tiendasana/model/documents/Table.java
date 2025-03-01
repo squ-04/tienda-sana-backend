@@ -23,10 +23,10 @@ public class Table {
     private ObjectId locationId;
 
     @Builder
-    public Table(String name, TableStatus status,ObjectId locationId) {
+    public Table(String name, TableStatus status,String locationId) {
         this.name = name;
         this.status = status;
-        this.locationId = locationId;
+        this.locationId = new ObjectId(locationId);
     }
 }
 

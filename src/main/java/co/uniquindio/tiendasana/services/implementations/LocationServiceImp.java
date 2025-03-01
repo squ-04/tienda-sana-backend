@@ -1,5 +1,6 @@
 package co.uniquindio.tiendasana.services.implementations;
 
+import co.uniquindio.tiendasana.dto.locationDTO;
 import co.uniquindio.tiendasana.repos.LocationRepo;
 import co.uniquindio.tiendasana.services.interfaces.LocationService;
 import org.springframework.stereotype.Service;
@@ -12,5 +13,15 @@ public class LocationServiceImp implements LocationService {
 
     public LocationServiceImp(LocationRepo locationRepo) {
         this.locationRepo = locationRepo;
+    }
+
+    @Override
+    public void createUpdateLocation(locationDTO location) {
+
+    }
+
+    @Override
+    public void deleteLocation(locationDTO location) {
+
     }
 }
