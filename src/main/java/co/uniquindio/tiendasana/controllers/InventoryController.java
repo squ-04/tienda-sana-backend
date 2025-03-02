@@ -21,7 +21,7 @@ public class InventoryController {
     private ProductService productService;
     private LocationService locationService;
     private TableService tableService;
-
+    /*
     @PostMapping("/")
     public ResponseEntity<MessageDTO<String>> createUpdateProduct(@Valid @RequestBody productDTO product){
         productService.createUpdateProduct(product);
@@ -57,5 +57,5 @@ public class InventoryController {
         locationService.deleteLocation(location);
         return ResponseEntity.ok(new MessageDTO<>(false,"prueba"));
     }
-
+    */
 }
