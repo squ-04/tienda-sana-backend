@@ -30,3 +30,33 @@ public class Table {
     }
 }
 
+/*Clase por hecha por el hijo de Robinson
+
+package co.uniquindio.tiendasana.model.documents;
+
+import co.uniquindio.tiendasana.model.enums.TableStatus;
+import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Document("tables")
+@Getter
+@Setter
+@NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+public class Table {
+    @Id
+    @EqualsAndHashCode.Include
+    private int id;
+    @EqualsAndHashCode.Include
+    private int number;
+    private TableStatus status;
+
+    @Builder
+    public Table(int number, TableStatus status) {
+        this.number = number;
+        this.status = status;
+    }
+}
+ */
+
