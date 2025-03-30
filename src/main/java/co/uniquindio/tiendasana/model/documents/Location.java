@@ -1,7 +1,5 @@
 package co.uniquindio.tiendasana.model.documents;
 
-import co.uniquindio.tiendasana.model.enums.ProductStatus;
-import co.uniquindio.tiendasana.model.enums.ProductType;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

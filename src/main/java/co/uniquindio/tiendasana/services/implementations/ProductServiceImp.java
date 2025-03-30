@@ -25,7 +25,7 @@ public class ProductServiceImp implements ProductService {
                 productInfo.name(),
                 productInfo.description(),
                 productInfo.image(),
-                productInfo.productType(),
+                productInfo.categoriaProducto(),
                 productInfo.status()
         );
         if (productObtained.isPresent()) {

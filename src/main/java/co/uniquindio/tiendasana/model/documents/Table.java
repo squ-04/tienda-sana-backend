@@ -1,7 +1,5 @@
 package co.uniquindio.tiendasana.model.documents;
 
-import co.uniquindio.tiendasana.model.enums.ProductStatus;
-import co.uniquindio.tiendasana.model.enums.ProductType;
 import co.uniquindio.tiendasana.model.enums.TableStatus;
 import lombok.*;
 import org.bson.types.ObjectId;
