@@ -1,15 +1,8 @@
 package co.uniquindio.tiendasana.controllers;
 
-import co.uniquindio.tiendasana.dto.MessageDTO;
-import co.uniquindio.tiendasana.dto.*;
-import co.uniquindio.tiendasana.services.interfaces.LocationService;
 import co.uniquindio.tiendasana.services.interfaces.ProductService;
 import co.uniquindio.tiendasana.services.interfaces.TableService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class InventoryController {
 
     private ProductService productService;
-    private LocationService locationService;
     private TableService tableService;
     /*
     @PostMapping("/")

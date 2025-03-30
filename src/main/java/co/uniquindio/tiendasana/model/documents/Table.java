@@ -18,13 +18,13 @@ public class Table {
     private String id;
     private String name;
     private TableStatus status;
-    private ObjectId locationId;
+    private String localidad;
 
     @Builder
-    public Table(String name, TableStatus status,String locationId) {
+    public Table(String name, TableStatus status,String localidad) {
         this.name = name;
         this.status = status;
-        this.locationId = new ObjectId(locationId);
+        this.localidad = localidad;
     }
 }
 
