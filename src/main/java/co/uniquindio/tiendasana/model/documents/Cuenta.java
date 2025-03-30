@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class Account {
+public class Cuenta {
     //Main attribute for identification
     @Id
     @EqualsAndHashCode.Include
@@ -29,20 +29,20 @@ public class Account {
     private LocalDateTime fechaRegistro;
 
     //Attributes are for security on the accounts
-    private CodigoValidacion codigoVerificacion;
-    private CodigoValidacion validacionContrasenia;
+    private CodigoValidacion codigoValidacionRegistro;
+    private CodigoValidacion codigoValidacionContrasenia;
 
     @Builder
-    private Account (Usuario usuario, String email, String contrasenia, Rol rol, LocalDateTime fechaRegistro,
-                     EstadoCuenta estado, CodigoValidacion codigoVerificacion, CodigoValidacion validacionContrasenia) {
+    private Cuenta(Usuario usuario, String email, String contrasenia, Rol rol, LocalDateTime fechaRegistro,
+                   EstadoCuenta estado, CodigoValidacion codigoValidacionRegistro, CodigoValidacion codigoValidacionContrasenia) {
         this.usuario = usuario;
         this.email = email;
         this.contrasenia = contrasenia;
         this.rol = rol;
         this.fechaRegistro = fechaRegistro;
         this.estado = estado;
-        this.codigoVerificacion = codigoVerificacion;
-        this.validacionContrasenia = validacionContrasenia;
+        this.codigoValidacionRegistro = codigoValidacionRegistro;
+        this.codigoValidacionContrasenia = codigoValidacionContrasenia;
 
     }
 }

@@ -1,7 +1,6 @@
 package co.uniquindio.tiendasana.repos;
 
 import co.uniquindio.tiendasana.model.documents.Location;
-import co.uniquindio.tiendasana.model.documents.Product;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;

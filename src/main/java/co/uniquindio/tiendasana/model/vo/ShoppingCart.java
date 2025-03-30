@@ -1,6 +1,5 @@
 package co.uniquindio.tiendasana.model.vo;
 
-import co.uniquindio.tiendasana.model.vo.ProductDetail;
 import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
@@ -20,10 +19,10 @@ public class ShoppingCart {
 
     private LocalDateTime date;
     private ObjectId userId;
-    private List<ProductDetail> products;
+    private List<DetalleCarrito> products;
 
     @Builder
-    public ShoppingCart(LocalDateTime date, ObjectId userId, List<ProductDetail> products) {
+    public ShoppingCart(LocalDateTime date, ObjectId userId, List<DetalleCarrito> products) {
         this.date = date;
         this.userId = userId;
         this.products = products;
