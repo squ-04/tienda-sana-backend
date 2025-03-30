@@ -19,12 +19,14 @@ public class Table {
     private String name;
     private TableStatus status;
     private String localidad;
+    private float precioReserva;
 
     @Builder
-    public Table(String name, TableStatus status,String localidad) {
+    public Table(String name, TableStatus status,String localidad,float precioReserva) {
         this.name = name;
         this.status = status;
         this.localidad = localidad;
+        this.precioReserva = precioReserva;
     }
 }
 
