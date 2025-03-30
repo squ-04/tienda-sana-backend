@@ -8,18 +8,18 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class ValidationCode {
+public class CodigoValidacion {
 
 
     //Attributes for the class
     @EqualsAndHashCode.Include
-    private String code;
-    private LocalDateTime creationDate;
+    private String codigo;
+    private LocalDateTime fechaCreacion;
 
     //Constructor method for the class
     @Builder
-    private ValidationCode(String code, LocalDateTime creationDate) {
-        this.code = code;
-        this.creationDate = creationDate;
+    private CodigoValidacion(String codigo, LocalDateTime fechaCreacion) {
+        this.codigo = codigo;
+        this.fechaCreacion = fechaCreacion;
     }
 }

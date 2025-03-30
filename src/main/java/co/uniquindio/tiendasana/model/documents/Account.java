@@ -1,9 +1,9 @@
 package co.uniquindio.tiendasana.model.documents;
 
-import co.uniquindio.tiendasana.model.enums.AccountStatus;
-import co.uniquindio.tiendasana.model.enums.Role;
-import co.uniquindio.tiendasana.model.vo.User;
-import co.uniquindio.tiendasana.model.vo.ValidationCode;
+import co.uniquindio.tiendasana.model.enums.EstadoCuenta;
+import co.uniquindio.tiendasana.model.enums.Rol;
+import co.uniquindio.tiendasana.model.vo.Usuario;
+import co.uniquindio.tiendasana.model.vo.CodigoValidacion;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -21,28 +21,28 @@ public class Account {
     @EqualsAndHashCode.Include
     private String id;
     //Secundary attributes for the class
-    private User user;
+    private Usuario usuario;
     private String email;
-    private String password;
-    private AccountStatus status;
-    private Role role;
-    private LocalDateTime registrationDate;
+    private String contrasenia;
+    private EstadoCuenta estado;
+    private Rol rol;
+    private LocalDateTime fechaRegistro;
 
     //Attributes are for security on the accounts
-    private ValidationCode verificationCode;
-    private ValidationCode passwordValidation;
+    private CodigoValidacion codigoVerificacion;
+    private CodigoValidacion validacionContrasenia;
 
     @Builder
-    private Account (User user, String email, String password, Role role, LocalDateTime registrationDate,
-                     AccountStatus status,ValidationCode verificationCode, ValidationCode passwordValidation) {
-        this.user = user;
+    private Account (Usuario usuario, String email, String contrasenia, Rol rol, LocalDateTime fechaRegistro,
+                     EstadoCuenta estado, CodigoValidacion codigoVerificacion, CodigoValidacion validacionContrasenia) {
+        this.usuario = usuario;
         this.email = email;
-        this.password = password;
-        this.role = role;
-        this.registrationDate = registrationDate;
-        this.status = status;
-        this.verificationCode = verificationCode;
-        this.passwordValidation = passwordValidation;
+        this.contrasenia = contrasenia;
+        this.rol = rol;
+        this.fechaRegistro = fechaRegistro;
+        this.estado = estado;
+        this.codigoVerificacion = codigoVerificacion;
+        this.validacionContrasenia = validacionContrasenia;
 
     }
 }
