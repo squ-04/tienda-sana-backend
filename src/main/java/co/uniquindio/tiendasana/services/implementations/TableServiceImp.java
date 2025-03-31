@@ -28,9 +28,9 @@ public class TableServiceImp implements TableService {
 /*
     @Override
     public void createUpdatePTable(tableDTO tableInfo) {
-        Optional<Table> obtainedTable=tableRepo.findByName(tableInfo.name());
+        Optional<Mesa> obtainedTable=tableRepo.findByName(tableInfo.name());
         Optional<Locations> location=locationRepo.findByName(tableInfo.name());
-        Table table=new Table(
+        Mesa table=new Mesa(
                 tableInfo.name(),
                 tableInfo.status(),
                 location.get().getId().toString()
@@ -43,7 +43,7 @@ public class TableServiceImp implements TableService {
 
     @Override
     public void deleteTable(tableDTO table) {
-        Optional<Table> tableObtained=tableRepo.findByName(table.name());
+        Optional<Mesa> tableObtained=tableRepo.findByName(table.name());
         tableRepo.delete(tableObtained.get());
     }*/
 }

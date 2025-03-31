@@ -1,10 +1,10 @@
 package co.uniquindio.tiendasana.dto;
 
-import co.uniquindio.tiendasana.model.enums.TableStatus;
+import co.uniquindio.tiendasana.model.enums.EstadoMesa;
 
 public record tableDTO(
         String name,
-        TableStatus status,
+        EstadoMesa status,
         String locationName
 ) {
 }

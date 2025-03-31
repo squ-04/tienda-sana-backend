@@ -9,7 +9,7 @@ public enum EstadoProducto {
 
     private final String estado;
 
-    EstadoProducto(String estado) {
+     EstadoProducto(String estado) {
         this.estado = estado;
     }
 
