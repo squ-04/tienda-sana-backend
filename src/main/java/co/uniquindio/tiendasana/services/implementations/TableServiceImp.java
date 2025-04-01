@@ -4,27 +4,10 @@ import co.uniquindio.tiendasana.dto.tableDTO;
 import co.uniquindio.tiendasana.repos.TableRepo;
 import co.uniquindio.tiendasana.services.interfaces.TableService;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(rollbackFor = Exception.class)
 public class TableServiceImp implements TableService {
-    private final TableRepo tableRepo;
 
-
-    public TableServiceImp(TableRepo tableRepo) {
-        this.tableRepo = tableRepo;
-    }
-
-    @Override
-    public void createUpdatePTable(tableDTO table) {
-
-    }
-
-    @Override
-    public void deleteTable(tableDTO table) {
-
-    }
 /*
     @Override
     public void createUpdatePTable(tableDTO tableInfo) {

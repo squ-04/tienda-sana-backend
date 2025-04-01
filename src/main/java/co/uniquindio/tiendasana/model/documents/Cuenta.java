@@ -5,19 +5,15 @@ import co.uniquindio.tiendasana.model.enums.Rol;
 import co.uniquindio.tiendasana.model.vo.Usuario;
 import co.uniquindio.tiendasana.model.vo.CodigoValidacion;
 import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-@Document("accounts")
 @Getter
 @Setter
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Cuenta {
     //Main attribute for identification
-    @Id
     @EqualsAndHashCode.Include
     private String id;
     //Secundary attributes for the class

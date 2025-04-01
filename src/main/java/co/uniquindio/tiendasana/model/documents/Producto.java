@@ -3,10 +3,7 @@ package co.uniquindio.tiendasana.model.documents;
 import co.uniquindio.tiendasana.model.enums.EstadoProducto;
 import co.uniquindio.tiendasana.model.enums.CategoriaProducto;
 import lombok.*;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document("products")
 @Setter
 @Getter
 @NoArgsConstructor
@@ -14,8 +11,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Producto {
 
-    //Atributos de la clase Producto
-    @Id
     @EqualsAndHashCode.Include
     /*esto se traduce como el softr record id no se si se tenga que llamar igual*/
     private String id;
@@ -42,7 +37,7 @@ public class Producto {
      * @param precioUnitario
      */
     @Builder
-    public Producto (String nombre, String descripcion, String estado,String categoria, int cantidad, String imagen, float precioUnitario) {
+    public Producto (String nombre, String descripcion, String estado,String categoria, int cantidad, String imagen, float precioUnitario, String id) {
         this.nombre = nombre;
         this.descripcion = descripcion;
         this.categoria= CategoriaProducto.fromCategoria(categoria);
@@ -50,6 +45,7 @@ public class Producto {
         this.cantidad = cantidad;
         this.imagen = imagen;
         this.precioUnitario = precioUnitario;
+        this.id = id;
     }
 
     public String getCategoria(){

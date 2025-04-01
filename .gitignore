@@ -48,3 +48,6 @@ bin/
 /*/bin/
 /*/build/
 /build/
+
+### Ignore due to configuration and env variables
+src/main/resources/credentials.json
