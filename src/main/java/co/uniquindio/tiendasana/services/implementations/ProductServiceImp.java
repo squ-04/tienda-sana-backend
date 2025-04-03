@@ -33,7 +33,7 @@ public class ProductServiceImp implements ProductService {
     public void leerDatos () throws IOException {
 
 
-        String rango = "Producto" + "!B2:I2"; // Rango para obtener la fila 2
+        String rango = "Producto" + "!B2:H2"; // Rango para obtener la fila 2
 
         ValueRange respuesta = sheetsService.spreadsheets().values()
                 .get(spreadsheetId, rango)
@@ -61,7 +61,7 @@ public class ProductServiceImp implements ProductService {
     // Nuevo método para insertar valores en la hoja de cálculo
      public void insertDataIntoSheet(String value1, String value2, String value3) throws IOException {
         // Definir el rango de celdas a insertar (Hoja 'Test', columnas A, B, y C)
-        String range = "Test!A2:C2"; // Esto corresponde a las columnas A a C de la hoja 'Test'
+        String range = "Test!A4:C4"; // Esto corresponde a las columnas A a C de la hoja 'Test'
 
         // Crear el valor que vamos a insertar
         List<List<Object>> values = Arrays.asList(
