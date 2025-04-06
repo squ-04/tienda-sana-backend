@@ -18,13 +18,27 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.Collections;
 
+/**
+ * Clase de configuración para el servicio de GoogleSheets
+ */
 @Configuration
 public class GoogleSheetsConfig {
 
-
+    /**
+     * Constante para la nombrar la aplicacion de Google a usar
+     */
     private static final String APPLICATION_NAME = "Mi Aplicación Google Sheets";
+    /**
+     *  Constante para el definir el metodo de fabrica y gestion de Json a usar
+     */
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
+    /**
+     * Metoddo usado para obtener un servicio de sheets en las demás partes del proyecto
+     * @return
+     * @throws IOException
+     * @throws GeneralSecurityException
+     */
     @Bean  // Define un bean que puede ser inyectado en otros servicios
     public Sheets sheetsService() throws IOException, GeneralSecurityException {
         GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("src/main/resources/credentials.json"))

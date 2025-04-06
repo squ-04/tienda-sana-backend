@@ -19,12 +19,26 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * Servicio para establecer metodos que ayuden a filtrar y gestionar acceso los controladores o metodos
+ */
 @Component
 @RequiredArgsConstructor
 public class TokenFilter extends OncePerRequestFilter {
 
+    /**
+     *  Constante que hace referencia la clase de JWTUtils
+     */
     private final JWTUtils jwtUtils;
 
+    /**
+     * Metodo para hacr el filtrado de una solicitud HTTP dependiendo del metodo de encabezado y tol en el token
+     * @param request
+     * @param response
+     * @param filterChain
+     * @throws ServletException
+     * @throws IOException
+     */
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -76,12 +90,24 @@ public class TokenFilter extends OncePerRequestFilter {
         }
     }
 
+    /**
+     *  Método para obetener el token en una solicitud HTTP
+     * @param req
+     * @return
+     */
     private String getToken(HttpServletRequest req) {
         String header = req.getHeader("Authorization");
         return header != null && header.startsWith("Bearer ") ? header.replace("Bearer ", "") :
                 null;
     }
 
+    /**
+     *  Método para crear un mensaje de respuesta en caso de existir algun error correspondiente al token
+     * @param mensaje
+     * @param codigoError
+     * @param response
+     * @throws IOException
+     */
     private void crearRespuestaError(String mensaje, int codigoError, HttpServletResponse response)
             throws IOException {
         MessageDTO<String> dto = new MessageDTO<>(true, mensaje);
@@ -92,6 +118,12 @@ public class TokenFilter extends OncePerRequestFilter {
         response.getWriter().close();
     }
 
+    /**
+     * Método usado para validar que el rol del token sea el mismo que el rol de parametro
+     * @param token
+     * @param role
+     * @return
+     */
     private boolean validarToken(String token, Rol role) {
         boolean error = true;
         if (token != null) {

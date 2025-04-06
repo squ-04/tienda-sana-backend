@@ -10,8 +10,17 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Map;
 
+/**
+ * Clase de servicios de utilidad para la gestion de Json Web Token (JWT)
+ */
 @Component
 public class JWTUtils {
+    /**
+     * Metodo usado para generar token de inicio de sesión al usuario que entra
+     * @param email
+     * @param claims
+     * @return
+     */
     public String generarToken(String email, Map<String, Object> claims){
         Instant now = Instant.now();
         return Jwts.builder()
@@ -22,13 +31,27 @@ public class JWTUtils {
                 .signWith( getKey() )
                 .compact();
     }
+
+    /**
+     * Metodo para analizar la validez del contenido de un Json Web Token (JWT)
+     * @param jwtString
+     * @return
+     * @throws ExpiredJwtException
+     * @throws UnsupportedJwtException
+     * @throws MalformedJwtException
+     * @throws IllegalArgumentException
+     */
     public Jws<Claims> parseJwt(String jwtString) throws ExpiredJwtException,
             UnsupportedJwtException, MalformedJwtException, IllegalArgumentException {
         JwtParser jwtParser = Jwts.parser().verifyWith( getKey() ).build();
         return jwtParser.parseSignedClaims(jwtString);
     }
+
+    /**
+     *  Metodo para generar clave secreta
+     * @return
+     */
     private SecretKey getKey(){
-        //TODO ask if this string needs to be changed
         String secretKey = "secretsecretsecretsecretsecretsecretsecretsecret";
 
         byte[] secretKeyBytes = secretKey.getBytes();
