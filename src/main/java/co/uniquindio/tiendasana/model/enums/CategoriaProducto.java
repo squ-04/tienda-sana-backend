@@ -2,6 +2,9 @@ package co.uniquindio.tiendasana.model.enums;
 
 import lombok.Getter;
 
+/**
+ * Enum para las categorias de los productos
+ */
 @Getter
 public enum CategoriaProducto {
 
@@ -13,14 +16,21 @@ public enum CategoriaProducto {
     PANADERIA ("Panadería"),
     TE("Té");
 
-
     private final String categoria;
 
-
+    /**
+     * Metodo contructor de las categorias
+     * @param categoria
+     */
      CategoriaProducto(String categoria) {
          this.categoria = categoria;
      }
 
+    /**
+     * Metodo que dada una cadena retorna un valor del enum
+     * @param categoria
+     * @return
+     */
     public static CategoriaProducto fromCategoria(String categoria) {
         for (CategoriaProducto categoriaProducto : CategoriaProducto.values()) {
             if (categoriaProducto.getCategoria().equalsIgnoreCase(categoria)) {

@@ -15,6 +15,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Clase para la interacción con la hoja de calculo correspondiente a los
+ * productos
+ */
 @Repository
 public class ProductRepo  {
 
@@ -25,19 +29,31 @@ public class ProductRepo  {
 
     private final String SHEET_NAME= "Producto";
 
+    /**
+     * Metodo contructor de la clase
+     * @param sheetsService
+     */
     public ProductRepo(Sheets sheetsService) {
         this.sheetsService = sheetsService;
     }
 
-
-
-
+    /**
+     *  Metodo publico usado para obtener las fils de la hoja Producto como intancias de la clase
+     *  Producto
+     * @return Lista de productos en la hoja
+     * @throws IOException
+     * @throws ProductoParseException
+     */
     public List<Producto> ObtenerProductos() throws IOException, ProductoParseException {
         List<List<Object>> filas = obtenerFilasHoja();
         return mapearFilasProductos(filas);
     }
 
-
+    /**
+     * Metodo usado para obtener las filas de la hoja como Objetos de Java
+     * @return Lista de listas de objetos
+     * @throws IOException
+     */
     private List<List<Object>> obtenerFilasHoja() throws IOException {
         String rango = SHEET_NAME +"!A2:H";
         ValueRange respuesta= sheetsService.spreadsheets().values().get(spreadsheetId,rango).execute();
@@ -45,6 +61,13 @@ public class ProductRepo  {
         return respuesta.getValues();
     }
 
+    /**
+     * Metodo usado para hacer un casteo o mapero de los objetos retornados por la
+     * hoja a instacias de la clase Producto
+     * @param filas
+     * @return
+     * @throws ProductoParseException
+     */
     private List<Producto> mapearFilasProductos(List<List<Object>> filas) throws ProductoParseException {
         List<Producto> productos = new ArrayList<>();
         for (List<Object> row : filas) {

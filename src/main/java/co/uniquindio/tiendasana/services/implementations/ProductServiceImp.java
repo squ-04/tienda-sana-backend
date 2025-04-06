@@ -28,6 +28,11 @@ public class ProductServiceImp implements ProductService {
     private String spreadsheetId;
     private final ProductRepo productRepo;
 
+    /**
+     * Metodo contructor de la clase
+     * @param productRepo
+     * @param sheetsService
+     */
     public ProductServiceImp(ProductRepo productRepo, Sheets sheetsService) {
         this.productRepo = productRepo;
         this.sheetsService = sheetsService;
@@ -68,6 +73,13 @@ public class ProductServiceImp implements ProductService {
         return null;
     }
 
+    /**
+     * Metodo usado para obtener lo informacion de los productos que los clientes
+     * verán en primera instancia
+     * @return Lista de items de productos
+     * @throws IOException
+     * @throws ProductoParseException
+     */
     @Override
     public List<ProductoItemDTO> obtenerProductosCliente() throws IOException, ProductoParseException {
         List<Producto> productos = productRepo.ObtenerProductos();

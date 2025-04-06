@@ -12,13 +12,24 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Controlador para los endpoints publicos, es decir no necesitan de un JWT con rol para ser accedidos
+ */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/public")
 public class PublicoController {
 
+    /**
+     * Instacia del servicio para los métodos de los productos
+     */
     private final ProductService productService;
 
+    /**
+     *  Endporint mediante el cual se obtienen los productos que verán los clientes
+     * @return
+     * @throws Exception
+     */
     @GetMapping("/productos/get-all")
     public ResponseEntity<MessageDTO<List<ProductoItemDTO>>> listarProductosCliente() throws Exception {
         List<ProductoItemDTO> productos= productService.obtenerProductosCliente();

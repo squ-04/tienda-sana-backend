@@ -18,6 +18,12 @@ public interface ProductService {
      * @return
      */
     ProductoInfoDTO obtenerInfoProducto(String id);
-
+    /**
+     * Metodo usado para obtener lo informacion de los productos que los clientes
+     * verán en primera instancia
+     * @return Lista de items de productos
+     * @throws IOException
+     * @throws ProductoParseException
+     */
     List<ProductoItemDTO> obtenerProductosCliente() throws IOException, ProductoParseException;
 }
