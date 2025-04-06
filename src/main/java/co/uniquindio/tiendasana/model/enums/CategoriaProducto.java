@@ -10,8 +10,8 @@ public enum CategoriaProducto {
     FRUTAS ("Frutas"),
     FRUTOSSECOS("Frutos secos"),
     LACTEOS ("Lacteos"),
-    PANADERIA ("Panaderia"),
-    TE("Te");
+    PANADERIA ("Panadería"),
+    TE("Té");
 
 
     private final String categoria;

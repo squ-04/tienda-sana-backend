@@ -1,6 +1,9 @@
 package co.uniquindio.tiendasana.services.implementations;
 
 import co.uniquindio.tiendasana.dto.productDTO;
+import co.uniquindio.tiendasana.dto.productodtos.ProductoInfoDTO;
+import co.uniquindio.tiendasana.dto.productodtos.ProductoItemDTO;
+import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.Producto;
 import co.uniquindio.tiendasana.repos.ProductRepo;
 import co.uniquindio.tiendasana.services.interfaces.ProductService;
@@ -15,6 +18,7 @@ import org.springframework.beans.factory.annotation.Value;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImp implements ProductService {
@@ -22,44 +26,16 @@ public class ProductServiceImp implements ProductService {
 
     @Value("${google.sheets.spreadsheet-id}")
     private String spreadsheetId;
+    private final ProductRepo productRepo;
 
-    public ProductServiceImp( Sheets sheetsService) {
+    public ProductServiceImp(ProductRepo productRepo, Sheets sheetsService) {
+        this.productRepo = productRepo;
         this.sheetsService = sheetsService;
     }
 
 
-    //Gson
-
-    public void leerDatos () throws IOException {
-
-
-        String rango = "Producto" + "!B2:H2"; // Rango para obtener la fila 2
-
-        ValueRange respuesta = sheetsService.spreadsheets().values()
-                .get(spreadsheetId, rango)
-                .execute();
-
-        List<List<Object>> valores = respuesta.getValues();
-
-        if (valores == null || valores.isEmpty()) {
-            System.out.println("No se encontraron datos.");
-        }
-        System.out.println(valores);
-
-        Producto producto = Producto
-                .builder()
-                .nombre(valores.get(0).get(0).toString())
-                .descripcion(valores.get(0).get(1).toString())
-                .categoria(valores.get(0).get(2).toString())
-                .estado(valores.get(0).get(3).toString())
-                .cantidad(Integer.parseInt(valores.get(0).get(4).toString()))
-                .build();
-
-        System.out.println(producto);
-    }
-
     // Nuevo método para insertar valores en la hoja de cálculo
-     public void insertDataIntoSheet(String value1, String value2, String value3) throws IOException {
+    public void insertDataIntoSheet(String value1, String value2, String value3) throws IOException {
         // Definir el rango de celdas a insertar (Hoja 'Test', columnas A, B, y C)
         String range = "Test!A4:C4"; // Esto corresponde a las columnas A a C de la hoja 'Test'
 
@@ -81,4 +57,33 @@ public class ProductServiceImp implements ProductService {
     }
 
 
+    /**
+     * Metodo usado para obtener los detalles de un producto
+     *
+     * @param id
+     * @return
+     */
+    @Override
+    public ProductoInfoDTO obtenerInfoProducto(String id) {
+        return null;
+    }
+
+    @Override
+    public List<ProductoItemDTO> obtenerProductosCliente() throws IOException, ProductoParseException {
+        List<Producto> productos = productRepo.ObtenerProductos();
+
+        List<ProductoItemDTO> productosItems = productos.stream()
+                .filter(producto -> "Disponible".equalsIgnoreCase(producto.getEstado()))
+                .filter(producto -> producto.getCantidad() > 0)
+                .map(producto -> new ProductoItemDTO(
+                        producto.getId(),
+                        producto.getNombre(),
+                        producto.getCategoria(),
+                        producto.getImagen(),
+                        producto.getPrecioUnitario()
+                ))
+                .collect(Collectors.toList());
+
+        return productosItems;
+    }
 }

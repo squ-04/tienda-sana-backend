@@ -21,13 +21,5 @@ public class ServicioProductoTest {
         }
     }
 
-    @Test
-    public void leerTest(){
-        try {
-            productService.leerDatos();
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-    }
 
 }
