@@ -3,8 +3,6 @@ package co.uniquindio.tiendasana.repos;
 
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.Producto;
-import co.uniquindio.tiendasana.model.enums.EstadoProducto;
-import co.uniquindio.tiendasana.model.enums.CategoriaProducto;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,7 +11,6 @@ import org.springframework.stereotype.Repository;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Clase para la interacción con la hoja de calculo correspondiente a los
@@ -23,7 +20,6 @@ import java.util.Optional;
 public class ProductRepo  {
 
     private final Sheets sheetsService;
-
     @Value("${google.sheets.spreadsheet-id}")
     private  String spreadsheetId;
 
