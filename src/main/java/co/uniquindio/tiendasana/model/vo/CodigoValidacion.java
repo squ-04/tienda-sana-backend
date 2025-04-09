@@ -18,7 +18,7 @@ public class CodigoValidacion {
 
     //Constructor method for the class
     @Builder
-    private CodigoValidacion(String codigo, LocalDateTime fechaCreacion) {
+    public CodigoValidacion(LocalDateTime fechaCreacion, String codigo) {
         this.codigo = codigo;
         this.fechaCreacion = fechaCreacion;
     }
