@@ -1,7 +1,6 @@
 package co.uniquindio.tiendasana;
 
-import co.uniquindio.tiendasana.services.implementations.ProductServiceImp;
-import co.uniquindio.tiendasana.services.interfaces.ProductService;
+import co.uniquindio.tiendasana.services.implementations.ProductoServiceImp;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -10,7 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 public class ServicioProductoTest {
 
     @Autowired
-    private ProductServiceImp productService;
+    private ProductoServiceImp productService;
 
     @Test
     public void insertarTest(){

@@ -1,6 +1,5 @@
 package co.uniquindio.tiendasana.services.implementations;
 
-import co.uniquindio.tiendasana.dto.productDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoInfoDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoItemDTO;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
@@ -10,8 +9,6 @@ import co.uniquindio.tiendasana.services.interfaces.ProductService;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -21,7 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class ProductServiceImp implements ProductService {
+public class ProductoServiceImp implements ProductService {
     private final Sheets sheetsService;
 
     @Value("${google.sheets.spreadsheet-id}")
@@ -33,7 +30,7 @@ public class ProductServiceImp implements ProductService {
      * @param productRepo
      * @param sheetsService
      */
-    public ProductServiceImp(ProductRepo productRepo, Sheets sheetsService) {
+    public ProductoServiceImp(ProductRepo productRepo, Sheets sheetsService) {
         this.productRepo = productRepo;
         this.sheetsService = sheetsService;
     }

@@ -10,7 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
-public class ShoppingCart {
+public class ShoppingCar {
 
     @EqualsAndHashCode.Include
     private String id;
@@ -20,7 +20,7 @@ public class ShoppingCart {
     private List<DetalleCarrito> products;
 
     @Builder
-    public ShoppingCart(LocalDateTime date, String userId, List<DetalleCarrito> products) {
+    public ShoppingCar(LocalDateTime date, String userId, List<DetalleCarrito> products) {
         this.date = date;
         this.userId = userId;
         this.products = products;
