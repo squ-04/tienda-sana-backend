@@ -1,7 +1,7 @@
 package co.uniquindio.tiendasana.controllers;
 
-import co.uniquindio.tiendasana.services.interfaces.ProductService;
-import co.uniquindio.tiendasana.services.interfaces.TableService;
+import co.uniquindio.tiendasana.services.interfaces.ProductoService;
+import co.uniquindio.tiendasana.services.interfaces.MesaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/inventory")
 public class InventoryController {
 
-    private ProductService productService;
-    private TableService tableService;
+    private ProductoService productService;
+    private MesaService tableService;
     /*
     @PostMapping("/")
     public ResponseEntity<MessageDTO<String>> createUpdateProduct(@Valid @RequestBody productDTO product){

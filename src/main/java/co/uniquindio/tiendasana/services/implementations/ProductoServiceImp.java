@@ -5,7 +5,7 @@ import co.uniquindio.tiendasana.dto.productodtos.ProductoItemDTO;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.Producto;
 import co.uniquindio.tiendasana.repos.ProductRepo;
-import co.uniquindio.tiendasana.services.interfaces.ProductService;
+import co.uniquindio.tiendasana.services.interfaces.ProductoService;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class ProductoServiceImp implements ProductService {
+public class ProductoServiceImp implements ProductoService {
     private final Sheets sheetsService;
 
     @Value("${google.sheets.spreadsheet-id}")

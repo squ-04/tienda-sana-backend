@@ -1,10 +1,10 @@
 package co.uniquindio.tiendasana.services.implementations;
 
-import co.uniquindio.tiendasana.services.interfaces.TableService;
+import co.uniquindio.tiendasana.services.interfaces.MesaService;
 import org.springframework.stereotype.Service;
 
 @Service
-public class MesaServiceImp implements TableService {
+public class MesaServiceImp implements MesaService {
 
 /*
     @Override

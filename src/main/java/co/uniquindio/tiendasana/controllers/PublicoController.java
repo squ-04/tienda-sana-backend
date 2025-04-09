@@ -2,8 +2,7 @@ package co.uniquindio.tiendasana.controllers;
 
 import co.uniquindio.tiendasana.dto.jwtdtos.MessageDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoItemDTO;
-import co.uniquindio.tiendasana.model.documents.Producto;
-import co.uniquindio.tiendasana.services.interfaces.ProductService;
+import co.uniquindio.tiendasana.services.interfaces.ProductoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,7 +22,7 @@ public class PublicoController {
     /**
      * Instacia del servicio para los métodos de los productos
      */
-    private final ProductService productService;
+    private final ProductoService productService;
 
     /**
      *  Endporint mediante el cual se obtienen los productos que verán los clientes
