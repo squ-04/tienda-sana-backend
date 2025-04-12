@@ -23,7 +23,7 @@ public class ProductRepo  {
     @Value("${google.sheets.spreadsheet-id}")
     private  String spreadsheetId;
 
-    private final String SHEET_NAME= "Producto";
+    private final String SHEET_NAME= "ProductoClientes";
 
     /**
      * Metodo contructor de la clase
@@ -41,7 +41,7 @@ public class ProductRepo  {
      * @throws ProductoParseException
      */
     public List<Producto> ObtenerProductos() throws IOException, ProductoParseException {
-        List<List<Object>> filas = obtenerFilasHoja();
+        List<List<Object>> filas = obtenerFilasHoja(1,3);
         return mapearFilasProductos(filas);
     }
 
@@ -50,8 +50,22 @@ public class ProductRepo  {
      * @return Lista de listas de objetos
      * @throws IOException
      */
-    private List<List<Object>> obtenerFilasHoja() throws IOException {
-        String rango = SHEET_NAME +"!A2:H";
+    private List<List<Object>> obtenerFilasHoja(int pagina, int cantidad) throws IOException {
+
+        ValueRange total = sheetsService.spreadsheets().values().get(spreadsheetId,SHEET_NAME+"!L1").execute();
+        List<List<Object>> filas = total.getValues();
+        int cantidadTotal = Integer.parseInt(""+filas.get(0).get(0));
+
+        int cantidadPaginas = cantidadTotal/cantidad;
+
+        if(pagina > cantidadPaginas){
+            throw new RuntimeException("La página no existe");//TODO cambiar excepcion por Exception
+        }
+
+        int filaInicio = 1 + (pagina * cantidad); // A1 es la primera fila de datos
+        int filaFin = filaInicio + cantidad - 1;
+
+        String rango = SHEET_NAME + "!A" + filaInicio + ":H" + filaFin;
         ValueRange respuesta= sheetsService.spreadsheets().values().get(spreadsheetId,rango).execute();
 
         return respuesta.getValues();
