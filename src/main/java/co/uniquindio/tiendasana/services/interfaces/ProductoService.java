@@ -22,5 +22,5 @@ public interface ProductoService {
      * @throws IOException
      * @throws ProductoParseException
      */
-    List<ProductoItemDTO> obtenerProductosCliente() throws IOException, ProductoParseException;
+    List<ProductoItemDTO> obtenerProductosCliente(int pagina) throws IOException, ProductoParseException;
 }

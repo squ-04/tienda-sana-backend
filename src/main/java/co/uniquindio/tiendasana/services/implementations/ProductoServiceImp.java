@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Service
 public class ProductoServiceImp implements ProductoService {
     private final Sheets sheetsService;
-
+    private final int ELEMENTOSPAGINA=6;
     @Value("${google.sheets.spreadsheet-id}")
     private String spreadsheetId;
     private final ProductRepo productRepo;
@@ -78,8 +78,8 @@ public class ProductoServiceImp implements ProductoService {
      * @throws ProductoParseException
      */
     @Override
-    public List<ProductoItemDTO> obtenerProductosCliente() throws IOException, ProductoParseException {
-        List<Producto> productos = productRepo.ObtenerProductos();
+    public List<ProductoItemDTO> obtenerProductosCliente(int pagina) throws IOException, ProductoParseException {
+        List<Producto> productos = productRepo.ObtenerProductos(pagina, ELEMENTOSPAGINA);
 
         List<ProductoItemDTO> productosItems = productos.stream()
                 .filter(producto -> "Disponible".equalsIgnoreCase(producto.getEstado()))

@@ -6,6 +6,7 @@ import co.uniquindio.tiendasana.services.interfaces.ProductoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -29,9 +30,9 @@ public class PublicoController {
      * @return
      * @throws Exception
      */
-    @GetMapping("/productos/get-all")
-    public ResponseEntity<MessageDTO<List<ProductoItemDTO>>> listarProductosCliente() throws Exception {
-        List<ProductoItemDTO> productos= productService.obtenerProductosCliente();
+    @GetMapping("/productos/get-all/{pagina}")
+    public ResponseEntity<MessageDTO<List<ProductoItemDTO>>> listarProductosCliente(@PathVariable int pagina) throws Exception {
+        List<ProductoItemDTO> productos= productService.obtenerProductosCliente(pagina);
         return ResponseEntity.ok( new MessageDTO<>(false, productos));
     }
 }

@@ -40,8 +40,8 @@ public class ProductRepo  {
      * @throws IOException
      * @throws ProductoParseException
      */
-    public List<Producto> ObtenerProductos() throws IOException, ProductoParseException {
-        List<List<Object>> filas = obtenerFilasHoja(1,3);
+    public List<Producto> ObtenerProductos(int pagina, int cantidadElementos) throws IOException, ProductoParseException {
+        List<List<Object>> filas = obtenerFilasHoja(pagina,cantidadElementos);
         return mapearFilasProductos(filas);
     }
 
