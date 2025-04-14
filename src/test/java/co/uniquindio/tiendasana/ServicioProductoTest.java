@@ -39,9 +39,7 @@ public class ServicioProductoTest {
         }
     }
 
-    @Test
-    public void eliminarTest(){
-
+    public Cuenta quemarCliente() {
         Usuario usuario = Usuario.builder()
                 .dni("1090")
                 .nombre("Juan")
@@ -59,7 +57,7 @@ public class ServicioProductoTest {
                 .fechaCreacion(LocalDateTime.now().plusDays(2))
                 .build();
 
-        Cuenta cuenta = Cuenta.builder()
+        return Cuenta.builder()
                 .usuario(usuario)
                 .email("corre@gmail.com")
                 .contrasenia("1234")
@@ -69,9 +67,28 @@ public class ServicioProductoTest {
                 .codigoValidacionContrasenia(codigoValidacionContrasenia)
                 .codigoValidacionRegistro(codigoValidacionRegistro)
                 .build();
+    }
 
+    @Test
+    public void ingresarClienteTest(){
+        Cuenta cuenta= quemarCliente();
         try {
-            cuentaRepo.ingresarCuenta(cuenta);
+            cuentaRepo.guardar(cuenta);
+            assertTrue(true);
+        } catch (IOException e) {
+            e.printStackTrace();
+            assertTrue(false);
+        }
+    }
+
+    @Test
+    public void actualizarClienteTest(){
+        Cuenta cuenta= quemarCliente();
+        cuenta.setContrasenia("Mega segura");
+        cuenta.setRol(Rol.ADMIN);
+        cuenta.setEmail("c@gmail.com");
+        try {
+            cuentaRepo.actualizar(cuenta);
             assertTrue(true);
         } catch (IOException e) {
             e.printStackTrace();
