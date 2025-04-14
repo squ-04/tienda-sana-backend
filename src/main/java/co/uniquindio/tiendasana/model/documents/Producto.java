@@ -24,6 +24,7 @@ public class Producto {
     private EstadoProducto estado;
     private int cantidad;
     private String imagen;
+    private int calificacionPromedio;
     private float precioUnitario;
 
     /**

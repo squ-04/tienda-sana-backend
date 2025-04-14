@@ -6,6 +6,7 @@ public record CrearCuentaDTO(
         String telefono,
         String direccion,
         String email,
-        String contrasenia
+        String contrasenia,
+        String confirmacionContrasenia
 ) {
 }
