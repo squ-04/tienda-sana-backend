@@ -155,7 +155,6 @@ public class CuentaRepo {
         }
     }
 
-
     public List<Cuenta> filtrar (Predicate<Cuenta> expresion) throws IOException {
         List<Cuenta> cuentas = obtenerCuentas();
         return cuentas.stream()

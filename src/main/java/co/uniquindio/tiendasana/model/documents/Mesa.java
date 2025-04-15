@@ -19,7 +19,10 @@ public class Mesa {
 
     private String localidad;
     private float precioReserva;
+    private int capacidad;
+    private String imagen;
 
+    /**
     @Builder
     public Mesa(String nombre, EstadoMesa estado, String localidad, float precioReserva) {
         this.nombre = nombre;
@@ -27,8 +30,19 @@ public class Mesa {
         this.localidad = localidad;
         this.precioReserva = precioReserva;
     }
+    */
 
-    public String getStado (){
+    @Builder
+    public Mesa(String nombre, EstadoMesa estado, String localidad, float precioReserva,int capacidad,String imagen) {
+        this.nombre = nombre;
+        this.estado = estado;
+        this.localidad = localidad;
+        this.precioReserva = precioReserva;
+        this.capacidad = capacidad;
+        this.imagen = imagen;
+    }
+
+    public String getEstado (){
         return estado.getEstado();
     }
 }

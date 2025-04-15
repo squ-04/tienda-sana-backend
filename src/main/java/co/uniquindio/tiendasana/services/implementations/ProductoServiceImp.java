@@ -79,7 +79,7 @@ public class ProductoServiceImp implements ProductoService {
      */
     @Override
     public List<ProductoItemDTO> obtenerProductosCliente(int pagina) throws IOException, ProductoParseException {
-        List<Producto> productos = productRepo.ObtenerProductos(pagina, ELEMENTOSPAGINA);
+        List<Producto> productos = productRepo.obtenerProductos(pagina, ELEMENTOSPAGINA);
 
         List<ProductoItemDTO> productosItems = productos.stream()
                 .filter(producto -> "Disponible".equalsIgnoreCase(producto.getEstado()))

@@ -6,6 +6,7 @@ import co.uniquindio.tiendasana.model.enums.Rol;
 import co.uniquindio.tiendasana.model.vo.CodigoValidacion;
 import co.uniquindio.tiendasana.model.vo.Usuario;
 import co.uniquindio.tiendasana.repos.CuentaRepo;
+import co.uniquindio.tiendasana.repos.ProductRepo;
 import co.uniquindio.tiendasana.services.implementations.ProductoServiceImp;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,8 @@ public class ServicioProductoTest {
     private ProductoServiceImp productService;
     @Autowired//TODO eliminar este repositorio(su intancia, no la clase) una vez ya no se necesite
     private CuentaRepo cuentaRepo;
+    @Autowired
+    private ProductRepo productoRepo;
     /**
     @Autowired
     private AssertTrueValidator assertTrueValidator;
@@ -91,6 +94,17 @@ public class ServicioProductoTest {
             cuentaRepo.actualizar(cuenta);
             assertTrue(true);
         } catch (IOException e) {
+            e.printStackTrace();
+            assertTrue(false);
+        }
+    }
+
+    @Test
+    public void obtenerProductos() {
+        try {
+            productoRepo.obtenerProductos();
+            assertTrue(true);
+        } catch (Exception e) {
             e.printStackTrace();
             assertTrue(false);
         }
