@@ -9,6 +9,7 @@ import org.simplejavamail.api.mailer.config.TransportStrategy;
 import org.simplejavamail.email.EmailBuilder;
 import org.simplejavamail.mailer.MailerBuilder;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -32,6 +33,7 @@ public class EmailServiceImp implements EmailService {
     private String SMTP_PASSWORD;
 
     @Override
+    @Async
     public void sendEmail(EmailDTO emailDTO) throws Exception {
         Email email = EmailBuilder.startingBlank()
                 .from(SMTP_USERNAME)
@@ -54,6 +56,7 @@ public class EmailServiceImp implements EmailService {
     }
 
     @Override
+    @Async
     public void sendEmailHtmlWithAttachment(EmailDTO emailDTO, byte[] qrCodeImage, String qrCodeContentId) throws Exception {
         Email email = EmailBuilder.startingBlank()
                 .from(SMTP_USERNAME)
