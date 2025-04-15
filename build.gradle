@@ -34,8 +34,6 @@ repositories {
 
 dependencies {
 
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
     //Dependencies for payment gateway
     implementation 'com.mercadopago:sdk-java:2.1.27'
     implementation 'org.springframework.boot:spring-boot-starter-validation'

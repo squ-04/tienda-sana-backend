@@ -1,21 +1,15 @@
 package co.uniquindio.tiendasana.repos;
 
 
+import co.uniquindio.tiendasana.dto.productodtos.ProductosTotal;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
-import co.uniquindio.tiendasana.model.documents.Cuenta;
 import co.uniquindio.tiendasana.model.documents.Producto;
-import co.uniquindio.tiendasana.utils.CuentaConstantes;
 import co.uniquindio.tiendasana.utils.ProductoConstantes;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Repository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,7 +29,7 @@ public class ProductRepo  {
     @Value("${google.sheets.spreadsheet-id}")
     private  String spreadsheetId;
 
-    private final String SHEET_NAME= ProductoConstantes.HOJA;
+    private final String SHEET_NAMECLIENTE = ProductoConstantes.HOJACLIENTE;
 
     /**
      * Metodo contructor de la clase
@@ -52,11 +46,11 @@ public class ProductRepo  {
      * @throws IOException
      * @throws ProductoParseException
      */
-    public Page<Producto> obtenerProductos(int pagina, int cantidadElementos) throws IOException, ProductoParseException {
-        List<List<Object>> filas = obtenerFilasHoja(pagina,cantidadElementos);
+    public ProductosTotal obtenerProductos(int pagina, int cantidadElementos) throws IOException, ProductoParseException {
+        int totalProductos= contarProductosExistintes();
+        List<List<Object>> filas = obtenerFilasHoja(pagina,cantidadElementos,totalProductos);
         List<Producto> productos = mapearFilasProductos(filas);
-        Pageable pageable = PageRequest.of(0, cantidadElementos);
-        return new PageImpl<>(productos, pageable, cantidadElementos);
+       return new ProductosTotal( totalProductos, productos);
     }
 
     public List<Producto> obtenerProductos() throws IOException, ProductoParseException {
@@ -65,13 +59,13 @@ public class ProductRepo  {
     }
 
     private List<List<Object>> obtenerFilasHoja() throws IOException {
-        String rango = SHEET_NAME + "!A2:"+ ProductoConstantes.COL_REGISTRO_FINAL; // ID, Nombre, Estado, Localidad, PrecioReserva
+        String rango = SHEET_NAMECLIENTE + "!A2:"+ ProductoConstantes.COL_REGISTRO_FINAL; // ID, Nombre, Estado, Localidad, PrecioReserva
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
         return respuesta.getValues();
     }
 
     public int contarProductosExistintes() throws IOException {
-        String rango = ProductoConstantes.CANT_PRODUCTOS; // Ajusta según columnas
+        String rango = SHEET_NAMECLIENTE + ProductoConstantes.CANT_PRODUCTOS; // Ajusta según columnas
         List<List<Object>> respuesta =
                 sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute().getValues();
         return Integer.parseInt(respuesta.get(0).get(0).toString());
@@ -82,19 +76,17 @@ public class ProductRepo  {
      * @return Lista de listas de objetos
      * @throws IOException
      */
-    private List<List<Object>> obtenerFilasHoja(int pagina, int cantidad) throws IOException {
-
-        int cantidadTotal=contarProductosExistintes();
+    private List<List<Object>> obtenerFilasHoja(int pagina, int cantidad, int cantidadTotal) throws IOException {
+        
         int cantidadPaginas=cantidadTotal/cantidad;
 
         if(pagina > cantidadPaginas){
             throw new RuntimeException("La página no existe");//TODO cambiar excepcion por Exception
         }
-
         int filaInicio = 1 + (pagina * cantidad); // A1 es la primera fila de datos
         int filaFin = filaInicio + cantidad - 1;
 
-        String rango = SHEET_NAME + "!A" + filaInicio + ":H" + filaFin;
+        String rango = SHEET_NAMECLIENTE + "!A" + filaInicio + ":H" + filaFin;
         ValueRange respuesta= sheetsService.spreadsheets().values().get(spreadsheetId,rango).execute();
 
         return respuesta.getValues();
@@ -207,7 +199,7 @@ public class ProductRepo  {
     public void actualizar(Producto producto) throws IOException {
         int indice=obtenerIndiceProducto(producto.getId());
         if (indice!=-1) {
-            String range = SHEET_NAME+"!A"+(2+indice)+":"+ ProductoConstantes.COL_REGISTRO_FINAL+(2+indice);
+            String range = SHEET_NAMECLIENTE +"!A"+(2+indice)+":"+ ProductoConstantes.COL_REGISTRO_FINAL+(2+indice);
             List<List<Object>> values = Arrays.asList(
                     mapearProductoInverso(producto)
             );

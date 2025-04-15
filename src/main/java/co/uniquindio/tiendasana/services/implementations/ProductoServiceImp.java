@@ -3,6 +3,7 @@ package co.uniquindio.tiendasana.services.implementations;
 import co.uniquindio.tiendasana.dto.productodtos.ListaProductos;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoInfoDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoItemDTO;
+import co.uniquindio.tiendasana.dto.productodtos.ProductosTotal;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.Producto;
 import co.uniquindio.tiendasana.repos.ProductRepo;
@@ -11,7 +12,6 @@ import co.uniquindio.tiendasana.utils.ProductoConstantes;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -99,8 +99,8 @@ public class ProductoServiceImp implements ProductoService {
      */
     @Override
     public ListaProductos obtenerProductosCliente(int pagina) throws IOException, ProductoParseException {
-        Page<Producto> paginaProductos = productRepo.obtenerProductos(pagina, ProductoConstantes.ELEMENTOSPAGINA);
-        List<Producto> productos=paginaProductos.getContent();
+        ProductosTotal paginaProductos = productRepo.obtenerProductos(pagina, ProductoConstantes.ELEMENTOSPAGINA);
+        List<Producto> productos=paginaProductos.productos();
         List<ProductoItemDTO> productosItems = productos.stream()
                 .filter(producto -> "Disponible".equalsIgnoreCase(producto.getEstado()))
                 .filter(producto -> producto.getCantidad() > 0)
@@ -114,7 +114,7 @@ public class ProductoServiceImp implements ProductoService {
                 .collect(Collectors.toList());
 
         return new ListaProductos(
-                paginaProductos.getTotalPages(),
+                (paginaProductos.totalProductos()/ProductoConstantes.ELEMENTOSPAGINA)+1,
                 productosItems
         );
     }

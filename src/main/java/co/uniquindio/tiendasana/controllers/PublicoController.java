@@ -39,26 +39,16 @@ public class PublicoController {
      * @return
      * @throws Exception
      */
-    /**
+
     @GetMapping("/productos/get-all/{pagina}")
-    public ResponseEntity<MessageDTO<List<ProductoItemDTO>>> listarProductosCliente(@PathVariable int pagina) throws Exception {
-        List<ProductoItemDTO> productos= productService.obtenerProductosCliente(pagina);
+    public ResponseEntity<MessageDTO<ListaProductos>> listarProductosCliente(@PathVariable int pagina) throws Exception {
+        ListaProductos productos= productService.obtenerProductosCliente(pagina);
         return ResponseEntity.ok( new MessageDTO<>(false, productos));
     }
-     */
-    @GetMapping("/event/get-all/{page}")
-    public ResponseEntity<MessageDTO<ListaProductos>> listaProductosCliente(@PathVariable int pagina){
-        ListaProductos productos = null;
-        try {
-            productos = productService.obtenerProductosCliente(pagina);
-            return ResponseEntity.ok(new MessageDTO<>(false,productos));
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.ok(new MessageDTO<>(true,productos));
-        }
-    }
 
-    @GetMapping("/event/get-info/{id}")
+
+
+    @GetMapping("/productos/get-info/{id}")
     public ResponseEntity<MessageDTO<ProductoInfoDTO>> getInfoEvenClient(@PathVariable String id) throws Exception{
         ProductoInfoDTO productoInfo = productService.obtenerInfoProducto(id);
         return ResponseEntity.ok(new MessageDTO<>(false,productoInfo));
