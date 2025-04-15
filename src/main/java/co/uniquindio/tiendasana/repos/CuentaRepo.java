@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -143,18 +144,6 @@ public class CuentaRepo {
         System.out.println("Numero de celdas actualizadas: " + result.getUpdatedCells());
     }
 
-    public Cuenta buscarPorEmail(String email) throws IOException {
-        List<Cuenta> cuentas=filtrar(cuenta -> cuenta.getEmail().equals(email));
-        if (cuentas.size()>1) {
-            throw new IOException("Mas de un registro encontrado");
-        }
-        if (cuentas.isEmpty()) {
-            return null;
-        } else {
-            return cuentas.get(0);
-        }
-    }
-
     public List<Cuenta> filtrar (Predicate<Cuenta> expresion) throws IOException {
         List<Cuenta> cuentas = obtenerCuentas();
         return cuentas.stream()
@@ -199,6 +188,36 @@ public class CuentaRepo {
         } else {
             throw new IOException("Registro no encontrado");
         }
+    }
+
+    public Optional<Cuenta> obtenerPorDNI(String dni) throws IOException {
+        List<Cuenta> cuentasObtenidas=
+                filtrar(cuenta -> cuenta.getUsuario().getDni().equals(dni));
+        if (cuentasObtenidas.isEmpty()) {
+            return Optional.empty();
+        }
+        if (cuentasObtenidas.size()>1) {
+            throw new IOException("Mas de una cuenta tiene ese dni");
+        }
+        return Optional.of(cuentasObtenidas.get(0));
+    }
+
+    public Optional<Cuenta> obtenerPorEmail(String email) throws IOException {
+        List<Cuenta> cuentasObtenidas=
+                filtrar(cuenta -> cuenta.getEmail().equals(email));
+        if (cuentasObtenidas.isEmpty()) {
+            return Optional.empty();
+        }
+        if (cuentasObtenidas.size()>1) {
+            throw new IOException("Mas de una cuenta tiene ese email");
+        }
+        return Optional.of(cuentasObtenidas.get(0));
+    }
+
+    public List<Cuenta> obtenerPorDniOEmail(String dni, String email) throws IOException {
+        return filtrar(cuenta ->
+            cuenta.getUsuario().getDni().equals(dni) || cuenta.getEmail().equals(email)
+        );
     }
 
 }

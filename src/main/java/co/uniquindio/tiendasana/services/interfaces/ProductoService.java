@@ -1,5 +1,6 @@
 package co.uniquindio.tiendasana.services.interfaces;
 
+import co.uniquindio.tiendasana.dto.productodtos.ListaProductos;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoInfoDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoItemDTO;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
@@ -22,5 +23,5 @@ public interface ProductoService {
      * @throws IOException
      * @throws ProductoParseException
      */
-    List<ProductoItemDTO> obtenerProductosCliente(int pagina) throws IOException, ProductoParseException;
+    ListaProductos obtenerProductosCliente(int pagina) throws IOException, ProductoParseException;
 }

@@ -5,6 +5,7 @@ public record ActualizarCuentaDTO (
         String nombre,
         String telefono,
         String direccion,
+        String correo,
         String contrasenia
 ){
 }

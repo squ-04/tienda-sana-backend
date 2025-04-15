@@ -2,18 +2,25 @@ package co.uniquindio.tiendasana.repos;
 
 
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
+import co.uniquindio.tiendasana.model.documents.Cuenta;
 import co.uniquindio.tiendasana.model.documents.Producto;
+import co.uniquindio.tiendasana.utils.CuentaConstantes;
 import co.uniquindio.tiendasana.utils.ProductoConstantes;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.data.web.SpringDataWebProperties;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Repository;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -45,9 +52,11 @@ public class ProductRepo  {
      * @throws IOException
      * @throws ProductoParseException
      */
-    public List<Producto> obtenerProductos(int pagina, int cantidadElementos) throws IOException, ProductoParseException {
+    public Page<Producto> obtenerProductos(int pagina, int cantidadElementos) throws IOException, ProductoParseException {
         List<List<Object>> filas = obtenerFilasHoja(pagina,cantidadElementos);
-        return mapearFilasProductos(filas);
+        List<Producto> productos = mapearFilasProductos(filas);
+        Pageable pageable = PageRequest.of(0, cantidadElementos);
+        return new PageImpl<>(productos, pageable, cantidadElementos);
     }
 
     public List<Producto> obtenerProductos() throws IOException, ProductoParseException {
@@ -61,6 +70,13 @@ public class ProductRepo  {
         return respuesta.getValues();
     }
 
+    public int contarProductosExistintes() throws IOException {
+        String rango = ProductoConstantes.CANT_PRODUCTOS; // Ajusta según columnas
+        List<List<Object>> respuesta =
+                sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute().getValues();
+        return Integer.parseInt(respuesta.get(0).get(0).toString());
+    }
+
     /**
      * Metodo usado para obtener las filas de la hoja como Objetos de Java
      * @return Lista de listas de objetos
@@ -68,11 +84,8 @@ public class ProductRepo  {
      */
     private List<List<Object>> obtenerFilasHoja(int pagina, int cantidad) throws IOException {
 
-        ValueRange total = sheetsService.spreadsheets().values().get(spreadsheetId,SHEET_NAME+"!L1").execute();
-        List<List<Object>> filas = total.getValues();
-        int cantidadTotal = Integer.parseInt(""+filas.get(0).get(0));
-
-        int cantidadPaginas = cantidadTotal/cantidad;
+        int cantidadTotal=contarProductosExistintes();
+        int cantidadPaginas=cantidadTotal/cantidad;
 
         if(pagina > cantidadPaginas){
             throw new RuntimeException("La página no existe");//TODO cambiar excepcion por Exception
@@ -210,6 +223,18 @@ public class ProductRepo  {
         } else {
             throw new IOException("Registro no encontrado");
         }
+    }
+
+    public Optional<Producto> obtenerPorId(String id) throws IOException, ProductoParseException {
+        List<Producto> productosObtenidos=
+                filtrar(producto -> producto.getId().equals(id));
+        if (productosObtenidos.isEmpty()) {
+            return Optional.empty();
+        }
+        if (productosObtenidos.size()>1) {
+            throw new IOException("Mas de un producto tiene ese id");
+        }
+        return Optional.of(productosObtenidos.get(0));
     }
 
 }

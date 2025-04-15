@@ -1,26 +1,29 @@
 package co.uniquindio.tiendasana.services.implementations;
 
+import co.uniquindio.tiendasana.dto.productodtos.ListaProductos;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoInfoDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoItemDTO;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.Producto;
 import co.uniquindio.tiendasana.repos.ProductRepo;
 import co.uniquindio.tiendasana.services.interfaces.ProductoService;
+import co.uniquindio.tiendasana.utils.ProductoConstantes;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class ProductoServiceImp implements ProductoService {
     private final Sheets sheetsService;
-    private final int ELEMENTOSPAGINA=6;
     @Value("${google.sheets.spreadsheet-id}")
     private String spreadsheetId;
     private final ProductRepo productRepo;
@@ -58,7 +61,6 @@ public class ProductoServiceImp implements ProductoService {
         System.out.println("Número de celdas actualizadas: " + result.getUpdatedCells());
     }
 
-
     /**
      * Metodo usado para obtener los detalles de un producto
      *
@@ -67,7 +69,25 @@ public class ProductoServiceImp implements ProductoService {
      */
     @Override
     public ProductoInfoDTO obtenerInfoProducto(String id) {
-        return null;
+        try {
+            Optional<Producto> productoObtenido= productRepo.obtenerPorId(id);
+            if (productoObtenido.isEmpty()) {
+                throw new IOException("Producto no encontrado");
+            }
+            Producto producto=productoObtenido.get();
+            return new ProductoInfoDTO(
+                    producto.getId(),
+                    producto.getNombre(),
+                    producto.getCategoria(),
+                    producto.getImagen(),
+                    producto.getPrecioUnitario(),
+                    producto.getCantidad()
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (ProductoParseException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -78,9 +98,9 @@ public class ProductoServiceImp implements ProductoService {
      * @throws ProductoParseException
      */
     @Override
-    public List<ProductoItemDTO> obtenerProductosCliente(int pagina) throws IOException, ProductoParseException {
-        List<Producto> productos = productRepo.obtenerProductos(pagina, ELEMENTOSPAGINA);
-
+    public ListaProductos obtenerProductosCliente(int pagina) throws IOException, ProductoParseException {
+        Page<Producto> paginaProductos = productRepo.obtenerProductos(pagina, ProductoConstantes.ELEMENTOSPAGINA);
+        List<Producto> productos=paginaProductos.getContent();
         List<ProductoItemDTO> productosItems = productos.stream()
                 .filter(producto -> "Disponible".equalsIgnoreCase(producto.getEstado()))
                 .filter(producto -> producto.getCantidad() > 0)
@@ -93,6 +113,11 @@ public class ProductoServiceImp implements ProductoService {
                 ))
                 .collect(Collectors.toList());
 
-        return productosItems;
+        return new ListaProductos(
+                paginaProductos.getTotalPages(),
+                productosItems
+        );
     }
+
+
 }

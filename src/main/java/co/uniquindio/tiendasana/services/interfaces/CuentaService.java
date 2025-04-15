@@ -1,7 +1,11 @@
 package co.uniquindio.tiendasana.services.interfaces;
 
+import co.uniquindio.tiendasana.dto.TokenDTO;
 import co.uniquindio.tiendasana.dto.cuentadtos.*;
 import co.uniquindio.tiendasana.model.documents.Cuenta;
+import jakarta.validation.Valid;
+
+import java.util.Map;
 
 public interface CuentaService {
 
@@ -9,7 +13,7 @@ public interface CuentaService {
 
     String actualizarCuenta(ActualizarCuentaDTO cuentaDTO) throws Exception;
 
-    String eliminarCuenta(String id) throws Exception;
+    String eliminarCuenta(String email) throws Exception;
 
     InfoCuentaDTO obtenerInfoCuenta(String id) throws Exception;
 
@@ -24,4 +28,8 @@ public interface CuentaService {
     String validarCodigoRegistro(ActivarCuentaDTO activarCuentaDTO) throws Exception;
 
     String reenviarCodigoRegistro(String email) throws Exception;
+
+    TokenDTO login(@Valid LoginDTO loginDTO);
+
+    TokenDTO refresh(Map<String, Object> claims);
 }
