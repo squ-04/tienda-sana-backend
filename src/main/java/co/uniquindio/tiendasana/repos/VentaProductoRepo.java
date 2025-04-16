@@ -51,7 +51,7 @@ public class VentaProductoRepo {
         for (List<Object> row : filas) {
             try {
                 String id = row.get(0).toString();
-                String usuarioId = row.get(1).toString();
+                String emailUsuario = row.get(1).toString();
 
                 List<DetalleVentaProducto> productos = objectMapper.readValue(
                         row.get(2).toString(),
@@ -69,7 +69,7 @@ public class VentaProductoRepo {
                 );
 
                 VentaProducto venta = VentaProducto.builder()
-                        .usuarioId(usuarioId)
+                        .emailUsario(emailUsuario)
                         .productos(productos)
                         .fecha(fecha)
                         .total(total)
@@ -123,7 +123,7 @@ public class VentaProductoRepo {
 
         return Arrays.asList(
                 ventaProducto.getId(),
-                ventaProducto.getUsuarioId(),
+                ventaProducto.getEmailUsario(),
                 ventaProducto.getFecha().toString(),
                 ""+ventaProducto.getTotal(),
                 ventaProducto.getCodigoPasarela(),

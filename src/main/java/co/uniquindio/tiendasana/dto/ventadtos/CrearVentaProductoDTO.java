@@ -1,7 +1,7 @@
 package co.uniquindio.tiendasana.dto.ventadtos;
 
 public record CrearVentaProductoDTO (
-        String clienteId,
+        String emailUsuario,
         String idPromocion
 )
 
