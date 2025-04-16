@@ -21,14 +21,13 @@ public record CrearCuentaDTO(
         @Size(max = 10, message = "El dni debe de tener como máximo 10 caracteres")
         String dni,
         @NotBlank(message = "El campo de telefono es obligatorio")
-        @Size(min = 10, max = 15, message = "El numero de telefono debe de ser entre 10 y15 caracteres de largo")
+        @Size(min = 10, max = 15, message = "El numero de telefono debe de ser entre 10 y 15 caracteres de largo")
         String telefono,
         @Size(max = 255, message = "La direccion tiene como máximo 255 caracteres")
         String direccion,
         @NotBlank(message = "Campo Email no puede estar vacio")
         @Email(message = "Formato de email invalido")
         String email,
-
         @NotBlank(message = "La contraseña es obligatoria")
         @Size(min = 7, max = 20, message = "La contraseña debe de tener entre 7 y 20 caracteres")
         String contrasenia

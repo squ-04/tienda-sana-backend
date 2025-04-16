@@ -16,7 +16,7 @@ public class VentaProducto {
     @EqualsAndHashCode.Include
     private String id;
 
-    private String usuarioId;
+    private String emailUsario;
     private List<DetalleVentaProducto> productos;
     private LocalDateTime fecha;
     private float total;
@@ -25,8 +25,8 @@ public class VentaProducto {
     private Pago pago;
 
     @Builder
-    public VentaProducto(String usuarioId, List<DetalleVentaProducto> productos, LocalDateTime fecha, float total, String promocionId, String codigoPasarela, Pago pago) {
-        this.usuarioId = usuarioId;
+    public VentaProducto(String emailUsario, List<DetalleVentaProducto> productos, LocalDateTime fecha, float total, String promocionId, String codigoPasarela, Pago pago) {
+        this.emailUsario = emailUsario;
         this.productos = productos;
         this.fecha = fecha;
         this.total = total;

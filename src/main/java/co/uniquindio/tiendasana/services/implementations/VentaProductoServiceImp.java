@@ -60,13 +60,13 @@ public class VentaProductoServiceImp implements VentaProductoService {
     @Override
     public String crearVenta(CrearVentaProductoDTO crearVentaProductoDTO) throws Exception {
 
-        CarritoCompras carritoCompras = carritoComprasService.getCarritoCompras(crearVentaProductoDTO.clienteId());
+        CarritoCompras carritoCompras = carritoComprasService.getCarritoCompras(crearVentaProductoDTO.emailUsuario());
         List<DetalleVentaProducto> items = getOrderDetails(carritoCompras);
 
         VentaProducto ventaProducto = new VentaProducto();
         ventaProducto.setProductos(items);
         ventaProducto.setFecha(LocalDateTime.now());
-        ventaProducto.setUsuarioId(crearVentaProductoDTO.clienteId());
+        ventaProducto.setEmailUsario(crearVentaProductoDTO.emailUsuario());
 
         if (crearVentaProductoDTO.idPromocion() != null && !crearVentaProductoDTO.idPromocion().isEmpty()) {
 
@@ -76,26 +76,26 @@ public class VentaProductoServiceImp implements VentaProductoService {
                 throw new ResourceNotFoundException("La promocion no existe");
             }
 
-            // Validar que el cupón tiene un id válido antes de usarlo
+
             if (promocion.getId() == null) {
                 throw new ResourceNotFoundException("La promocion no tiene un id válido para crear la orden");
             }
 
 
-            float totalWithDiscount = calculateTotal(items, promocion.getId(), crearVentaProductoDTO.clienteId());
+            float totalWithDiscount = calculateTotal(items, promocion.getId(), crearVentaProductoDTO.emailUsuario());
             ventaProducto.setTotal(totalWithDiscount);
 
 
         } else {
-            ventaProducto.setTotal(calculateTotal(items, null, crearVentaProductoDTO.clienteId()));
+            ventaProducto.setTotal(calculateTotal(items, null, crearVentaProductoDTO.emailUsuario()));
         }
 
-        Cuenta cuenta = cuentaService.obtenerCuenta(crearVentaProductoDTO.clienteId());
+        Cuenta cuenta = cuentaService.obtenerCuentaPorEmail(crearVentaProductoDTO.emailUsuario());
         VentaProducto createOrder = ventaProductoRepo.guardar(ventaProducto);
 
         enviarResumenVenta(cuenta.getEmail(), ventaProducto);
 
-        carritoComprasService.borrarCarritoCompras(crearVentaProductoDTO.clienteId());
+        carritoComprasService.borrarCarritoCompras(crearVentaProductoDTO.emailUsuario());
 
         return createOrder.getId();
     }
@@ -224,7 +224,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
      */
     private VentaItemDTO mapearAVentaItemDTO(VentaProducto ventaProducto) {
         return new VentaItemDTO(
-                ventaProducto.getUsuarioId() != null ? ventaProducto.getUsuarioId().toString() : null,
+                ventaProducto.getEmailUsario() != null ? ventaProducto.getEmailUsario().toString() : null,
                 ventaProducto.getFecha(),
                 mapearADetalleVentaProducto(ventaProducto.getProductos()),
                 ventaProducto.getPago() != null ? ventaProducto.getPago().getPaymentType() : null,
@@ -288,7 +288,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
         if (ventaGuardar.getPromocionId() != null) {
             promocion = promocionService.getPromocion(ventaGuardar.getPromocionId());
         }
-        List<VentaProducto> ventasCliente = obtenerVentasProductoPorCliente(ventaGuardar.getUsuarioId());
+        List<VentaProducto> ventasCliente = obtenerVentasProductoPorCliente(ventaGuardar.getEmailUsario());
 
         // Recorrer los items de la orden y crea los ítems de la pasarela
         for (DetalleVentaProducto item : ventaGuardar.getProductos()) {
@@ -387,9 +387,9 @@ public class VentaProductoServiceImp implements VentaProductoService {
 
                 ventaProducto.setPago(orderPago);
                 ventaProductoRepo.guardar(ventaProducto);
-                Cuenta cuenta = cuentaService.obtenerCuenta(ventaProducto.getUsuarioId());
+                Cuenta cuenta = cuentaService.obtenerCuentaPorEmail(ventaProducto.getEmailUsario());
 
-                List<VentaProducto> ordersClient = obtenerVentasProductoPorCliente(cuenta.getId());
+                List<VentaProducto> ordersClient = obtenerVentasProductoPorCliente(cuenta.getEmail());
                 if (ventaProducto.getPago().getStatus().equalsIgnoreCase("APPROVED") && ventaProducto.getPago().getStatusDetail().equalsIgnoreCase("accredited")) {
                     enviarResumenVenta(cuenta.getEmail(), ventaProducto);
                 }
