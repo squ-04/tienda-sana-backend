@@ -159,7 +159,7 @@ public class CuentaServiceImp implements CuentaService {
                 throw new Exception("Este codigo de verififcacion es incorrecto");
             }
         }
-        return cuenta.getId();
+        return cuenta.getEmail();
     }
 
     @Override
@@ -207,7 +207,7 @@ public class CuentaServiceImp implements CuentaService {
         }
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-        if (!passwordEncoder.matches(cuenta.getContrasenia(), loginDTO.contrasenia())) {
+        if (!passwordEncoder.matches(loginDTO.contrasenia(),cuenta.getContrasenia())) {
             throw new Exception("Contraseña incorrecta");
         }
         Map<String, Object> map = buildClaims(cuenta);
