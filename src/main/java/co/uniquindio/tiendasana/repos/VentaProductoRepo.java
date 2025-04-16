@@ -3,6 +3,9 @@ package co.uniquindio.tiendasana.repos;
 import co.uniquindio.tiendasana.model.documents.VentaProducto;
 import co.uniquindio.tiendasana.model.vo.DetalleVentaProducto;
 import co.uniquindio.tiendasana.model.vo.Pago;
+import co.uniquindio.tiendasana.utils.CuentaConstantes;
+import co.uniquindio.tiendasana.utils.VentaProductoConstantes;
+import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import org.springframework.stereotype.Repository;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Repository
@@ -22,7 +26,7 @@ public class VentaProductoRepo {
     @Value("${google.sheets.spreadsheet-id}")
     private String spreadsheetId;
 
-    private final String SHEET_NAME = "Ventas";
+    private final String SHEET_NAME = VentaProductoConstantes.HOJA_VENTA;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -84,5 +88,57 @@ public class VentaProductoRepo {
         }
 
         return ventas;
+    }
+
+
+    public VentaProducto guardar(VentaProducto ventaProducto) throws IOException {
+
+        int ventasExistentes= contarVentasExistentes();
+        String range = SHEET_NAME+"!A"+(2+ventasExistentes)+":"+ CuentaConstantes.COL_REGISTRO_FINAL+(2+ ventasExistentes);
+
+        List<List<Object>> values = Arrays.asList(
+                mapearVentaInverso(ventaProducto)
+        );
+
+        ValueRange body = new ValueRange().setValues(values);
+
+        UpdateValuesResponse result = sheetsService.spreadsheets().values()
+                .update(spreadsheetId, range, body)
+                .setValueInputOption("RAW") // "RAW" para insertar como está
+                .execute();
+
+        System.out.println("Numero de celdas actualizadas: " + result.getUpdatedCells());
+        return ventaProducto;
+    }
+
+    public int contarVentasExistentes() throws IOException {
+        String rango = VentaProductoConstantes.CANT_VENTAS; // Ajusta según columnas
+        List<List<Object>> respuesta =
+                sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute().getValues();
+        return Integer.parseInt(respuesta.get(0).get(0).toString());
+    }
+
+
+    public List<Object> mapearVentaInverso(VentaProducto ventaProducto) {
+
+        return Arrays.asList(
+                ventaProducto.getId(),
+                ventaProducto.getUsuarioId(),
+                ventaProducto.getFecha().toString(),
+                ""+ventaProducto.getTotal(),
+                ventaProducto.getCodigoPasarela(),
+                ""+ventaProducto.getPago()
+        );
+    }
+
+    public List<VentaProducto> obtenerVentasPorCliente(String idClient) {
+        return List.of();
+    }
+
+    public VentaProducto obtenerVentaProducto(String idVentaProducto) {
+        return null;
+    }
+
+    public void borrar(VentaProducto ventaBorrar) {
     }
 }

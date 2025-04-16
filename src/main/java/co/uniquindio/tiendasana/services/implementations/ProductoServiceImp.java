@@ -119,5 +119,10 @@ public class ProductoServiceImp implements ProductoService {
         );
     }
 
+    @Override
+    public Producto getProducto(String id) throws ProductoParseException {
+        return null;
+    }
+
 
 }

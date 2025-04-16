@@ -4,6 +4,7 @@ import co.uniquindio.tiendasana.dto.productodtos.ListaProductos;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoInfoDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoItemDTO;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
+import co.uniquindio.tiendasana.model.documents.Producto;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,4 +25,7 @@ public interface ProductoService {
      * @throws ProductoParseException
      */
     ListaProductos obtenerProductosCliente(int pagina) throws IOException, ProductoParseException;
+
+
+    Producto getProducto(String id) throws ProductoParseException;
 }

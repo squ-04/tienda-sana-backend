@@ -23,7 +23,7 @@ public class Pago {
 
     @Builder
     public Pago(String id, String currency, String paymentMethod, String statusDetail,
-                   String authorizationCode, LocalDateTime date, float transactionValue, String status) {
+                String authorizationCode, LocalDateTime date, float transactionValue, String status) {
         this.id = id;
         this.currency = currency;
         this.paymentType = paymentMethod;
