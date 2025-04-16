@@ -14,10 +14,10 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Cuenta {
     //Main attribute for identification
-    @EqualsAndHashCode.Include
-    private String id;
+
     //Secundary attributes for the class
     private Usuario usuario;
+    @EqualsAndHashCode.Include
     private String email;
     private String contrasenia;
     private EstadoCuenta estado;
