@@ -68,7 +68,7 @@ public class CarritoComprasRepo {
     }
 
     private List<List<Object>> obtenerFilasHojaSimples() throws IOException {
-        String rango = SHEET_NAME + "!A2:C"; // Asumiendo que usas columnas: Fecha, IDUsuario, Productos
+        String rango = SHEET_NAME + "!A2:"+CarritoConstantes.COL_REGISTRO_CARRITO_FINAL;
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
         return respuesta.getValues();
     }
@@ -116,6 +116,85 @@ public class CarritoComprasRepo {
         return carritos;
     }
 
+    public int contarCarritosExistintes() throws IOException {
+        String rango = CarritoConstantes.CANT_CARRITOS; // Ajusta según columnas
+        List<List<Object>> respuesta =
+                sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute().getValues();
+        return Integer.parseInt(respuesta.get(0).get(0).toString());
+    }
+
+    public void guardarCarritoCompraSimple(CarritoCompras carrito) throws IOException {
+
+        int detalles=contarCarritosExistintes();
+        String range = SHEET_NAME+"!A"+(2+detalles)+":"+ CarritoConstantes.COL_REGISTRO_CARRITO_FINAL+(2+detalles);
+
+        List<List<Object>> values = Arrays.asList(
+                mapearCarritoInverso(carrito)
+        );
+
+        ValueRange body = new ValueRange().setValues(values);
+
+        UpdateValuesResponse result = sheetsService.spreadsheets().values()
+                .update(spreadsheetId, range, body)
+                .setValueInputOption("RAW") // "RAW" para insertar como está
+                .execute();
+
+        System.out.println("Numero de celdas actualizadas: " + result.getUpdatedCells());
+    }
+
+    public void guardarCarritoCompra(CarritoCompras carrito) throws IOException {
+        guardarCarritoCompraSimple(carrito);
+        for (DetalleCarrito detalle:carrito.getProductos()) {
+            guardarDetalle(detalle);
+        }
+    }
+
+    public int obtenerIndiceCarrito(String idUsuario) {
+        List<CarritoCompras> carritos = null;
+        int filaCuenta=-1;
+        try {
+            carritos = obtenerCarritosSimples();
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
+        int tam=carritos.size();
+        for (int i=0;i<tam;i++) {
+            if (carritos.get(i).getIdUsuario().equals(idUsuario)) {
+                filaCuenta=i;
+                break;
+            }
+        }
+        return filaCuenta;
+    }
+
+    public void actualizarCarritoSimple(CarritoCompras carrito) throws IOException {
+        int indice=obtenerIndiceCarrito(carrito.getIdUsuario());
+        if (indice!=-1) {
+            String range = SHEET_NAME+"!A"+(2+indice)+":"+ CarritoConstantes.COL_REGISTRO_CARRITO_FINAL+(2+indice);
+            List<List<Object>> values = Arrays.asList(
+                    mapearCarritoInverso(carrito)
+            );
+
+            ValueRange body = new ValueRange().setValues(values);
+
+            UpdateValuesResponse result = sheetsService.spreadsheets().values()
+                    .update(spreadsheetId, range, body)
+                    .setValueInputOption("RAW") // "RAW" para insertar como está
+                    .execute();
+
+            System.out.println("Numero de celdas actualizadas: " + result.getUpdatedCells());
+        } else {
+            throw new IOException("Registro no encontrado");
+        }
+    }
+
+    public void actualizarCarrito(CarritoCompras carrito) throws IOException {
+        actualizarCarritoSimple(carrito);
+        for (DetalleCarrito detalle:carrito.getProductos()) {
+            actualizarDetalle(detalle);
+        }
+    }
+
     //-----------DetallesCarrito-----------------------------------------------------------------------
 
     public List<DetalleCarrito> obtenerDetallesCarrito() throws IOException {
@@ -124,7 +203,7 @@ public class CarritoComprasRepo {
     }
 
     private List<List<Object>> obtenerFilasHojaDetalle() throws IOException {
-        String rango = SHEET_NAME_DETALLE + "!A2:C"; // Asumiendo que usas columnas: Fecha, IDUsuario, Productos
+        String rango = SHEET_NAME_DETALLE + "!A2:"+CarritoConstantes.COL_REGISTRO_DETALLE_FINAL; // Asumiendo que usas columnas: Fecha, IDUsuario, Productos
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
         return respuesta.getValues();
     }
@@ -172,7 +251,7 @@ public class CarritoComprasRepo {
     }
 
     public int contarDetallesExistintes() throws IOException {
-        String rango = CuentaConstantes.CANT_CUENTAS; // Ajusta según columnas
+        String rango = CarritoConstantes.CANT_DETALLES;// Ajusta según columnas
         List<List<Object>> respuesta =
                 sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute().getValues();
         return Integer.parseInt(respuesta.get(0).get(0).toString());
@@ -180,8 +259,8 @@ public class CarritoComprasRepo {
 
     public void guardarDetalle(DetalleCarrito detalle) throws IOException {
 
-        int cuentas=contarDetallesExistintes();
-        String range = SHEET_NAME_DETALLE+"!A"+(2+cuentas)+":"+ CuentaConstantes.COL_REGISTRO_FINAL+(2+cuentas);
+        int detalles=contarDetallesExistintes();
+        String range = SHEET_NAME_DETALLE+"!A"+(2+detalles)+":"+ CarritoConstantes.COL_REGISTRO_DETALLE_FINAL+(2+detalles);
 
         List<List<Object>> values = Arrays.asList(
                 mapearDetalleCarritoInverso(detalle)
@@ -219,7 +298,7 @@ public class CarritoComprasRepo {
     public void actualizarDetalle(DetalleCarrito detalle) throws IOException {
         int indice=obtenerIndiceDetalle(detalle.getIdCarrito(),detalle.getProductoId());
         if (indice!=-1) {
-            String range = SHEET_NAME_DETALLE+"!A"+(2+indice)+":"+CuentaConstantes.COL_REGISTRO_FINAL+(2+indice);
+            String range = SHEET_NAME_DETALLE+"!A"+(2+indice)+":"+ CarritoConstantes.COL_REGISTRO_DETALLE_FINAL+(2+indice);
             List<List<Object>> values = Arrays.asList(
                     mapearDetalleCarritoInverso(detalle)
             );
@@ -240,8 +319,8 @@ public class CarritoComprasRepo {
     public List<Object> mapearBorrado() {
         return Arrays.asList(
                 "-",
-                "-",
-                "-",
+                "0",
+                "0",
                 "-"
         );
     }
@@ -249,7 +328,7 @@ public class CarritoComprasRepo {
     public void eliminarDetalle(DetalleCarrito detalle) throws IOException {
         int indice=obtenerIndiceDetalle(detalle.getIdCarrito(),detalle.getProductoId());
         if (indice!=-1) {
-            String range = SHEET_NAME_DETALLE+"!A"+(2+indice)+":"+CuentaConstantes.COL_REGISTRO_FINAL+(2+indice);
+            String range = SHEET_NAME_DETALLE+"!A"+(2+indice)+":"+ CarritoConstantes.COL_REGISTRO_DETALLE_FINAL+(2+indice);
             List<List<Object>> values = Arrays.asList(
                     mapearBorrado()
             );
@@ -261,7 +340,7 @@ public class CarritoComprasRepo {
                     .setValueInputOption("RAW") // "RAW" para insertar como está
                     .execute();
 
-            System.out.println("Numero de celdas actualizadas: " + result.getUpdatedCells());
+            System.out.println("Numero de celdas eliminadas: " + result.getUpdatedCells());
         } else {
             throw new IOException("Registro no encontrado");
         }
