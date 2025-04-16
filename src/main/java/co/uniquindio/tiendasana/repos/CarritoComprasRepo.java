@@ -36,6 +36,11 @@ public class CarritoComprasRepo {
         this.sheetsService = sheetsService;
     }
 
+    /**
+     * Optiene todos los carritos de compras con sus respectivos detalles
+     * @return Carritos de compras
+     * @throws IOException
+     */
     public List<CarritoCompras> obtenerCarritos() throws IOException {
         List<CarritoCompras> carritos=obtenerCarritosSimples();
         asignarDetalles(carritos);
@@ -55,6 +60,16 @@ public class CarritoComprasRepo {
         }
     }
 
+    /**
+     * Filtra los carritos teniendo en cuenta sus detalles, puede llegar a darse en
+     * O(<span style="color:red;">n</span>*<span style="color:blue;">m</span>)<br>
+     * <span style="color:red;">n</span> siendo la cantidad total de carritos de compra<br>
+     * <span style="color:blue;">m</span> siendo la cantidad total de detalles de todos los carritos juntos
+     * @param expresion
+     * @return
+     * @throws IOException
+     * @throws ProductoParseException
+     */
     public List<CarritoCompras> filtrar (Predicate<CarritoCompras> expresion) throws IOException, ProductoParseException {
         List<CarritoCompras> carritos = obtenerCarritos();
         return carritos.stream()
@@ -62,6 +77,11 @@ public class CarritoComprasRepo {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Optiene todos los carritos de compras sin sus respectivos detalles
+     * @return Carritos de compras sin detalles
+     * @throws IOException
+     */
     public List<CarritoCompras> obtenerCarritosSimples() throws IOException {
         List<List<Object>> filas = obtenerFilasHojaSimples();
         return mapearFilasCarritos(filas);
@@ -86,6 +106,12 @@ public class CarritoComprasRepo {
         return carritos;
     }
 
+    /**
+     * Mapea el carrito de compra a partir de los datos de la base de datos,
+     * sin tener en cuenta sus detalles
+     * @param row Datos en el formato de la base de datos
+     * @return Datos en el formato de las clases de java
+     */
     public CarritoCompras mapearCarrito(List<Object> row) {
         String id=row.get(0).toString();
         LocalDateTime fecha=LocalDateTime.parse(row.get(1).toString());
@@ -99,6 +125,11 @@ public class CarritoComprasRepo {
                 .build();
     }
 
+    /**
+     * Convierte los datos de carrito al formato de la base de datos sin tener en cuenta los detalles
+     * @param carrito Datos de los carritos
+     * @return datos en formato de la base de datos
+     */
     public List<Object> mapearCarritoInverso(CarritoCompras carrito) {
         return Arrays.asList(
                 carrito.getId(),
@@ -107,6 +138,16 @@ public class CarritoComprasRepo {
         );
     }
 
+    /**
+     * Filtra los carritos sin tener en cuenta sus detalles, puede llegar a darse en
+     * O(<span style="color:red;">n</span>+<span style="color:blue;">m</span>)<br>
+     * <span style="color:red;">n</span> siendo la cantidad total de carritos de compra<br>
+     * <span style="color:blue;">m</span> siendo la cantidad total de detalles de todos los carritos juntos
+     * @param expresion
+     * @return
+     * @throws IOException
+     * @throws ProductoParseException
+     */
     public List<CarritoCompras> filtrarCarritosSimple (Predicate<CarritoCompras> expresion) throws IOException, ProductoParseException {
         List<CarritoCompras> carritos = obtenerCarritosSimples();
         List<CarritoCompras> carritosFiltrados =  carritos.stream()
@@ -123,6 +164,11 @@ public class CarritoComprasRepo {
         return Integer.parseInt(respuesta.get(0).get(0).toString());
     }
 
+    /**
+     * Guarda los datos del carrito de compras sin tener en cuenta los detalles
+     * @param carrito Carrito de compras junto con sus detalles
+     * @throws IOException
+     */
     public void guardarCarritoCompraSimple(CarritoCompras carrito) throws IOException {
 
         int detalles=contarCarritosExistintes();
@@ -142,6 +188,11 @@ public class CarritoComprasRepo {
         System.out.println("Numero de celdas actualizadas: " + result.getUpdatedCells());
     }
 
+    /**
+     * Guarda los datos del carrito de compras junto con sus detalles
+     * @param carrito Carrito de compras junto con sus detalles
+     * @throws IOException
+     */
     public void guardarCarritoCompra(CarritoCompras carrito) throws IOException {
         guardarCarritoCompraSimple(carrito);
         for (DetalleCarrito detalle:carrito.getProductos()) {
@@ -167,6 +218,11 @@ public class CarritoComprasRepo {
         return filaCuenta;
     }
 
+    /**
+     * Actualiza los datos de la base de datos del carrito de compras teniendo en cuenta sus detalles
+     * @param carrito Datos del carrito de compras sin detalles
+     * @throws IOException
+     */
     public void actualizarCarritoSimple(CarritoCompras carrito) throws IOException {
         int indice=obtenerIndiceCarrito(carrito.getIdUsuario());
         if (indice!=-1) {
@@ -188,6 +244,11 @@ public class CarritoComprasRepo {
         }
     }
 
+    /**
+     * Actualiza los datos de la base de datos del carrito de compras teniendo en cuenta sus detalles
+     * @param carrito Datos del carrito de compras
+     * @throws IOException
+     */
     public void actualizarCarrito(CarritoCompras carrito) throws IOException {
         actualizarCarritoSimple(carrito);
         for (DetalleCarrito detalle:carrito.getProductos()) {
@@ -197,6 +258,11 @@ public class CarritoComprasRepo {
 
     //-----------DetallesCarrito-----------------------------------------------------------------------
 
+    /**
+     * Optiene todos los los detalles de todos los carritos de compras
+     * @return Detalles de carritos de compras
+     * @throws IOException
+     */
     public List<DetalleCarrito> obtenerDetallesCarrito() throws IOException {
         List<List<Object>> filas = obtenerFilasHojaDetalle();
         return mapearFilasDetallesCarrito(filas);
@@ -221,6 +287,11 @@ public class CarritoComprasRepo {
         return detalles;
     }
 
+    /**
+     * Mapea el detalle de un carrito de compra a partir de los datos de la base de datos
+     * @param row Datos en el formato de la base de datos
+     * @return Datos en el formato de las clases de java
+     */
     public DetalleCarrito mapearDetalleCarrito(List<Object> row) {
         String productoId=row.get(0).toString();
         int cantidad=Integer.parseInt(row.get(1).toString());
@@ -234,6 +305,11 @@ public class CarritoComprasRepo {
                 .build();
     }
 
+    /**
+     * Convierte los datos de detalle al formato de la base de datos
+     * @param detalle Datos de los detalles
+     * @return datos en formato de la base de datos
+     */
     public List<Object> mapearDetalleCarritoInverso(DetalleCarrito detalle) {
         return Arrays.asList(
                 detalle.getProductoId(),
