@@ -83,7 +83,7 @@ public class CuentaServiceImp implements CuentaService {
 
     @Override
     public String actualizarCuenta(ActualizarCuentaDTO cuentaDTO) throws Exception {
-        Cuenta cuenta = cuentaRepo.obtenerPorEmail(cuentaDTO.correo()).get();
+        Cuenta cuenta = obtenerCuentaPorEmail(cuentaDTO.email());
         cuenta.getUsuario().setNombre(cuentaDTO.nombre());
         cuenta.getUsuario().setTelefono(cuentaDTO.telefono());
         cuenta.getUsuario().setDireccion(cuentaDTO.direccion());

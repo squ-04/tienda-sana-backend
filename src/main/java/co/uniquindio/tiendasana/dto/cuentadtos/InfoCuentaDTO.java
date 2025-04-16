@@ -7,12 +7,20 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.hibernate.validator.constraints.Length;
 
+/**
+ * Data transfer object para mostrar informacion de la cuenta cuando sea solicitado
+ * @param email
+ * @param dni
+ * @param nombre
+ * @param telefono
+ * @param direccion
+ */
 public record InfoCuentaDTO(
-        //This id is gonna be a token in the future
-        @NotNull(message = "ID cannot be null")
-                String id,
+        @NotBlank(message = "Email no puede estar vacio")
+        @Email(message = "Formato del email no es valido")
+        String email,
 
-        @NotBlank(message = "The DNI is mandatory")
+        @NotBlank(message = "El campo DNI es obligatorio")
         @Length(max = 10, message = "The DNI must have a maximum of 10 characters")
         String dni,
 
@@ -24,10 +32,8 @@ public record InfoCuentaDTO(
         String telefono,
 
         @Size(max = 255, message = "The address cannot exceed 255 characters")
-        String direccion,
+        String direccion
 
-        @NotBlank(message = "Email can't be empty")
-        @Email(message = "Email format is invalid")
-        String email
+
 ) {
 }
