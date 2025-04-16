@@ -21,7 +21,8 @@ public class CarritoCompras {
     private List<DetalleCarrito> productos;
 
     @Builder
-    public CarritoCompras(LocalDateTime fecha, String idUsuario, List<DetalleCarrito> productos) {
+    public CarritoCompras(String id,LocalDateTime fecha, String idUsuario, List<DetalleCarrito> productos) {
+        this.id = id;
         this.fecha = fecha;
         this.idUsuario = idUsuario;
         this.productos = productos;
