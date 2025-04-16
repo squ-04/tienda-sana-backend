@@ -48,6 +48,7 @@ public class CuentaServiceImp implements CuentaService {
 
         // Genera un código de validación
         String codigoValidacion = generarCodigoValidacion();
+        String codigoValidacionContrasenia= generarCodigoValidacion();
 
         // Crea la cuenta
         Cuenta cuenta = Cuenta.builder()
@@ -62,19 +63,21 @@ public class CuentaServiceImp implements CuentaService {
                         .telefono(cuentaDTO.telefono())
                         .direccion(cuentaDTO.direccion())
                         .build())
-                .codigoValidacionContrasenia(new CodigoValidacion(LocalDateTime.now(), codigoValidacion))
                 .build();
+        //Se cambio el codigo de contraseña por el del registro que es el que se tiene que colocar
+        cuenta.setCodigoValidacionRegistro(new CodigoValidacion(LocalDateTime.now(), codigoValidacion));
+        cuenta.setCodigoValidacionContrasenia(new CodigoValidacion(LocalDateTime.now(), codigoValidacionContrasenia));
 
-        cuentaRepo.guardar(cuenta);
+
 
         // Envía el correo de validación
         String subject = "Bienvenido a Tienda Sana: activa tu cuenta";
         String body = "Tu código de verificación es: " + codigoValidacion + ". Tienes 15 minutos para activarla.";
 
         emailService.sendEmail(new EmailDTO(subject, body, cuenta.getEmail()));
-
+        cuentaRepo.guardar(cuenta);
         // Retorna un identificador temporal
-        return UUID.randomUUID().toString();
+        return cuenta.getEmail();
     }
 
     @Override
@@ -180,7 +183,7 @@ public class CuentaServiceImp implements CuentaService {
                 throw new Exception("This registration validation code is incorrect");
             }
         }
-        return "";
+        return "La cuenta ha sido verificada exitosamente";
     }
 
     @Override

@@ -43,6 +43,7 @@ public class CuentaRepo {
     private List<List<Object>> obtenerFilasHoja() throws IOException {
         String rango = SHEET_NAME + "!A2:"+CuentaConstantes.COL_REGISTRO_FINAL; // Ajusta según columnas
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
+        System.out.println(respuesta.getValues());
         return respuesta.getValues();
     }
 
@@ -120,6 +121,8 @@ public class CuentaRepo {
                 cuenta.getFechaRegistro().toString(),
                 codigoValidacionRegistro.getCodigo(),
                 codigoValidacionRegistro.getFechaCreacion().toString(),
+                //Esto no se crea en el registro pero se puede crear uno provisional, aunque se debe de cambiar
+                //Por cada vez que se desee cambiar la contraseña
                 codigoValidacionContrasenia.getCodigo(),
                 codigoValidacionContrasenia.getFechaCreacion().toString()
         );
