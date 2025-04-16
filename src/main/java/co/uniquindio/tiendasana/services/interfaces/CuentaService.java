@@ -17,7 +17,6 @@ public interface CuentaService {
 
     InfoCuentaDTO obtenerInfoCuenta(String id) throws Exception;
 
-    Cuenta obtenerCuenta(String id) throws Exception;
 
     Cuenta obtenerCuentaPorEmail(String email) throws Exception;
 
@@ -29,7 +28,7 @@ public interface CuentaService {
 
     String reenviarCodigoRegistro(String email) throws Exception;
 
-    TokenDTO login(@Valid LoginDTO loginDTO);
+    TokenDTO login(@Valid LoginDTO loginDTO) throws Exception;
 
     TokenDTO refresh(Map<String, Object> claims);
 }
