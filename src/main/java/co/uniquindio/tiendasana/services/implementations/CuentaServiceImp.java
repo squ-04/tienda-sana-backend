@@ -104,12 +104,11 @@ public class CuentaServiceImp implements CuentaService {
     public InfoCuentaDTO obtenerInfoCuenta(String email) throws Exception {
         Cuenta cuenta = cuentaRepo.obtenerPorEmail(email).get();
         return new InfoCuentaDTO(
-                "",
+                cuenta.getEmail(),
                 cuenta.getUsuario().getDni(),
                 cuenta.getUsuario().getNombre(),
                 cuenta.getUsuario().getTelefono(),
-                cuenta.getUsuario().getDireccion(),
-                cuenta.getEmail()
+                cuenta.getUsuario().getTelefono()
         );
     }
 
