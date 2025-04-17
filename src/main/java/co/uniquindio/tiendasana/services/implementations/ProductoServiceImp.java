@@ -79,6 +79,7 @@ public class ProductoServiceImp implements ProductoService {
                     producto.getId(),
                     producto.getNombre(),
                     producto.getCategoria(),
+                    producto.getDescripcion(),
                     producto.getImagen(),
                     producto.getPrecioUnitario(),
                     producto.getCantidad()
