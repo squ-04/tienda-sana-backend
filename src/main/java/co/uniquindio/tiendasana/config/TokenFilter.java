@@ -128,7 +128,7 @@ public class TokenFilter extends OncePerRequestFilter {
         boolean error = true;
         if (token != null) {
             Jws<Claims> jws = jwtUtils.parseJwt(token);
-            if (Rol.valueOf(jws.getPayload().get("role").toString()) == role) {
+            if (Rol.valueOf(jws.getPayload().get("rol").toString()) == role) {
                 error = false;
             }
         }
