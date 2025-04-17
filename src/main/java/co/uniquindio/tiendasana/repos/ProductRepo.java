@@ -83,7 +83,7 @@ public class ProductRepo  {
         if(pagina > cantidadPaginas){
             throw new RuntimeException("La página no existe");//TODO cambiar excepcion por Exception
         }
-        int filaInicio = 1 + (pagina * cantidad); // A1 es la primera fila de datos
+        int filaInicio = 2 + (pagina * cantidad); // A2 es la primera fila de datos
         int filaFin = filaInicio + cantidad - 1;
 
         String rango = SHEET_NAMECLIENTE + "!A" + filaInicio + ":H" + filaFin;

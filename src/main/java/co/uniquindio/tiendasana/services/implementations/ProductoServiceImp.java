@@ -68,11 +68,11 @@ public class ProductoServiceImp implements ProductoService {
      * @return
      */
     @Override
-    public ProductoInfoDTO obtenerInfoProducto(String id) {
+    public ProductoInfoDTO obtenerInfoProducto(String id) throws Exception {
         try {
             Optional<Producto> productoObtenido= productRepo.obtenerPorId(id);
             if (productoObtenido.isEmpty()) {
-                throw new IOException("Producto no encontrado");
+                throw new Exception("Producto no encontrado");
             }
             Producto producto=productoObtenido.get();
             return new ProductoInfoDTO(
@@ -120,8 +120,13 @@ public class ProductoServiceImp implements ProductoService {
     }
 
     @Override
-    public Producto getProducto(String id) throws ProductoParseException {
-        return null;
+    public Producto getProducto(String id) throws ProductoParseException, IOException {
+        Optional<Producto> productoOptional= productRepo.obtenerPorId(id);
+        if (productoOptional.isEmpty()) {
+            throw new ProductoParseException("Producto no encontrado");
+        }
+        Producto producto=productoOptional.get();
+        return producto;
     }
 
 

@@ -16,7 +16,7 @@ public interface ProductoService {
      * @param id
      * @return
      */
-    ProductoInfoDTO obtenerInfoProducto(String id);
+    ProductoInfoDTO obtenerInfoProducto(String id) throws Exception;
     /**
      * Metodo usado para obtener lo informacion de los productos que los clientes
      * verán en primera instancia
@@ -27,5 +27,5 @@ public interface ProductoService {
     ListaProductos obtenerProductosCliente(int pagina) throws IOException, ProductoParseException;
 
 
-    Producto getProducto(String id) throws ProductoParseException;
+    Producto getProducto(String id) throws ProductoParseException, IOException;
 }
