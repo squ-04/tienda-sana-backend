@@ -124,7 +124,7 @@ public class CuentaServiceImp implements CuentaService {
 
     @Override
     public String enviarCodigoRecuperacion(String email) throws Exception {
-        Cuenta cuenta = cuentaRepo.obtenerPorEmail(email).get();
+        Cuenta cuenta = obtenerCuentaPorEmail(email);
         String codigoRecuperacion = generarCodigoValidacion();
         String asunto = "Codigo de recuperacion";
         String cuerpo = "Hey! has pedido el codigo de recuperacion de tu contrasenia por tu cuenta de TiendaSana\n" +
@@ -163,7 +163,7 @@ public class CuentaServiceImp implements CuentaService {
 
     @Override
     public String validarCodigoRegistro(ActivarCuentaDTO activarCuentaDTO) throws Exception {
-        Cuenta cuenta = cuentaRepo.obtenerPorEmail(activarCuentaDTO.email()).get();
+        Cuenta cuenta = obtenerCuentaPorEmail(activarCuentaDTO.email());
         CodigoValidacion codigoValidacionRegistro = cuenta.getCodigoValidacionRegistro();
 
         if (codigoValidacionRegistro != null) {
@@ -184,7 +184,10 @@ public class CuentaServiceImp implements CuentaService {
 
     @Override
     public String reenviarCodigoRegistro(String email) throws Exception {
-        Cuenta cuenta = cuentaRepo.obtenerPorEmail(email).get();
+        Cuenta cuenta = obtenerCuentaPorEmail(email);
+        if(cuenta.getEstado() == EstadoCuenta.ACTIVA) {
+            throw new Exception("Esta cuenta ya ha sido activada");
+        }
         CodigoValidacion codigoValidacionReenviado = new CodigoValidacion(LocalDateTime.now(), generarCodigoValidacion());
         cuenta.setCodigoValidacionRegistro(codigoValidacionReenviado);
         String asunto = "Hey! este es tu NUEVO codigo de activacion para tu cuenta de Tienda Sana";
