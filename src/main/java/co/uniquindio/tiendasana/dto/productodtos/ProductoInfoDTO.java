@@ -14,6 +14,7 @@ public record ProductoInfoDTO (
         String id,
         String nombre,
         String categoria,
+        String descripcion,
         String imagen,
         float precioUnitario,
         int cantidad
