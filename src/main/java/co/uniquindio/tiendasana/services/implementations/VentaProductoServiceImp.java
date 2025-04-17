@@ -1,5 +1,6 @@
 package co.uniquindio.tiendasana.services.implementations;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -9,6 +10,7 @@ import co.uniquindio.tiendasana.dto.ventadtos.CrearVentaProductoDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.DetalleOrdenDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.PaymentResponseDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.VentaItemDTO;
+import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.*;
 import co.uniquindio.tiendasana.model.vo.DetalleCarrito;
 import co.uniquindio.tiendasana.model.vo.DetalleVentaProducto;
@@ -91,7 +93,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
         }
 
         Cuenta cuenta = cuentaService.obtenerCuentaPorEmail(crearVentaProductoDTO.emailUsuario());
-        VentaProducto createOrder = ventaProductoRepo.guardar(ventaProducto);
+        VentaProducto createOrder = ventaProductoRepo.guardarVentaProducto(ventaProducto);
 
         enviarResumenVenta(cuenta.getEmail(), ventaProducto);
 
@@ -164,11 +166,11 @@ public class VentaProductoServiceImp implements VentaProductoService {
 
     /**
      * Método para obtener las ventas de un cliente
-     * @param idClient ID del cliente
+     * @param emailCliente ID del cliente
      * @return Lista de ventas del cliente
      */
-    private List<VentaProducto> obtenerVentasProductoPorCliente(String idClient) {
-        return ventaProductoRepo.obtenerVentasPorCliente(idClient);
+    private List<VentaProducto> obtenerVentasProductoPorCliente(String emailCliente) throws IOException, ProductoParseException {
+        return ventaProductoRepo.filtrarVentasSimple(ventaProducto -> ventaProducto.getEmailUsario().equals(emailCliente));
     }
 
     /**
@@ -178,8 +180,8 @@ public class VentaProductoServiceImp implements VentaProductoService {
      * @throws ResourceNotFoundException
      */
     @Override
-    public VentaProducto obtenerVentaProducto(String idVentaProducto) throws ResourceNotFoundException {
-        VentaProducto ventaProducto = ventaProductoRepo.obtenerVentaProducto(idVentaProducto);
+    public VentaProducto obtenerVentaProducto(String idVentaProducto) throws ResourceNotFoundException, IOException, ProductoParseException {
+        VentaProducto ventaProducto = (VentaProducto) ventaProductoRepo.filtrarVentasSimple(ventaProducto1 -> ventaProducto1.getId().equals(idVentaProducto));
         if (ventaProducto == null) {
             throw new ResourceNotFoundException("La venta con el id: " + idVentaProducto + " no existe");
         }
@@ -197,7 +199,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
         VentaProducto ventaBorrar = obtenerVentaProducto(idVentaProducto);
         Pago pago = ventaBorrar.getPago();
         if(pago ==null || (!(pago.getStatus().equals(PaymentStatus.APPROVED) && pago.getStatusDetail().equalsIgnoreCase("accredited"))) ){
-            ventaProductoRepo.borrar(ventaBorrar);
+            ventaProductoRepo.actualizarVentaSimple(ventaBorrar);
             return "La venta fue borrada";
         }else{
             throw new Exception("No se puede borrar la venta porque ya fue aprobada");
@@ -211,7 +213,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
      * @throws ResourceNotFoundException
      */
     @Override
-    public VentaItemDTO obtenerInformacionVenta(String ventaProductoId) throws ResourceNotFoundException {
+    public VentaItemDTO obtenerInformacionVenta(String ventaProductoId) throws ResourceNotFoundException, IOException, ProductoParseException {
         VentaProducto ventaProducto = obtenerVentaProducto(ventaProductoId); // Método que obtiene la orden
 
         return mapearAVentaItemDTO(ventaProducto);
@@ -238,12 +240,12 @@ public class VentaProductoServiceImp implements VentaProductoService {
 
     /**
      * Método para listar las ventas de un cliente
-     * @param clienteId ID del cliente
+     * @param emailCliente ID del cliente
      * @return Lista de ventas del cliente
      */
     @Override
-    public List<VentaItemDTO> listarVentasCliente(String clienteId) {
-        List<VentaProducto> ventas = ventaProductoRepo.obtenerVentasPorCliente(clienteId);
+    public List<VentaItemDTO> listarVentasCliente(String emailCliente) throws IOException, ProductoParseException {
+        List<VentaProducto> ventas = ventaProductoRepo.filtrarVentasSimple(ventaProducto -> ventaProducto.getEmailUsario().equals(emailCliente));
         return obtenerVentaItemDto(ventas);
     }
 
@@ -346,7 +348,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
 
         // Guardar el código de la pasarela en la orden
         ventaGuardar.setCodigoPasarela(preference.getId());
-        ventaProductoRepo.guardar(ventaGuardar);
+        ventaProductoRepo.guardarVentaProducto(ventaGuardar);
 
 
 
@@ -386,7 +388,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
                 Pago orderPago = createPayment(payment);
 
                 ventaProducto.setPago(orderPago);
-                ventaProductoRepo.guardar(ventaProducto);
+                ventaProductoRepo.guardarVentaProducto(ventaProducto);
                 Cuenta cuenta = cuentaService.obtenerCuentaPorEmail(ventaProducto.getEmailUsario());
 
                 List<VentaProducto> ordersClient = obtenerVentasProductoPorCliente(cuenta.getEmail());

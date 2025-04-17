@@ -172,8 +172,8 @@ public class VentaProductoRepo {
      * O(<span style="color:red;">n</span>+<span style="color:blue;">m</span>)<br>
      * <span style="color:red;">n</span> siendo la cantidad total de ventas de productos<br>
      * <span style="color:blue;">m</span> siendo la cantidad total de detalles de todos las ventas juntas
-     * @param expresion
-     * @return
+     * @param expresion expresion lambda que filtra las ventas
+     * @return Ventas de productos
      * @throws IOException
      * @throws ProductoParseException
      */
@@ -195,10 +195,12 @@ public class VentaProductoRepo {
 
     /**
      * Guarda los datos de la venta de productos sin tener en cuenta los detalles
+     *
      * @param venta Vneta de productos junto con sus detalles
+     * @return
      * @throws IOException
      */
-    public void guardarVentaProductoSimple(VentaProducto venta) throws IOException {
+    public VentaProducto guardarVentaProductoSimple(VentaProducto venta) throws IOException {
 
         int detalles=contarCarritosExistintes();
         String range = SHEET_NAME+"!A"+(2+detalles)+":"+ VentaProductoConstantes.COL_REGISTRO_VENTA_FINAL+(2+detalles);
@@ -215,18 +217,22 @@ public class VentaProductoRepo {
                 .execute();
 
         System.out.println("Numero de celdas actualizadas: " + result.getUpdatedCells());
+        return venta;
     }
 
     /**
      * Guarda los datos de la venta de productos junto con sus detalles
+     *
      * @param venta Venta de productos junto con sus detalles
+     * @return
      * @throws IOException
      */
-    public void guardarVentaProducto(VentaProducto venta) throws IOException {
+    public VentaProducto guardarVentaProducto(VentaProducto venta) throws IOException {
         guardarVentaProductoSimple(venta);
         for (DetalleVentaProducto detalle:venta.getProductos()) {
             guardarDetalle(detalle);
         }
+        return venta;
     }
 
     public int obtenerIndiceVenta(String id) {
