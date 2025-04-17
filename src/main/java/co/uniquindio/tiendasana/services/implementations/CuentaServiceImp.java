@@ -102,7 +102,7 @@ public class CuentaServiceImp implements CuentaService {
 
     @Override
     public InfoCuentaDTO obtenerInfoCuenta(String email) throws Exception {
-        Cuenta cuenta = cuentaRepo.obtenerPorEmail(email).get();
+        Cuenta cuenta = obtenerCuentaPorEmail(email);
         return new InfoCuentaDTO(
                 cuenta.getEmail(),
                 cuenta.getUsuario().getDni(),
