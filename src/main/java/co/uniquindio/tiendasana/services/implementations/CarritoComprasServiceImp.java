@@ -1,5 +1,9 @@
 package co.uniquindio.tiendasana.services.implementations;
 
+import co.uniquindio.tiendasana.dto.carritoCompras.AgregarDetalleCarritoDTO;
+import co.uniquindio.tiendasana.dto.carritoCompras.BorrarDetalleCarritoDTO;
+import co.uniquindio.tiendasana.dto.carritoCompras.EditarDetalleCarritoDTO;
+import co.uniquindio.tiendasana.dto.carritoCompras.VistaItemCarritoDTO;
 import co.uniquindio.tiendasana.model.documents.CarritoCompras;
 import co.uniquindio.tiendasana.model.vo.DetalleCarrito;
 import co.uniquindio.tiendasana.services.interfaces.CarritoComprasService;
@@ -24,5 +28,25 @@ public class CarritoComprasServiceImp implements CarritoComprasService {
     @Override
     public CarritoCompras getCarritoCompras(String idUsuario) {
         return null;
+    }
+
+    @Override
+    public String agregarDetalleCarrito(AgregarDetalleCarritoDTO addShoppingCarDetailDTO) {
+        return "";
+    }
+
+    @Override
+    public String editarDetalleCarrito(EditarDetalleCarritoDTO editCarDetailDTO) {
+        return "";
+    }
+
+    @Override
+    public String borrarCarritoCompras(BorrarDetalleCarritoDTO deleteCarDetailDTO) {
+        return "";
+    }
+
+    @Override
+    public List<VistaItemCarritoDTO> listarDetallesCarrito(String emailUsuario) {
+        return List.of();
     }
 }
