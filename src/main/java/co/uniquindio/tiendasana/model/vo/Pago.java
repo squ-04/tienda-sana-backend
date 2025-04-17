@@ -22,11 +22,11 @@ public class Pago {
     private String status;
 
     @Builder
-    public Pago(String id, String currency, String paymentMethod, String statusDetail,
+    public Pago(String id, String currency, String paymentType, String statusDetail,
                 String authorizationCode, LocalDateTime date, float transactionValue, String status) {
         this.id = id;
         this.currency = currency;
-        this.paymentType = paymentMethod;
+        this.paymentType = paymentType;
         this.statusDetail = statusDetail;
         this.authorizationCode = authorizationCode;
         this.date = date;

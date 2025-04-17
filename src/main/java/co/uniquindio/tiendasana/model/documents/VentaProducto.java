@@ -25,7 +25,8 @@ public class VentaProducto {
     private Pago pago;
 
     @Builder
-    public VentaProducto(String emailUsario, List<DetalleVentaProducto> productos, LocalDateTime fecha, float total, String promocionId, String codigoPasarela, Pago pago) {
+    public VentaProducto(String id,String emailUsario, List<DetalleVentaProducto> productos, LocalDateTime fecha, float total, String promocionId, String codigoPasarela, Pago pago) {
+        this.id = id;
         this.emailUsario = emailUsario;
         this.productos = productos;
         this.fecha = fecha;
