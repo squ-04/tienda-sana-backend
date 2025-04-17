@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -41,7 +42,7 @@ public class GoogleSheetsConfig {
      */
     @Bean  // Define un bean que puede ser inyectado en otros servicios
     public Sheets sheetsService() throws IOException, GeneralSecurityException {
-        GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream("src/main/resources/credentials.json"))
+        GoogleCredentials credentials = GoogleCredentials.fromStream(new FileInputStream( new File("/etc/secrets/credentials.json") ))
                 .createScoped(Collections.singleton(SheetsScopes.SPREADSHEETS));
 
         Sheets sheetsService = new Sheets.Builder(GoogleNetHttpTransport.newTrustedTransport(), JSON_FACTORY, new HttpCredentialsAdapter(credentials))
