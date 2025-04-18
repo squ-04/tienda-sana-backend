@@ -108,7 +108,7 @@ public class CuentaServiceImp implements CuentaService {
                 cuenta.getUsuario().getDni(),
                 cuenta.getUsuario().getNombre(),
                 cuenta.getUsuario().getTelefono(),
-                cuenta.getUsuario().getTelefono()
+                cuenta.getUsuario().getDireccion()
         );
     }
 
