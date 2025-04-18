@@ -15,7 +15,7 @@ import java.util.List;
 public interface CarritoComprasService {
 
 
-    void borrarCarritoCompras(String idUsuario);
+    void borrarCarritoCompras(String idUsuario) throws IOException;
 
     List<DetalleCarrito> getItems();
 
