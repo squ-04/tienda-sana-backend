@@ -2,6 +2,7 @@ package co.uniquindio.tiendasana.repos;
 
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.VentaProducto;
+import co.uniquindio.tiendasana.model.vo.DetalleCarrito;
 import co.uniquindio.tiendasana.model.vo.DetalleVentaProducto;
 import co.uniquindio.tiendasana.model.vo.Pago;
 import co.uniquindio.tiendasana.utils.VentaProductoConstantes;
@@ -90,7 +91,12 @@ public class VentaProductoRepo {
     private List<List<Object>> obtenerFilasHojaSimples() throws IOException {
         String rango = SHEET_NAME + "!A2:"+ VentaProductoConstantes.COL_REGISTRO_VENTA_FINAL;
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
-        return respuesta.getValues();
+        List<List<Object>> valores=respuesta.getValues();
+        if (valores!=null) {
+            return valores;
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     private List<VentaProducto> mapearFilasVentas(List<List<Object>> filas) {
@@ -286,7 +292,14 @@ public class VentaProductoRepo {
      */
     public void actualizarVenta(VentaProducto venta) throws IOException {
         actualizarVentaSimple(venta);
-        for (DetalleVentaProducto detalle:venta.getProductos()) {
+        List<DetalleVentaProducto> detallesActualizarVenta=new ArrayList<>(venta.getProductos());
+        detallesActualizarVenta.retainAll(obtenerDetallesVenta());
+        List<DetalleVentaProducto> detallesNuevosVenta=new ArrayList<>(venta.getProductos());
+        detallesNuevosVenta.removeAll(detallesActualizarVenta);
+        for (DetalleVentaProducto detalle:detallesNuevosVenta) {
+            guardarDetalle(detalle);
+        }
+        for (DetalleVentaProducto detalle:detallesActualizarVenta) {
             actualizarDetalle(detalle);
         }
     }

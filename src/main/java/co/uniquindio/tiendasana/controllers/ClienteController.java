@@ -43,7 +43,8 @@ public class ClienteController {
     @PutMapping("/carrito/add-item")
     public ResponseEntity<MessageDTO<String>> agregarDetalleCarrito
     (@Valid @RequestBody AgregarDetalleCarritoDTO addShoppingCarDetailDTO) throws Exception{
-        String shoppingCarId= carritoComprasService.agregarDetalleCarrito(addShoppingCarDetailDTO);
+        String shoppingCarId;
+        shoppingCarId= carritoComprasService.agregarDetalleCarrito(addShoppingCarDetailDTO);
         return ResponseEntity.ok(new MessageDTO<>(false, shoppingCarId));
     }
 
