@@ -23,7 +23,9 @@ import java.util.stream.Collectors;
 
 @Repository
 public class CuentaRepo {
-
+    /**
+     * Variables y constantes para la conexion con Google Sheets
+     */
     private final Sheets sheetsService;
 
     @Value("${google.sheets.spreadsheet-id}")
@@ -31,6 +33,10 @@ public class CuentaRepo {
 
     private final String SHEET_NAME = CuentaConstantes.HOJA;
 
+    /**
+     * contructor del repositorio donde se le inyecta la dependencia de la hoja
+     * @param sheetsService
+     */
     public CuentaRepo(Sheets sheetsService) {
         this.sheetsService = sheetsService;
     }
