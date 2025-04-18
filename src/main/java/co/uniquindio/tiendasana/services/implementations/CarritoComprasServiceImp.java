@@ -30,8 +30,9 @@ public class CarritoComprasServiceImp implements CarritoComprasService {
     private final CarritoComprasRepo carritoComprasRepo;
 
     @Override
-    public void borrarCarritoCompras(String idUsuario) {
-
+    public void borrarCarritoCompras(String idUsuario) throws IOException {
+        CarritoCompras carrito=carritoComprasRepo.obtenerPorIdUsuario(idUsuario).get();
+        carritoComprasRepo.eliminarDetalles(carrito.getProductos());
     }
 
     @Override
@@ -168,4 +169,5 @@ public class CarritoComprasServiceImp implements CarritoComprasService {
             return carritoCompraRecibido.get();
         }
     }
+
 }

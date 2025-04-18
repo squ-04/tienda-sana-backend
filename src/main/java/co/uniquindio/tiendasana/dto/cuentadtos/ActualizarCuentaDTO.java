@@ -25,8 +25,6 @@ public record ActualizarCuentaDTO (
         @NotBlank(message = "El campo de dirección es obligatorio")
         @Size(max = 255, message = "La direccion tiene como máximo 255 caracteres")
         String direccion,
-        @NotBlank(message = "La contraseña es obligatoria")
-        @Size(min = 7, max = 20, message = "La contraseña debe de tener entre 7 y 20 caracteres")
         String contrasenia
 ){
 }
