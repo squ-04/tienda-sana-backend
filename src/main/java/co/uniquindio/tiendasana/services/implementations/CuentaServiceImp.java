@@ -87,8 +87,12 @@ public class CuentaServiceImp implements CuentaService {
         cuenta.getUsuario().setNombre(cuentaDTO.nombre());
         cuenta.getUsuario().setTelefono(cuentaDTO.telefono());
         cuenta.getUsuario().setDireccion(cuentaDTO.direccion());
-        cuenta.setContrasenia(new BCryptPasswordEncoder().encode(cuentaDTO.contrasenia()));
+        if(!(cuentaDTO.contrasenia()==null ||cuentaDTO.contrasenia().isEmpty() || cuentaDTO.contrasenia().isBlank())){
+            cuenta.setContrasenia(new BCryptPasswordEncoder().encode(cuentaDTO.contrasenia()));
+        }
+
         cuentaRepo.actualizar(cuenta);
+        System.out.println("Actualizando cuenta");
         return "Actualizacion realizada con exito";
     }
 
