@@ -30,6 +30,7 @@ public class ProductRepo  {
     private  String spreadsheetId;
 
     private final String SHEET_NAMECLIENTE = ProductoConstantes.HOJACLIENTE;
+    private final String SHEET_GENERAL= ProductoConstantes.HOJAADMIN;
 
     /**
      * Metodo contructor de la clase
@@ -204,7 +205,7 @@ public class ProductRepo  {
     public void actualizar(Producto producto) throws IOException {
         int indice=obtenerIndiceProducto(producto.getId());
         if (indice!=-1) {
-            String range = SHEET_NAMECLIENTE +"!A"+(2+indice)+":"+ ProductoConstantes.COL_REGISTRO_FINAL+(2+indice);
+            String range = SHEET_GENERAL +"!A"+(2+indice)+":"+ ProductoConstantes.COL_REGISTRO_FINAL+(2+indice);
             List<List<Object>> values = Arrays.asList(
                     mapearProductoInverso(producto)
             );
