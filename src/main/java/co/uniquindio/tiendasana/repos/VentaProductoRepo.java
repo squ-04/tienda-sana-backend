@@ -102,10 +102,10 @@ public class VentaProductoRepo {
         List<VentaProducto> ventas = new ArrayList<>();
         for (List<Object> row : filas) {
             try {
-                VentaProducto carrito= mapearVenta(row);
-                ventas.add(carrito);
+                VentaProducto venta= mapearVenta(row);
+                ventas.add(venta);
             } catch (Exception e) {
-                System.err.println("Error al procesar fila: " + row + "\n" + e.getMessage());
+                e.printStackTrace();
             }
         }
         return ventas;
@@ -118,24 +118,27 @@ public class VentaProductoRepo {
      * @return Datos en el formato de las clases de java
      */
     public VentaProducto mapearVenta(List<Object> row) {
-        String id=row.get(0).toString();
-        String emailUsuario=row.get(1).toString();
-        LocalDateTime fecha=LocalDateTime.parse(row.get(2).toString());
+        String id = row.get(0).toString();
+        String emailUsuario = row.get(1).toString();
+        LocalDateTime fecha = LocalDateTime.parse(row.get(2).toString());
         String totalString = row.get(3).toString();
         float total = totalString.matches("\\d+(\\.\\d+)?") ? Float.parseFloat(totalString) : 0.0f;
-        String promocionId=row.get(4).toString();
-        String codigoPasarela=row.get(5).toString();
+        String promocionId = row.get(4).toString();
+        String codigoPasarela = row.get(5).toString();
 
-        Pago pago = Pago.builder()
-                .id(row.get(6).toString())
-                .currency(row.get(7).toString())
-                .paymentType(row.get(8).toString())
-                .statusDetail(row.get(9).toString())
-                .authorizationCode(row.get(10).toString())
-                .date(LocalDateTime.parse(row.get(11).toString()))
-                .transactionValue(Float.parseFloat(row.get(12).toString()))
-                .status(row.get(13).toString())
-                .build();
+        Pago pago = null;
+        if (row.size() > 6 && row.get(6) != null) {
+            pago = Pago.builder()
+                    .id(row.get(6) != null ? row.get(6).toString() : "-")
+                    .currency(row.size() > 7 && row.get(7) != null ? row.get(7).toString() : "-")
+                    .paymentType(row.size() > 8 && row.get(8) != null ? row.get(8).toString() : "-")
+                    .statusDetail(row.size() > 9 && row.get(9) != null ? row.get(9).toString() : "-")
+                    .authorizationCode(row.size() > 10 && row.get(10) != null ? row.get(10).toString() : "-")
+                    .date(row.size() > 11 && !row.get(11).toString().equals("-") ? LocalDateTime.parse(row.get(11).toString()) : null)
+                    .transactionValue(row.size() > 12 && !row.get(12).toString().equals("-") ? Float.parseFloat(row.get(12).toString()) : 0.0f)
+                    .status(row.size() > 13 && row.get(13) != null ? row.get(13).toString() : "-")
+                    .build();
+        }
 
         return VentaProducto.builder()
                 .id(id)
@@ -158,18 +161,18 @@ public class VentaProductoRepo {
         return Arrays.asList(
                 venta.getId(),
                 venta.getEmailUsario(),
-                venta.getFecha().toString(),
+                venta.getFecha() != null ? venta.getFecha().toString() : "-",
                 "" + venta.getTotal(),
                 venta.getPromocionId(),
                 venta.getCodigoPasarela(),
-                pago != null ? pago.getId() : "",
-                pago != null ? pago.getCurrency() : "",
-                pago != null ? pago.getPaymentType() : "",
-                pago != null ? pago.getStatusDetail() : "",
-                pago != null ? pago.getAuthorizationCode() : "",
-                pago != null ? pago.getDate().toString() : "",
-                pago != null ? "" + pago.getTransactionValue() : "",
-                pago != null ? pago.getStatus() : ""
+                pago != null ? pago.getId() : "-",
+                pago != null ? pago.getCurrency() : "-",
+                pago != null ? pago.getPaymentType() : "-",
+                pago != null ? pago.getStatusDetail() : "-",
+                pago != null ? pago.getAuthorizationCode() : "-",
+                pago != null && pago.getDate() != null ? pago.getDate().toString() : "-",
+                pago != null ? "" + pago.getTransactionValue() : "0",
+                pago != null ? pago.getStatus() : "-"
         );
     }
 
@@ -185,6 +188,7 @@ public class VentaProductoRepo {
      */
     public List<VentaProducto> filtrarVentasSimple (Predicate<VentaProducto> expresion) throws IOException, ProductoParseException {
         List<VentaProducto> ventas = obtenerVentasSimples();
+
         List<VentaProducto> ventasFiltradas =  ventas.stream()
                 .filter(expresion)
                 .collect(Collectors.toList());

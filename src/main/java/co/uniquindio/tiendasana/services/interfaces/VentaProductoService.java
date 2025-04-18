@@ -15,11 +15,11 @@ public interface VentaProductoService {
 
     String crearVenta(CrearVentaProductoDTO crearVentaProductoDTO) throws Exception;
 
-    VentaProducto obtenerVentaProducto(String s) throws ResourceNotFoundException, IOException, ProductoParseException;
+    VentaProducto obtenerVentaProducto(String s) throws Exception;
 
     String borrarVentaProducto(String idVentaProducto) throws Exception;
 
-    VentaItemDTO obtenerInformacionVenta(String ventaProductoId) throws ResourceNotFoundException, IOException, ProductoParseException;
+    VentaItemDTO obtenerInformacionVenta(String ventaProductoId) throws Exception;
 
     List<VentaItemDTO> listarVentasCliente(String clienteId) throws IOException, ProductoParseException;
 

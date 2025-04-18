@@ -9,7 +9,6 @@ import java.util.List;
 
 @Setter
 @Getter
-@NoArgsConstructor
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class VentaProducto {
@@ -34,5 +33,16 @@ public class VentaProducto {
         this.promocionId = promocionId;
         this.codigoPasarela = codigoPasarela;
         this.pago = pago;
+    }
+
+    public VentaProducto() {
+        this.id = "-";
+        this.emailUsario = "-";
+        this.productos = null;
+        this.fecha = null;
+        this.total = 0;
+        this.promocionId = "-";
+        this.codigoPasarela = "-";
+        this.pago = null;
     }
 }
