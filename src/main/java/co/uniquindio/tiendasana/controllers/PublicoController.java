@@ -11,6 +11,7 @@ import co.uniquindio.tiendasana.dto.productodtos.ProductoItemDTO;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.services.interfaces.CuentaService;
 import co.uniquindio.tiendasana.services.interfaces.ProductoService;
+import co.uniquindio.tiendasana.services.interfaces.VentaProductoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,7 @@ public class PublicoController {
      */
     private final ProductoService productService;
     private final CuentaService cuentaService;
+    private final VentaProductoService ventaProductoService;
 
     /**
      *  Endporint mediante el cual se obtienen los productos que verán los clientes
@@ -46,7 +48,11 @@ public class PublicoController {
         return ResponseEntity.ok( new MessageDTO<>(false, productos));
     }
 
-
+    @PostMapping("/venta/receive-notification")
+    public ResponseEntity<MessageDTO<String>> receiveNotificationFromMercadoPago(@RequestBody Map<String, Object> request){
+        ventaProductoService.receiveNotificationFromMercadoPago(request);
+        return ResponseEntity.ok(new MessageDTO<>(false,"Notification received"));
+    }
 
     @GetMapping("/productos/get-info/{id}")
     public ResponseEntity<MessageDTO<ProductoInfoDTO>> getInfoEvenClient(@PathVariable String id) throws Exception{

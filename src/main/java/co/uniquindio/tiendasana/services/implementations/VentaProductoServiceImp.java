@@ -102,9 +102,9 @@ public class VentaProductoServiceImp implements VentaProductoService {
 
         VentaProducto createOrder = ventaProductoRepo.guardarVentaProducto(ventaProducto);
 
-        enviarResumenVenta(cuenta.getEmail(), ventaProducto);
 
-        carritoComprasService.borrarCarritoCompras(crearVentaProductoDTO.emailUsuario());
+
+        //carritoComprasService.borrarCarritoCompras(crearVentaProductoDTO.emailUsuario());
 
         return createOrder.getId();
     }
@@ -129,8 +129,6 @@ public class VentaProductoServiceImp implements VentaProductoService {
                 orderDetail.setCantidad(carDetail.getCantidad());
                 orderDetail.setVentaId(idVentaProducto);
                 items.add(orderDetail);
-
-
 
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
@@ -336,9 +334,9 @@ public class VentaProductoServiceImp implements VentaProductoService {
             //TODO
             // Configurar las urls de retorno de la pasarela (Frontend)
             PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                    .success("https://smooth-unicorn-trusting.ngrok-free.app/?status=success")
-                    .failure("https://smooth-unicorn-trusting.ngrok-free.app/?status=failure")
-                    .pending("https://smooth-unicorn-trusting.ngrok-free.app/?status=pending")
+                    .success("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=success")
+                    .failure("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=failure")
+                    .pending("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=pending")
                     .build();
 
 
@@ -349,7 +347,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
                     //TODO agregar id orden
                     .metadata(Map.of("id_venta", ventaGuardar.getId()))
                     //TODO Agregar url de Ngrok (Se actualiza constantemente) la ruta debe incluir la direccion al controlador de las notificaciones
-                    .notificationUrl("https://smooth-unicorn-trusting.ngrok-free.app/api/public/order/receive-notification")
+                    .notificationUrl("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/api/public/venta/receive-notification")
                     .build();
 
 
@@ -360,7 +358,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
 
             // Guardar el código de la pasarela en la orden
             ventaGuardar.setCodigoPasarela(preference.getId());
-            ventaProductoRepo.guardarVentaProducto(ventaGuardar);
+            ventaProductoRepo.actualizarVentaSimple(ventaGuardar);
 
 
 
@@ -405,7 +403,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
                 Pago orderPago = createPayment(payment);
 
                 ventaProducto.setPago(orderPago);
-                ventaProductoRepo.guardarVentaProducto(ventaProducto);
+                ventaProductoRepo.actualizarVentaSimple(ventaProducto);
                 Cuenta cuenta = cuentaService.obtenerCuentaPorEmail(ventaProducto.getEmailUsario());
 
                 List<VentaProducto> ordersClient = obtenerVentasProductoPorCliente(cuenta.getEmail());
