@@ -3,6 +3,7 @@ package co.uniquindio.tiendasana.services.implementations;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import co.uniquindio.tiendasana.dto.EmailDTO;
@@ -63,6 +64,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
     public String crearVenta(CrearVentaProductoDTO crearVentaProductoDTO) throws Exception {
 
         CarritoCompras carritoCompras = carritoComprasService.getCarritoCompras(crearVentaProductoDTO.emailUsuario());
+        System.out.println(carritoCompras==null);
         List<DetalleVentaProducto> items = getOrderDetails(carritoCompras);
 
         VentaProducto ventaProducto = new VentaProducto();
@@ -70,11 +72,12 @@ public class VentaProductoServiceImp implements VentaProductoService {
         ventaProducto.setFecha(LocalDateTime.now());
         ventaProducto.setEmailUsario(crearVentaProductoDTO.emailUsuario());
 
+        System.out.println("llega hasta 1");
         if (crearVentaProductoDTO.idPromocion() != null && !crearVentaProductoDTO.idPromocion().isEmpty()) {
 
             Promocion promocion = promocionService.getPromocion(crearVentaProductoDTO.idPromocion());
 
-            if (promocion == null) {
+            if (promocion == null ) {
                 throw new ResourceNotFoundException("La promocion no existe");
             }
 
@@ -92,9 +95,14 @@ public class VentaProductoServiceImp implements VentaProductoService {
             ventaProducto.setTotal(calculateTotal(items, null, crearVentaProductoDTO.emailUsuario()));
         }
 
+        System.out.println("llega hasta 2");
         Cuenta cuenta = cuentaService.obtenerCuentaPorEmail(crearVentaProductoDTO.emailUsuario());
+
+        System.out.println("llega hasta 3");
+        ventaProducto.setId(UUID.randomUUID().toString());
         VentaProducto createOrder = ventaProductoRepo.guardarVentaProducto(ventaProducto);
 
+        System.out.println("llega hasta 4");
         enviarResumenVenta(cuenta.getEmail(), ventaProducto);
 
         carritoComprasService.borrarCarritoCompras(crearVentaProductoDTO.emailUsuario());
@@ -319,7 +327,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
         }
 
         //TODO Configurar las credenciales de MercadoPag. Crear cuenta de mercado pago
-        MercadoPagoConfig.setAccessToken("APP_USR-8178646482281064-100513-248819fc76ea7f7577f902e927eaefb7-2014458486");
+        MercadoPagoConfig.setAccessToken("TEST-6796006609981784-041814-00c638c5e870eb13f83b385b87897541-1190282227");
 
         //TODO
         // Configurar las urls de retorno de la pasarela (Frontend)
@@ -335,7 +343,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
                 .backUrls(backUrls)
                 .items(itemsGateway)
                 //TODO agregar id orden
-                .metadata(Map.of("id_orden", ventaGuardar.getId()))
+                .metadata(Map.of("id_venta", ventaGuardar.getId()))
                 //TODO Agregar url de Ngrok (Se actualiza constantemente) la ruta debe incluir la direccion al controlador de las notificaciones
                 .notificationUrl("https://smooth-unicorn-trusting.ngrok-free.app/api/public/order/receive-notification")
                 .build();

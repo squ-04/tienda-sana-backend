@@ -19,7 +19,7 @@ public interface CarritoComprasService {
 
     List<DetalleCarrito> getItems();
 
-    CarritoCompras getCarritoCompras(String idUsuario);
+    CarritoCompras getCarritoCompras(String idUsuario) throws Exception;
 
     String agregarDetalleCarrito(@Valid AgregarDetalleCarritoDTO addShoppingCarDetailDTO) throws IOException, ProductoParseException;
 

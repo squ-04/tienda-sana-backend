@@ -2,7 +2,6 @@ package co.uniquindio.tiendasana.repos;
 
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.VentaProducto;
-import co.uniquindio.tiendasana.model.vo.DetalleCarrito;
 import co.uniquindio.tiendasana.model.vo.DetalleVentaProducto;
 import co.uniquindio.tiendasana.model.vo.Pago;
 import co.uniquindio.tiendasana.utils.VentaProductoConstantes;
@@ -29,7 +28,7 @@ public class VentaProductoRepo {
     private String spreadsheetId;
 
     private final String SHEET_NAME = VentaProductoConstantes.HOJA_VENTA;
-    private final String SHEET_NAME_DETALLE = VentaProductoConstantes.CANT_DETALLES;
+    private final String SHEET_NAME_DETALLE = VentaProductoConstantes.HOJA_DETALLE;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -122,7 +121,8 @@ public class VentaProductoRepo {
         String id=row.get(0).toString();
         String emailUsuario=row.get(1).toString();
         LocalDateTime fecha=LocalDateTime.parse(row.get(2).toString());
-        float total=Float.parseFloat(row.get(3).toString());
+        String totalString = row.get(3).toString();
+        float total = totalString.matches("\\d+(\\.\\d+)?") ? Float.parseFloat(totalString) : 0.0f;
         String promocionId=row.get(4).toString();
         String codigoPasarela=row.get(5).toString();
 
@@ -154,22 +154,22 @@ public class VentaProductoRepo {
      * @return datos en formato de la base de datos
      */
     public List<Object> mapearVentaInverso(VentaProducto venta) {
-        Pago pago=venta.getPago();
+        Pago pago = venta.getPago();
         return Arrays.asList(
                 venta.getId(),
                 venta.getEmailUsario(),
                 venta.getFecha().toString(),
-                ""+venta.getTotal(),
+                "" + venta.getTotal(),
                 venta.getPromocionId(),
                 venta.getCodigoPasarela(),
-                pago.getId(),
-                pago.getCurrency(),
-                pago.getPaymentType(),
-                pago.getStatusDetail(),
-                pago.getAuthorizationCode(),
-                pago.getDate().toString(),
-                ""+pago.getTransactionValue(),
-                pago.getStatus()
+                pago != null ? pago.getId() : "",
+                pago != null ? pago.getCurrency() : "",
+                pago != null ? pago.getPaymentType() : "",
+                pago != null ? pago.getStatusDetail() : "",
+                pago != null ? pago.getAuthorizationCode() : "",
+                pago != null ? pago.getDate().toString() : "",
+                pago != null ? "" + pago.getTransactionValue() : "",
+                pago != null ? pago.getStatus() : ""
         );
     }
 
@@ -192,8 +192,8 @@ public class VentaProductoRepo {
         return ventas;
     }
 
-    public int contarCarritosExistintes() throws IOException {
-        String rango = VentaProductoConstantes.CANT_CARRITOS; // Ajusta según columnas
+    public int contarVentasExistentes() throws IOException {
+        String rango = VentaProductoConstantes.CANT_VENTAS; // Ajusta según columnas
         List<List<Object>> respuesta =
                 sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute().getValues();
         return Integer.parseInt(respuesta.get(0).get(0).toString());
@@ -208,7 +208,7 @@ public class VentaProductoRepo {
      */
     public VentaProducto guardarVentaProductoSimple(VentaProducto venta) throws IOException {
 
-        int detalles=contarCarritosExistintes();
+        int detalles= contarVentasExistentes();
         String range = SHEET_NAME+"!A"+(2+detalles)+":"+ VentaProductoConstantes.COL_REGISTRO_VENTA_FINAL+(2+detalles);
 
         List<List<Object>> values = Arrays.asList(

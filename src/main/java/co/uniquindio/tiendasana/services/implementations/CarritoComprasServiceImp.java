@@ -40,8 +40,12 @@ public class CarritoComprasServiceImp implements CarritoComprasService {
     }
 
     @Override
-    public CarritoCompras getCarritoCompras(String idUsuario) {
-        return null;
+    public CarritoCompras getCarritoCompras(String idUsuario) throws Exception {
+        Optional<CarritoCompras> shoppingCar = carritoComprasRepo.obtenerPorIdUsuario(idUsuario);
+        if (shoppingCar.isEmpty()) {
+            throw new Exception("No hay un carrito de compras para el usuario: " + idUsuario);
+        }
+        return shoppingCar.get();
     }
 
     @Override
