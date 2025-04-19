@@ -112,6 +112,7 @@ public class ProductRepo  {
                 Producto producto=mapearProducto(row);
                 productos.add(producto);
             }catch (NumberFormatException e){
+                e.printStackTrace();
                 throw new ProductoParseException("Error en el parseo de cantidad o precio unitario del producto en fila "+ row);
             }
         }
@@ -170,9 +171,9 @@ public class ProductRepo  {
                 producto.getDescripcion(),
                 producto.getCategoria(),
                 producto.getEstado(),
-                ""+producto.getCantidad(),
+                producto.getCantidad(),
                 producto.getImagen(),
-                ""+((int)producto.getPrecioUnitario()),
+                ((int)producto.getPrecioUnitario()),
                 producto.getId()
         );
     }
