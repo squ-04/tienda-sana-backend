@@ -26,7 +26,13 @@ public interface ProductoService {
      */
     ListaProductos obtenerProductosCliente(int pagina) throws IOException, ProductoParseException;
 
-
+    /**
+     * Obtener un producto (Entidad) dado su ID
+     * @param id
+     * @return
+     * @throws ProductoParseException
+     * @throws IOException
+     */
     Producto getProducto(String id) throws ProductoParseException, IOException;
 
     /**

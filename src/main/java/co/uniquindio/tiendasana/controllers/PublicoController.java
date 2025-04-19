@@ -48,12 +48,23 @@ public class PublicoController {
         return ResponseEntity.ok( new MessageDTO<>(false, productos));
     }
 
+    /**
+     * Endpoint mediante el cual se recibe la notificación de Mercado Pago
+     * @param request
+     * @return
+     */
     @PostMapping("/venta/receive-notification")
     public ResponseEntity<MessageDTO<String>> receiveNotificationFromMercadoPago(@RequestBody Map<String, Object> request){
         ventaProductoService.receiveNotificationFromMercadoPago(request);
         return ResponseEntity.ok(new MessageDTO<>(false,"Notification received"));
     }
 
+    /**
+     * Endpoint mediante el cual se obtiene la información de un producto
+     * @param id Id del producto
+     * @return
+     * @throws Exception
+     */
     @GetMapping("/productos/get-info/{id}")
     public ResponseEntity<MessageDTO<ProductoInfoDTO>> getInfoEvenClient(@PathVariable String id) throws Exception{
         ProductoInfoDTO productoInfo = productService.obtenerInfoProducto(id);

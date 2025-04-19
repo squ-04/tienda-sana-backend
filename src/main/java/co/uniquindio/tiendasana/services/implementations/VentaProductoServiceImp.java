@@ -43,7 +43,15 @@ public class VentaProductoServiceImp implements VentaProductoService {
     private final PromocionService promocionService;
     private final VentaProductoRepo ventaProductoRepo;
 
-
+    /**
+     * Constructor de la clase VentaProductoServiceImp
+     * @param cuentaService Servicio de cuentas
+     * @param productoService Servicio de productos
+     * @param carritoComprasService Servicio de carrito de compras
+     * @param emailService Servicio de correo electrónico
+     * @param promocionService Servicio de promociones
+     * @param ventaProductoRepo Repositorio de ventas de productos
+     */
     public VentaProductoServiceImp(CuentaService cuentaService, ProductoService productoService, CarritoComprasService carritoComprasService, EmailService emailService, PromocionService promocionService, VentaProductoRepo ventaProductoRepo) {
         this.cuentaService = cuentaService;
         this.productoService = productoService;
@@ -290,17 +298,18 @@ public class VentaProductoServiceImp implements VentaProductoService {
     public PaymentResponseDTO makePayment(String ventaProductoId) throws Exception {
         try {
             // Obtener la orden guardada en la base de datos y los ítems de la orden
-
+            System.out.println("ID DE LA VENTA: " + ventaProductoId);
             VentaProducto ventaGuardar = obtenerVentaProducto(ventaProductoId);
+            System.out.println("Venta guardar "+ventaGuardar);
+
 
             List<PreferenceItemRequest> itemsGateway = new ArrayList<>();
-
+            System.out.println("Productos "+ventaGuardar.getProductos());
             // Comprobar si hay un cupón de descuento en la orden
             Promocion promocion = null;
             if (ventaGuardar.getPromocionId() != null) {
                 promocion = promocionService.getPromocion(ventaGuardar.getPromocionId());
             }
-            List<VentaProducto> ventasCliente = obtenerVentasProductoPorCliente(ventaGuardar.getEmailUsario());
 
             // Recorrer los items de la orden y crea los ítems de la pasarela
             for (DetalleVentaProducto item : ventaGuardar.getProductos()) {
@@ -335,9 +344,9 @@ public class VentaProductoServiceImp implements VentaProductoService {
             //TODO
             // Configurar las urls de retorno de la pasarela (Frontend)
             PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                    .success("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=success")
-                    .failure("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=failure")
-                    .pending("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=pending")
+                    .success("https://tienda-sana-frontend.vercel.app/carrito?status=success")
+                    .failure("https://tienda-sana-frontend.vercel.app/carrito?status=failure")
+                    .pending("https://tienda-sana-frontend.vercel.app/carrito?status=pending")
                     .build();
 
 
@@ -348,7 +357,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
                     //TODO agregar id orden
                     .metadata(Map.of("id_venta", ventaGuardar.getId()))
                     //TODO Agregar url de Ngrok (Se actualiza constantemente) la ruta debe incluir la direccion al controlador de las notificaciones
-                    .notificationUrl("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/api/public/venta/receive-notification")
+                    .notificationUrl("https://tienda-sana-backend.onrender.com/api/public/venta/receive-notification")
                     .build();
 
 
@@ -455,41 +464,128 @@ public class VentaProductoServiceImp implements VentaProductoService {
         String qrCodeUrl = "https://quickchart.io/qr?text=" + ventaProducto.getId() + "&size=300";
         byte[] qrCodeImage = emailService.downloadImage(qrCodeUrl);
 
-        String subject = "Summary of your purchase";
+        String subject = "Resumen de tu compra en Tienda Sana";
         StringBuilder body = new StringBuilder();
 
-        body.append("<html><body>");
-        body.append("<h1>Hello ").append(cuenta.getUsuario().getNombre()).append("!</h1>");
-        body.append("<p>Thank you for your purchase. Below is a summary of your order:</p>");
+        // Inicio del HTML con estilos CSS incorporados
+        body.append("<!DOCTYPE html>");
+        body.append("<html>");
+        body.append("<head>");
+        body.append("<meta charset='UTF-8'>");
+        body.append("<style>");
+        body.append("body { font-family: 'Helvetica', Arial, sans-serif; color: #333; line-height: 1.6; margin: 0; padding: 0; }");
+        body.append(".container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f8f8; }");
+        body.append(".header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }");
+        body.append(".content { background-color: #ffffff; padding: 20px; border-radius: 0 0 5px 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }");
+        body.append("h1 { margin: 0; color: white; font-size: 24px; }");
+        body.append("h2 { color: #4CAF50; font-size: 20px; border-bottom: 2px solid #4CAF50; padding-bottom: 10px; margin-top: 20px; }");
+        body.append(".product { background-color: #f9f9f9; padding: 15px; margin: 10px 0; border-left: 4px solid #4CAF50; border-radius: 4px; }");
+        body.append(".total { background-color: #4CAF50; color: white; padding: 10px; text-align: right; margin-top: 20px; font-size: 18px; border-radius: 4px; }");
+        body.append(".footer { margin-top: 20px; font-size: 12px; text-align: center; color: #777; }");
+        body.append(".qr-code { text-align: center; margin: 20px 0; }");
+        body.append("</style>");
+        body.append("</head>");
 
-        body.append("<h3>Order Summary:</h3>");
-        body.append("<p>Order Number: ").append(ventaProducto.getId()).append("<br>") //El correo se está enviando antes de crear la orden por lo q
-                .append("Purchase Date: ").append(ventaProducto.getFecha()).append("</p>");
+        // Contenido del correo
+        body.append("<body>");
+        body.append("<div class='container'>");
 
+        // Encabezado
+        body.append("<div class='header'>");
+        body.append("<h1>Tienda Sana</h1>");
+        body.append("</div>");
+
+        // Contenido principal
+        body.append("<div class='content'>");
+        body.append("<h2>¡Hola ").append(cuenta.getUsuario().getNombre()).append("!</h2>");
+        body.append("<p>Gracias por tu compra en Tienda Sana. A continuación encontrarás un resumen de tu pedido:</p>");
+
+        // Detalles del pedido
+        body.append("<h2>Detalles del Pedido:</h2>");
+        body.append("<p><strong>Número de Pedido:</strong> #").append(ventaProducto.getId()).append("<br>");
+        body.append("<strong>Fecha de Compra:</strong> ").append(ventaProducto.getFecha()).append("</p>");
+
+        // Información de pago
         if (ventaProducto.getPago() != null) {
-            body.append("<p>Payment Method: ").append(ventaProducto.getPago().getPaymentType().toLowerCase()).append("<br>")
-                    .append("Payment Status: ").append(ventaProducto.getPago().getStatus()).append("</p>");
+            body.append("<p><strong>Método de Pago:</strong> ").append(traducirMetodoPago(ventaProducto.getPago().getPaymentType())).append("<br>");
+            body.append("<strong>Estado del Pago:</strong> ").append(traducirEstadoPago(ventaProducto.getPago().getStatus())).append("</p>");
         }
 
-        body.append("<h3>Event Details:</h3>");
+        // Productos comprados
+        body.append("<h2>Productos Adquiridos:</h2>");
         for (DetalleVentaProducto item : ventaProducto.getProductos()) {
             Producto producto = productoService.getProducto(item.getProductoId());
-            body.append("<p>---------------------------------<br>")
-                    .append("Producto: ").append(producto.getNombre()).append("<br>")
-                    .append("Descripcion: ").append(producto.getDescripcion()).append("<br>")
-                    .append("Cantidad: ").append(item.getCantidad()).append("<br>")
-                    .append("---------------------------------</p>");
+            body.append("<div class='product'>");
+            body.append("<p><strong>").append(producto.getNombre()).append("</strong><br>");
+            body.append("<em>").append(producto.getDescripcion()).append("</em><br>");
+            body.append("Cantidad: ").append(item.getCantidad()).append("<br>");
+            body.append("Precio unitario: $").append(formatearPrecio(producto.getPrecioUnitario())).append("<br>");
+            body.append("Subtotal: $").append(formatearPrecio(producto.getPrecioUnitario() * item.getCantidad())).append("</p>");
+            body.append("</div>");
         }
 
-        body.append("<p>Total Paid: ").append(ventaProducto.getTotal()).append("</p>");
+        // Total
+        body.append("<div class='total'>");
+        body.append("Total pagado: $").append(formatearPrecio(ventaProducto.getTotal()));
+        body.append("</div>");
 
+        // Código QR
+        body.append("<div class='qr-code'>");
+        body.append("<p><strong>Código de confirmación</strong></p>");
+        body.append("<img src='cid:qrCodeImage' alt='Código QR de tu pedido' width='150' height='150'>");
+        body.append("<p>Presenta este código para recoger tu pedido</p>");
+        body.append("</div>");
 
-        body.append("</body></html>");
+        // Pie de página
+        body.append("<div class='footer'>");
+        body.append("<p>Si tienes alguna duda sobre tu pedido, no dudes en contactarnos a través de <a href='mailto:soporte@tiendasana.com'>soporte@tiendasana.com</a>.</p>");
+        body.append("<p>© ").append(java.time.Year.now().getValue()).append(" Tienda Sana. Todos los derechos reservados.</p>");
+        body.append("</div>");
+
+        body.append("</div>"); // Cierre del div content
+        body.append("</div>"); // Cierre del div container
+        body.append("</body>");
+        body.append("</html>");
 
         // Enviar el correo con la imagen embebida
         emailService.sendEmailHtmlWithAttachment(new EmailDTO(subject, body.toString(), email), qrCodeImage, "qrCodeImage");
 
-        return "The summary of your purchase has been sent to your email";
+        return "El resumen de tu compra ha sido enviado a tu correo electrónico";
+    }
+
+    // Métodos auxiliares para traducción
+    private String traducirMetodoPago(String paymentType) {
+        switch (paymentType.toLowerCase()) {
+            case "credit_card":
+                return "Tarjeta de Crédito";
+            case "debit_card":
+                return "Tarjeta de Débito";
+            case "paypal":
+                return "PayPal";
+            case "cash":
+                return "Efectivo";
+            default:
+                return paymentType;
+        }
+    }
+
+    private String traducirEstadoPago(String status) {
+        switch (status.toLowerCase()) {
+            case "completed":
+                return "Completado";
+            case "pending":
+                return "Pendiente";
+            case "failed":
+                return "Fallido";
+            case "refunded":
+                return "Reembolsado";
+            default:
+                return status;
+        }
+    }
+
+    private String formatearPrecio(double precio) {
+        return String.format("%.2f", precio);
     }
 
 

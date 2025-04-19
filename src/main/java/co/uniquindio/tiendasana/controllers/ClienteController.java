@@ -90,7 +90,7 @@ public class ClienteController {
      * @return ResponseEntity con el id de la venta
      * @throws Exception
      */
-    @PostMapping("/order/make-payment/{ventaProductoId}")
+    @PostMapping("/venta/make-payment/{ventaProductoId}")
     public ResponseEntity<MessageDTO<PaymentResponseDTO>> makePayment(@PathVariable String ventaProductoId) throws Exception {
         // Llamamos al método del servicio para crear el
 
