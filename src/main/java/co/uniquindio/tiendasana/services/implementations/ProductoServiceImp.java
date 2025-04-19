@@ -119,7 +119,13 @@ public class ProductoServiceImp implements ProductoService {
                 productosItems
         );
     }
-
+    /**
+     * Obtener un producto (Entidad) dado su ID
+     * @param id
+     * @return
+     * @throws ProductoParseException
+     * @throws IOException
+     */
     @Override
     public Producto getProducto(String id) throws ProductoParseException, IOException {
         Optional<Producto> productoOptional= productRepo.obtenerPorId(id);
