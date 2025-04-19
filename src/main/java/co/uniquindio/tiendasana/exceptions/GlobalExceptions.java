@@ -22,15 +22,8 @@ public class GlobalExceptions {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<MessageDTO<String>> generalException(Exception e, HttpServletRequest request) {
-        String path = request.getRequestURI();
-
-        if (path.startsWith("/actuator")) {
-            // Deja que el actuator maneje sus propias excepciones
-             e.printStackTrace();
-        }
-
-        return ResponseEntity.internalServerError()
-                .body(new MessageDTO<>(true, e.getMessage()));
+        return ResponseEntity.internalServerError().body(new MessageDTO<>(true, e.getMessage())
+        );
     }
 
     /**
