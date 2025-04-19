@@ -104,7 +104,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
 
 
 
-        //carritoComprasService.borrarCarritoCompras(crearVentaProductoDTO.emailUsuario());
+        carritoComprasService.borrarCarritoCompras(crearVentaProductoDTO.emailUsuario());
 
         return createOrder.getId();
     }
