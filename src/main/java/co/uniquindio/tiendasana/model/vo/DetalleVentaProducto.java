@@ -2,6 +2,8 @@ package co.uniquindio.tiendasana.model.vo;
 
 import lombok.*;
 
+import java.util.Objects;
+
 @Setter
 @Getter
 @NoArgsConstructor
@@ -19,5 +21,12 @@ public class DetalleVentaProducto {
         this.cantidad = cantidad;
         this.valor = valor;
         this.ventaId = ventaId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        DetalleVentaProducto that = (DetalleVentaProducto) o;
+        return Objects.equals(productoId, that.productoId) && Objects.equals(ventaId, that.ventaId);
     }
 }

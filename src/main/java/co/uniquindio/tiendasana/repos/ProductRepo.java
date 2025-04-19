@@ -30,6 +30,7 @@ public class ProductRepo  {
     private  String spreadsheetId;
 
     private final String SHEET_NAMECLIENTE = ProductoConstantes.HOJACLIENTE;
+    private final String SHEET_GENERAL= ProductoConstantes.HOJAADMIN;
 
     /**
      * Metodo contructor de la clase
@@ -61,7 +62,12 @@ public class ProductRepo  {
     private List<List<Object>> obtenerFilasHoja() throws IOException {
         String rango = SHEET_NAMECLIENTE + "!A2:"+ ProductoConstantes.COL_REGISTRO_FINAL; // ID, Nombre, Estado, Localidad, PrecioReserva
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
-        return respuesta.getValues();
+        List<List<Object>> valores=respuesta.getValues();
+        if (valores!=null) {
+            return valores;
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     public int contarProductosExistintes() throws IOException {
@@ -106,6 +112,7 @@ public class ProductRepo  {
                 Producto producto=mapearProducto(row);
                 productos.add(producto);
             }catch (NumberFormatException e){
+                e.printStackTrace();
                 throw new ProductoParseException("Error en el parseo de cantidad o precio unitario del producto en fila "+ row);
             }
         }
@@ -164,9 +171,9 @@ public class ProductRepo  {
                 producto.getDescripcion(),
                 producto.getCategoria(),
                 producto.getEstado(),
-                ""+producto.getCantidad(),
+                producto.getCantidad(),
                 producto.getImagen(),
-                ""+((int)producto.getPrecioUnitario()),
+                ((int)producto.getPrecioUnitario()),
                 producto.getId()
         );
     }
@@ -199,7 +206,7 @@ public class ProductRepo  {
     public void actualizar(Producto producto) throws IOException {
         int indice=obtenerIndiceProducto(producto.getId());
         if (indice!=-1) {
-            String range = SHEET_NAMECLIENTE +"!A"+(2+indice)+":"+ ProductoConstantes.COL_REGISTRO_FINAL+(2+indice);
+            String range = SHEET_GENERAL +"!A"+(2+indice)+":"+ ProductoConstantes.COL_REGISTRO_FINAL+(2+indice);
             List<List<Object>> values = Arrays.asList(
                     mapearProductoInverso(producto)
             );

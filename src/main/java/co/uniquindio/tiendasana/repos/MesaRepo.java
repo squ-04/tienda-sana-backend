@@ -37,7 +37,12 @@ public class MesaRepo {
     private List<List<Object>> obtenerFilasHoja() throws IOException {
         String rango = SHEET_NAME + "!A2:"+ MesaConstantes.COL_REGISTRO_FINAL; // ID, Nombre, Estado, Localidad, PrecioReserva
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
-        return respuesta.getValues();
+        List<List<Object>> valores=respuesta.getValues();
+        if (valores!=null) {
+            return valores;
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     private List<Mesa> mapearFilasMesas(List<List<Object>> filas) {

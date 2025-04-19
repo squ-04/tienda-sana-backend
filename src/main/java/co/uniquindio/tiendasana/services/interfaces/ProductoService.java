@@ -28,4 +28,13 @@ public interface ProductoService {
 
 
     Producto getProducto(String id) throws ProductoParseException, IOException;
+
+    /**
+     * Metodo para reducir la cantidad de Stock de un producto una vez se tenga un pago aprovado y acreditado
+     * @param id
+     * @param cantidadComprada
+     * @throws ProductoParseException
+     * @throws IOException
+     */
+    void reducirCantidadProductosStock(String id, int cantidadComprada) throws Exception;
 }

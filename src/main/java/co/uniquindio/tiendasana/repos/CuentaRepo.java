@@ -23,7 +23,9 @@ import java.util.stream.Collectors;
 
 @Repository
 public class CuentaRepo {
-
+    /**
+     * Variables y constantes para la conexion con Google Sheets
+     */
     private final Sheets sheetsService;
 
     @Value("${google.sheets.spreadsheet-id}")
@@ -31,6 +33,10 @@ public class CuentaRepo {
 
     private final String SHEET_NAME = CuentaConstantes.HOJA;
 
+    /**
+     * contructor del repositorio donde se le inyecta la dependencia de la hoja
+     * @param sheetsService
+     */
     public CuentaRepo(Sheets sheetsService) {
         this.sheetsService = sheetsService;
     }
@@ -44,7 +50,12 @@ public class CuentaRepo {
         String rango = SHEET_NAME + "!A2:"+CuentaConstantes.COL_REGISTRO_FINAL; // Ajusta según columnas
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
         System.out.println(respuesta.getValues());
-        return respuesta.getValues();
+        List<List<Object>> valores=respuesta.getValues();
+        if (valores!=null) {
+            return valores;
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     private List<Cuenta> mapearFilasCuentas(List<List<Object>> filas) {

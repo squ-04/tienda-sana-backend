@@ -2,6 +2,7 @@ package co.uniquindio.tiendasana.model.documents;
 
 import co.uniquindio.tiendasana.model.enums.EstadoProducto;
 import co.uniquindio.tiendasana.model.enums.CategoriaProducto;
+import jakarta.validation.constraints.Min;
 import lombok.*;
 
 @Setter
@@ -57,4 +58,7 @@ public class Producto {
         return estado.getEstado();
     }
 
+    public boolean estaStockDisponible(int cantidadComprar) {
+        return getCantidad()-cantidadComprar>=0;
+    }
 }

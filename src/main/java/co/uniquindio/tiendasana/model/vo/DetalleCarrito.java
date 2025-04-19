@@ -2,6 +2,8 @@ package co.uniquindio.tiendasana.model.vo;
 
 import lombok.*;
 
+import java.util.Objects;
+
 @Setter
 @Getter
 @NoArgsConstructor
@@ -20,4 +22,10 @@ public class DetalleCarrito {
         this.idCarrito = idCarrito;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        DetalleCarrito that = (DetalleCarrito) o;
+        return Objects.equals(productoId, that.productoId) && Objects.equals(idCarrito, that.idCarrito);
+    }
 }
