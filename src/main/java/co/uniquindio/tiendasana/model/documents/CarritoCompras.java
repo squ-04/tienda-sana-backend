@@ -28,4 +28,23 @@ public class CarritoCompras {
         this.productos = productos;
     }
 
+    public void agregarDetalle(DetalleCarrito detalleCarrito) {
+        if (detalleCarrito != null) {
+            boolean detalleEncontrado=false;
+            for (DetalleCarrito detalle:this.productos) {
+                if (detalle.equals(detalleCarrito)) {
+                    detalleEncontrado=true;
+                    float precioUnitario=detalle.getSubtotal()/detalle.getCantidad();
+                    detalle.setCantidad(detalle.getCantidad()+detalleCarrito.getCantidad());
+                    detalle.setSubtotal(detalle.getCantidad()*precioUnitario);
+                }
+            }
+            if (!detalleEncontrado) {
+                this.productos.add(detalleCarrito);
+            }
+        } else {
+            this.productos=List.of(detalleCarrito);
+        }
+    }
+
 }
