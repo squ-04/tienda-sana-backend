@@ -1,9 +1,11 @@
 package co.uniquindio.tiendasana;
 
+import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.CarritoCompras;
 import co.uniquindio.tiendasana.model.documents.Cuenta;
 import co.uniquindio.tiendasana.model.documents.Producto;
 import co.uniquindio.tiendasana.model.documents.VentaProducto;
+import co.uniquindio.tiendasana.model.enums.CategoriaProducto;
 import co.uniquindio.tiendasana.model.enums.EstadoCuenta;
 import co.uniquindio.tiendasana.model.enums.Rol;
 import co.uniquindio.tiendasana.model.vo.*;
@@ -12,6 +14,7 @@ import co.uniquindio.tiendasana.repos.CuentaRepo;
 import co.uniquindio.tiendasana.repos.ProductRepo;
 import co.uniquindio.tiendasana.repos.VentaProductoRepo;
 import co.uniquindio.tiendasana.services.implementations.ProductoServiceImp;
+import co.uniquindio.tiendasana.utils.ProductoConstantes;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -74,7 +77,7 @@ public class ServicioProductoTest {
         return Producto.builder()
                 .nombre("Ensalada Mediterranea")
                 .descripcion("Ensalada fresca con lechuga, tomate cherry, pepino, aceitunas negras, queso feta y aderezo de aceite de oliva.")
-                .categoria("Comida Saludable")
+                .categoria("Frutos secos")
                 .estado("Disponible")
                 .cantidad(30)
                 .imagen("https://ejemplo.com/imagenes/ensalada-mediterranea.jpg")
@@ -141,62 +144,257 @@ public class ServicioProductoTest {
 
     @Test
     public void obtenerCuentas() {
-
+        try {
+            List<Cuenta> cuentas=cuentaRepo.obtenerCuentas();
+            assertNotNull(cuentas);
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
     @Test
     public void obtenerProductos() {
+        try {
+            List<Producto> productos=productoRepo.obtenerProductos(ProductoConstantes.HOJAADMIN);
+            assertNotNull(productos);
+        } catch (IOException | ProductoParseException e) {
+            e.printStackTrace();
+            fail();
+        }
+    }
 
+    @Test
+    public void obtenerProductosCliente() {
+        try {
+            List<Producto> productos=productoRepo.obtenerProductos(ProductoConstantes.HOJACLIENTE);
+            assertNotNull(productos);
+        } catch (IOException | ProductoParseException e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
     @Test
     public void obtenerDetallesCarritoCompras() {
-
+        try {
+            List<DetalleCarrito> detalleCarritos=carritoComprasRepo.obtenerDetallesCarrito();
+            assertNotNull(detalleCarritos);
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
     @Test
-    public void obtenerCarritoCompras() {
-
+    public void obtenerCarritosComprasSimples() {
+        try {
+            List<CarritoCompras> carritoCompras=carritoComprasRepo.obtenerCarritosSimples();
+            if (carritoCompras==null) {
+                fail();
+            }
+            for (CarritoCompras carrito: carritoCompras) {
+                if (carrito.getProductos() != null) {
+                    fail();
+                }
+            }
+            assertTrue(true);
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
     @Test
     public void obtenerDetallesVentaProducto() {
-
+        try {
+            List<DetalleVentaProducto> detallesVenta=ventaProductoRepo.obtenerDetallesVenta();
+            assertNotNull(detallesVenta);
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
     @Test
     public void obtenerVentaProducto() {
-
+        try {
+            List<VentaProducto> ventasProductos=ventaProductoRepo.obtenerVentasSimples();
+            if (ventasProductos==null) {
+                fail();
+            }
+            for (VentaProducto venta: ventasProductos) {
+                if (venta.getProductos() != null) {
+                    fail();
+                }
+            }
+            assertTrue(true);
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail();
+        }
     }
 
     @Test
     public void mapearCuentas() {
+        Cuenta cuenta=quemarCuenta();
+        List<Object> datosMapeados=cuentaRepo.mapearCuentaInverso(cuenta);
+        if (datosMapeados==null || datosMapeados.size()!=13) {
+            fail();
+        }
+        Cuenta cuentaMapeada=cuentaRepo.mapearCuenta(datosMapeados);
+        if (cuentaMapeada==null) {
+            fail();
+        }
+        assertAll("Verificar que los datos se mantengan igual despues de los mapeos",
+                () -> assertEquals(cuenta.getUsuario().getDni(),
+                        cuentaMapeada.getUsuario().getDni()),
+                () -> assertEquals(cuenta.getUsuario().getNombre(),
+                        cuentaMapeada.getUsuario().getNombre()),
+                () -> assertEquals(cuenta.getUsuario().getTelefono(),
+                        cuentaMapeada.getUsuario().getTelefono()),
+                () -> assertEquals(cuenta.getUsuario().getDireccion(),
+                        cuentaMapeada.getUsuario().getDireccion()),
+                () -> assertEquals(cuenta.getEmail(),cuentaMapeada.getEmail()),
+                () -> assertEquals(cuenta.getContrasenia(),cuentaMapeada.getContrasenia()),
+                () -> assertEquals(cuenta.getRol(),cuentaMapeada.getRol()),
+                () -> assertEquals(cuenta.getEstado(),cuentaMapeada.getEstado()),
+                () -> assertEquals(cuenta.getFechaRegistro(),cuentaMapeada.getFechaRegistro()),
+                () -> assertEquals(cuenta.getCodigoValidacionRegistro().getCodigo(),
+                        cuentaMapeada.getCodigoValidacionRegistro().getCodigo()),
+                () -> assertEquals(cuenta.getCodigoValidacionRegistro().getFechaCreacion(),
+                        cuentaMapeada.getCodigoValidacionRegistro().getFechaCreacion()),
+                () -> assertEquals(cuenta.getCodigoValidacionContrasenia().getCodigo(),
+                        cuentaMapeada.getCodigoValidacionContrasenia().getCodigo()),
+                () -> assertEquals(cuenta.getCodigoValidacionContrasenia().getFechaCreacion(),
+                        cuentaMapeada.getCodigoValidacionContrasenia().getFechaCreacion())
+        );
 
     }
 
     @Test
     public void mapearProductos() {
-
+        Producto producto=quemarProducto();
+        List<Object> datosMapeados=productoRepo.mapearProductoInverso(producto);
+        System.out.println(datosMapeados);
+        if (datosMapeados==null || datosMapeados.size()!=8) {
+            fail();
+        }
+        Producto productoMapeado=productoRepo.mapearProducto(datosMapeados);
+        if (productoMapeado==null) {
+            fail();
+        }
+        assertAll("Verificar que los datos se mantengan igual despues de los mapeos",
+                () -> assertEquals(producto.getNombre(),productoMapeado.getNombre()),
+                () -> assertEquals(producto.getDescripcion(),productoMapeado.getDescripcion()),
+                () -> assertEquals(producto.getCategoria(),productoMapeado.getCategoria()),
+                () -> assertEquals(producto.getEstado(),productoMapeado.getEstado()),
+                () -> assertEquals(producto.getCantidad(),productoMapeado.getCantidad()),
+                () -> assertEquals(producto.getImagen(),productoMapeado.getImagen()),
+                () -> assertEquals(producto.getPrecioUnitario(),productoMapeado.getPrecioUnitario()),
+                () -> assertEquals(producto.getId(),productoMapeado.getId())
+        );
     }
 
     @Test
     public void mapearDetallesCarritoCompras() {
-
+        Cuenta cuenta=quemarCuenta();
+        Producto producto=quemarProducto();
+        DetalleCarrito detalleCarrito=quemarDetalleCarrito(cuenta.getEmail(),producto.getId());
+        List<Object> datosMapeados=carritoComprasRepo.mapearDetalleCarritoInverso(detalleCarrito);
+        if (datosMapeados==null || datosMapeados.size()!=4) {
+            fail();
+        }
+        DetalleCarrito detalleCarritoMapeado=carritoComprasRepo.mapearDetalleCarrito(datosMapeados);
+        if (detalleCarritoMapeado==null) {
+            fail();
+        }
+        assertAll("Verificar que los datos se mantengan igual despues de los mapeos",
+                () -> assertEquals(detalleCarrito.getProductoId(),detalleCarritoMapeado.getProductoId()),
+                () -> assertEquals(detalleCarrito.getCantidad(),detalleCarritoMapeado.getCantidad()),
+                () -> assertEquals(detalleCarrito.getSubtotal(),detalleCarritoMapeado.getSubtotal()),
+                () -> assertEquals(detalleCarrito.getIdCarrito(),detalleCarritoMapeado.getIdCarrito())
+        );
     }
 
     @Test
     public void mapearCarritoCompras() {
-
+        Cuenta cuenta=quemarCuenta();
+        CarritoCompras carrito=quemarCarritoCompras(cuenta.getEmail());
+        List<Object> datosMapeados=carritoComprasRepo.mapearCarritoInverso(carrito);
+        if (datosMapeados==null || datosMapeados.size()!=3) {
+            fail();
+        }
+        CarritoCompras carritoMapeado=carritoComprasRepo.mapearCarrito(datosMapeados);
+        if (carritoMapeado==null) {
+            fail();
+        }
+        assertAll("Verificar que los datos se mantengan igual despues de los mapeos",
+                () -> assertEquals(carrito.getId(),carritoMapeado.getId()),
+                () -> assertEquals(carrito.getFecha(),carritoMapeado.getFecha()),
+                () -> assertEquals(carrito.getIdUsuario(),carritoMapeado.getIdUsuario())
+        );
     }
 
     @Test
     public void mapearDetallesVentaProducto() {
-
+        Producto producto=quemarProducto();
+        DetalleVentaProducto detalleVenta=quemarDetalleVentaProducto(
+                "4e20ab9f-3b3b-4bee-95a1-93a64aed9af7",producto.getId());
+        List<Object> datosMapeados=ventaProductoRepo.mapearDetalleVentaInverso(detalleVenta);
+        if (datosMapeados==null || datosMapeados.size()!=4) {
+            fail();
+        }
+        DetalleVentaProducto detalleVentaMapeada=ventaProductoRepo.mapearDetalleVenta(datosMapeados);
+        if (detalleVentaMapeada==null) {
+            fail();
+        }
+        assertAll("Verificar que los datos se mantengan igual despues de los mapeos",
+                () -> assertEquals(detalleVenta.getProductoId(),detalleVentaMapeada.getProductoId()),
+                () -> assertEquals(detalleVenta.getCantidad(),detalleVentaMapeada.getCantidad()),
+                () -> assertEquals(detalleVenta.getValor(),detalleVentaMapeada.getValor()),
+                () -> assertEquals(detalleVenta.getVentaId(),detalleVentaMapeada.getVentaId())
+        );
     }
 
     @Test
     public void mapearVentaProducto() {
-
+        Cuenta cuenta=quemarCuenta();
+        Producto producto=quemarProducto();
+        VentaProducto ventaProducto=quemarVentaProducto(cuenta.getEmail(),producto.getId());
+        List<Object> datosMapeados=ventaProductoRepo.mapearVentaInverso(ventaProducto);
+        if (datosMapeados==null || datosMapeados.size()!=14) {
+            fail();
+        }
+        VentaProducto ventaProductoMapeada=ventaProductoRepo.mapearVenta(datosMapeados);
+        if (ventaProductoMapeada==null) {
+            fail();
+        }
+        assertAll("Verificar que los datos se mantengan igual despues de los mapeos",
+                () -> assertEquals(ventaProducto.getId(),ventaProductoMapeada.getId()),
+                () -> assertEquals(ventaProducto.getEmailUsario(),ventaProductoMapeada.getEmailUsario()),
+                () -> assertEquals(ventaProducto.getFecha(),ventaProductoMapeada.getFecha()),
+                () -> assertEquals(ventaProducto.getTotal(),ventaProductoMapeada.getTotal()),
+                () -> assertEquals(ventaProducto.getPromocionId(),ventaProductoMapeada.getPromocionId()),
+                () -> assertEquals(ventaProducto.getCodigoPasarela(),
+                        ventaProductoMapeada.getCodigoPasarela()),
+                () -> assertEquals(ventaProducto.getPago().getId(),
+                        ventaProductoMapeada.getPago().getId()),
+                () -> assertEquals(ventaProducto.getPago().getCurrency(),
+                        ventaProductoMapeada.getPago().getCurrency()),
+                () -> assertEquals(ventaProducto.getPago().getPaymentType(),
+                        ventaProductoMapeada.getPago().getPaymentType()),
+                () -> assertEquals(ventaProducto.getPago().getStatusDetail(),
+                        ventaProductoMapeada.getPago().getStatusDetail()),
+                () -> assertEquals(ventaProducto.getPago().getAuthorizationCode(),
+                        ventaProductoMapeada.getPago().getAuthorizationCode()),
+                () -> assertEquals(ventaProducto.getPago().getDate(),
+                        ventaProductoMapeada.getPago().getDate()),
+                () -> assertEquals(ventaProducto.getPago().getTransactionValue(),
+                        ventaProductoMapeada.getPago().getTransactionValue()),
+                () -> assertEquals(ventaProducto.getPago().getStatus(),
+                        ventaProductoMapeada.getPago().getStatus())
+        );
     }
 
 }
