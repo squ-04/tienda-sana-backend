@@ -60,9 +60,7 @@ public class CarritoComprasServiceImp implements CarritoComprasService {
         detalleCarrito.setIdCarrito(carritoCompras.getId());
         detalleCarrito.setSubtotal(producto.getPrecioUnitario()*addShoppingCarDetailDTO.cantidad());
 
-        List<DetalleCarrito> detalles = carritoCompras.getProductos();
-        detalles.add(detalleCarrito);
-        carritoCompras.setProductos(detalles);
+        carritoCompras.agregarDetalle(detalleCarrito);
         carritoComprasRepo.actualizarCarrito(carritoCompras);
         return carritoCompras.getId();
     }
