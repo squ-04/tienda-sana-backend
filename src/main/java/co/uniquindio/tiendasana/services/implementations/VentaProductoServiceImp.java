@@ -298,17 +298,18 @@ public class VentaProductoServiceImp implements VentaProductoService {
     public PaymentResponseDTO makePayment(String ventaProductoId) throws Exception {
         try {
             // Obtener la orden guardada en la base de datos y los ítems de la orden
-
+            System.out.println("ID DE LA VENTA: " + ventaProductoId);
             VentaProducto ventaGuardar = obtenerVentaProducto(ventaProductoId);
+            System.out.println("Venta guardar "+ventaGuardar);
+
 
             List<PreferenceItemRequest> itemsGateway = new ArrayList<>();
-
+            System.out.println("Productos "+ventaGuardar.getProductos());
             // Comprobar si hay un cupón de descuento en la orden
             Promocion promocion = null;
             if (ventaGuardar.getPromocionId() != null) {
                 promocion = promocionService.getPromocion(ventaGuardar.getPromocionId());
             }
-            List<VentaProducto> ventasCliente = obtenerVentasProductoPorCliente(ventaGuardar.getEmailUsario());
 
             // Recorrer los items de la orden y crea los ítems de la pasarela
             for (DetalleVentaProducto item : ventaGuardar.getProductos()) {

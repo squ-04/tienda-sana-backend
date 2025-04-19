@@ -58,6 +58,7 @@ public class VentaProductoRepo {
      */
     public void asignarDetalles(List<VentaProducto> ventas) throws IOException {
         List<DetalleVentaProducto> detalles= obtenerDetallesVenta();
+        System.out.println("Detalles: "+detalles);
         for (VentaProducto ventaProducto:ventas) {
             ventaProducto.setProductos(
                     detalles.stream()
@@ -66,7 +67,12 @@ public class VentaProductoRepo {
                             )
                     .collect(Collectors.toList())
             );
+
         }
+        for (VentaProducto ventaProducto:ventas) {
+            System.out.println("Ciclo Venta: "+ventaProducto);
+        }
+
     }
 
     /**
@@ -213,7 +219,7 @@ public class VentaProductoRepo {
                 .filter(expresion)
                 .collect(Collectors.toList());
         asignarDetalles(ventasFiltradas);
-        return ventas;
+        return ventasFiltradas;
     }
 
     /**

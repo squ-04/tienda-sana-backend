@@ -159,7 +159,7 @@ public class CarritoComprasRepo {
                 .filter(expresion)
                 .collect(Collectors.toList());
         asignarDetalles(carritosFiltrados);
-        return carritos;
+        return carritosFiltrados;
     }
 
     public int contarCarritosExistintes() throws IOException {
