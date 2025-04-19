@@ -51,7 +51,7 @@ public class PublicoController {
     /**
      * Endpoint mediante el cual se recibe la notificación de Mercado Pago
      * @param request
-     * @return 
+     * @return
      */
     @PostMapping("/venta/receive-notification")
     public ResponseEntity<MessageDTO<String>> receiveNotificationFromMercadoPago(@RequestBody Map<String, Object> request){
