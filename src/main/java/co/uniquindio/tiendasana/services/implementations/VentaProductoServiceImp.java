@@ -125,7 +125,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
 
                 DetalleVentaProducto orderDetail = new DetalleVentaProducto();
                 orderDetail.setProductoId(carDetail.getProductoId());
-                orderDetail.setValor(carDetail.getSubtotal() * carDetail.getCantidad());
+                orderDetail.setValor(carDetail.getSubtotal());
                 orderDetail.setCantidad(carDetail.getCantidad());
                 orderDetail.setVentaId(idVentaProducto);
                 items.add(orderDetail);
