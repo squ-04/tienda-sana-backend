@@ -43,7 +43,15 @@ public class VentaProductoServiceImp implements VentaProductoService {
     private final PromocionService promocionService;
     private final VentaProductoRepo ventaProductoRepo;
 
-
+    /**
+     * Constructor de la clase VentaProductoServiceImp
+     * @param cuentaService Servicio de cuentas
+     * @param productoService Servicio de productos
+     * @param carritoComprasService Servicio de carrito de compras
+     * @param emailService Servicio de correo electrónico
+     * @param promocionService Servicio de promociones
+     * @param ventaProductoRepo Repositorio de ventas de productos
+     */
     public VentaProductoServiceImp(CuentaService cuentaService, ProductoService productoService, CarritoComprasService carritoComprasService, EmailService emailService, PromocionService promocionService, VentaProductoRepo ventaProductoRepo) {
         this.cuentaService = cuentaService;
         this.productoService = productoService;
