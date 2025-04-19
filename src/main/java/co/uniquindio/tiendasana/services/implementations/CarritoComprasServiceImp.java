@@ -134,15 +134,15 @@ public class CarritoComprasServiceImp implements CarritoComprasService {
     private Optional<VistaItemCarritoDTO> convertToCarItemViewDTO(DetalleCarrito itemView) {
         try {
 
-            Producto event = productoService.getProducto(itemView.getProductoId());
+            Producto producto = productoService.getProducto(itemView.getProductoId());
 
             return Optional.of(new VistaItemCarritoDTO(
-                    event.getId(),
-                    event.getNombre(),
-                    event.getCategoria(),
-                    event.getPrecioUnitario(),
-                    event.getCantidad(),
-                    event.getPrecioUnitario() * event.getCantidad()
+                    producto.getId(),
+                    producto.getNombre(),
+                    producto.getCategoria(),
+                    producto.getPrecioUnitario(),
+                    itemView.getCantidad(),
+                    producto.getPrecioUnitario() * itemView.getCantidad()
             ));
 
         } catch (Exception e) {
