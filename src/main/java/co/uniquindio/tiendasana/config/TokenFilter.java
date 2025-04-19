@@ -134,10 +134,5 @@ public class TokenFilter extends OncePerRequestFilter {
         }
         return error;
     }
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        return path.startsWith("/actuator");
-    }
 
 }
