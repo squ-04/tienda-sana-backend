@@ -3,6 +3,7 @@ package co.uniquindio.tiendasana.repos;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.CarritoCompras;
 import co.uniquindio.tiendasana.model.documents.Cuenta;
+import co.uniquindio.tiendasana.model.documents.Producto;
 import co.uniquindio.tiendasana.model.vo.DetalleCarrito;
 import co.uniquindio.tiendasana.utils.CarritoConstantes;
 import co.uniquindio.tiendasana.utils.CuentaConstantes;
@@ -68,9 +69,8 @@ public class CarritoComprasRepo {
      * @param expresion
      * @return
      * @throws IOException
-     * @throws ProductoParseException
      */
-    public List<CarritoCompras> filtrar (Predicate<CarritoCompras> expresion) throws IOException, ProductoParseException {
+    public List<CarritoCompras> filtrar (Predicate<CarritoCompras> expresion) throws IOException {
         List<CarritoCompras> carritos = obtenerCarritos();
         return carritos.stream()
                 .filter(expresion)
@@ -90,7 +90,12 @@ public class CarritoComprasRepo {
     private List<List<Object>> obtenerFilasHojaSimples() throws IOException {
         String rango = SHEET_NAME + "!A2:"+CarritoConstantes.COL_REGISTRO_CARRITO_FINAL;
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
-        return respuesta.getValues();
+        List<List<Object>> valores=respuesta.getValues();
+        if (valores!=null) {
+            return valores;
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     private List<CarritoCompras> mapearFilasCarritos(List<List<Object>> filas) {
@@ -148,13 +153,13 @@ public class CarritoComprasRepo {
      * @throws IOException
      * @throws ProductoParseException
      */
-    public List<CarritoCompras> filtrarCarritosSimple (Predicate<CarritoCompras> expresion) throws IOException, ProductoParseException {
+    public List<CarritoCompras> filtrarCarritosSimple (Predicate<CarritoCompras> expresion) throws IOException {
         List<CarritoCompras> carritos = obtenerCarritosSimples();
         List<CarritoCompras> carritosFiltrados =  carritos.stream()
                 .filter(expresion)
                 .collect(Collectors.toList());
         asignarDetalles(carritosFiltrados);
-        return carritos;
+        return carritosFiltrados;
     }
 
     public int contarCarritosExistintes() throws IOException {
@@ -251,7 +256,14 @@ public class CarritoComprasRepo {
      */
     public void actualizarCarrito(CarritoCompras carrito) throws IOException {
         actualizarCarritoSimple(carrito);
-        for (DetalleCarrito detalle:carrito.getProductos()) {
+        List<DetalleCarrito> detallesActualizarCarrito=new ArrayList<>(carrito.getProductos());
+        detallesActualizarCarrito.retainAll(obtenerDetallesCarrito());
+        List<DetalleCarrito> detallesNuevosCarrito=new ArrayList<>(carrito.getProductos());
+        detallesNuevosCarrito.removeAll(detallesActualizarCarrito);
+        for (DetalleCarrito detalle:detallesNuevosCarrito) {
+            guardarDetalle(detalle);
+        }
+        for (DetalleCarrito detalle:detallesActualizarCarrito) {
             actualizarDetalle(detalle);
         }
     }
@@ -271,7 +283,12 @@ public class CarritoComprasRepo {
     private List<List<Object>> obtenerFilasHojaDetalle() throws IOException {
         String rango = SHEET_NAME_DETALLE + "!A2:"+CarritoConstantes.COL_REGISTRO_DETALLE_FINAL; // Asumiendo que usas columnas: Fecha, IDUsuario, Productos
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
-        return respuesta.getValues();
+        List<List<Object>> valores=respuesta.getValues();
+        if (valores!=null) {
+            return valores;
+        } else {
+            return new ArrayList<>();
+        }
     }
 
     private List<DetalleCarrito> mapearFilasDetallesCarrito(List<List<Object>> filas) throws IOException {
@@ -422,4 +439,21 @@ public class CarritoComprasRepo {
         }
     }
 
+    public Optional<CarritoCompras> obtenerPorIdUsuario(String idUsuario) throws IOException {
+        List<CarritoCompras> carritosObtenidos=
+                filtrar(carrito -> carrito.getIdUsuario().equals(idUsuario));
+        if (carritosObtenidos.isEmpty()) {
+            return Optional.empty();
+        }
+        if (carritosObtenidos.size()>1) {
+            throw new IOException("Mas de un carrite tiene ese usuario");
+        }
+        return Optional.of(carritosObtenidos.get(0));
+    }
+
+    public void eliminarDetalles(List<DetalleCarrito> detallesEliminar) throws IOException {
+        for (DetalleCarrito detalle : detallesEliminar) {
+            eliminarDetalle(detalle);
+        }
+    }
 }

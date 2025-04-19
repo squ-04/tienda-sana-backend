@@ -3,6 +3,7 @@ package co.uniquindio.tiendasana.services.implementations;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import co.uniquindio.tiendasana.dto.EmailDTO;
@@ -42,7 +43,15 @@ public class VentaProductoServiceImp implements VentaProductoService {
     private final PromocionService promocionService;
     private final VentaProductoRepo ventaProductoRepo;
 
-
+    /**
+     * Constructor de la clase VentaProductoServiceImp
+     * @param cuentaService Servicio de cuentas
+     * @param productoService Servicio de productos
+     * @param carritoComprasService Servicio de carrito de compras
+     * @param emailService Servicio de correo electrónico
+     * @param promocionService Servicio de promociones
+     * @param ventaProductoRepo Repositorio de ventas de productos
+     */
     public VentaProductoServiceImp(CuentaService cuentaService, ProductoService productoService, CarritoComprasService carritoComprasService, EmailService emailService, PromocionService promocionService, VentaProductoRepo ventaProductoRepo) {
         this.cuentaService = cuentaService;
         this.productoService = productoService;
@@ -62,19 +71,26 @@ public class VentaProductoServiceImp implements VentaProductoService {
     @Override
     public String crearVenta(CrearVentaProductoDTO crearVentaProductoDTO) throws Exception {
 
-        CarritoCompras carritoCompras = carritoComprasService.getCarritoCompras(crearVentaProductoDTO.emailUsuario());
-        List<DetalleVentaProducto> items = getOrderDetails(carritoCompras);
+
 
         VentaProducto ventaProducto = new VentaProducto();
-        ventaProducto.setProductos(items);
+
         ventaProducto.setFecha(LocalDateTime.now());
         ventaProducto.setEmailUsario(crearVentaProductoDTO.emailUsuario());
+
+        Cuenta cuenta = cuentaService.obtenerCuentaPorEmail(crearVentaProductoDTO.emailUsuario());
+
+        ventaProducto.setId(UUID.randomUUID().toString());
+
+        CarritoCompras carritoCompras = carritoComprasService.getCarritoCompras(crearVentaProductoDTO.emailUsuario());
+        List<DetalleVentaProducto> items = getOrderDetails(carritoCompras, ventaProducto.getId());
+        ventaProducto.setProductos(items);
 
         if (crearVentaProductoDTO.idPromocion() != null && !crearVentaProductoDTO.idPromocion().isEmpty()) {
 
             Promocion promocion = promocionService.getPromocion(crearVentaProductoDTO.idPromocion());
 
-            if (promocion == null) {
+            if (promocion == null ) {
                 throw new ResourceNotFoundException("La promocion no existe");
             }
 
@@ -92,10 +108,9 @@ public class VentaProductoServiceImp implements VentaProductoService {
             ventaProducto.setTotal(calculateTotal(items, null, crearVentaProductoDTO.emailUsuario()));
         }
 
-        Cuenta cuenta = cuentaService.obtenerCuentaPorEmail(crearVentaProductoDTO.emailUsuario());
         VentaProducto createOrder = ventaProductoRepo.guardarVentaProducto(ventaProducto);
 
-        enviarResumenVenta(cuenta.getEmail(), ventaProducto);
+
 
         carritoComprasService.borrarCarritoCompras(crearVentaProductoDTO.emailUsuario());
 
@@ -108,7 +123,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
      * @param carritoCompras Carrito de compras del cliente
      * @return Lista de detalles de la orden
      */
-    private @NotNull List<DetalleVentaProducto> getOrderDetails(CarritoCompras carritoCompras) {
+    private @NotNull List<DetalleVentaProducto> getOrderDetails(CarritoCompras carritoCompras, String idVentaProducto) {
         List<DetalleVentaProducto> items = new ArrayList<>();
         List<DetalleCarrito> details = carritoCompras.getProductos();
         details.forEach(carDetail -> {
@@ -118,11 +133,10 @@ public class VentaProductoServiceImp implements VentaProductoService {
 
                 DetalleVentaProducto orderDetail = new DetalleVentaProducto();
                 orderDetail.setProductoId(carDetail.getProductoId());
-                orderDetail.setValor(carDetail.getSubtotal() * carDetail.getCantidad());
+                orderDetail.setValor(carDetail.getSubtotal());
                 orderDetail.setCantidad(carDetail.getCantidad());
+                orderDetail.setVentaId(idVentaProducto);
                 items.add(orderDetail);
-
-
 
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
@@ -180,12 +194,13 @@ public class VentaProductoServiceImp implements VentaProductoService {
      * @throws ResourceNotFoundException
      */
     @Override
-    public VentaProducto obtenerVentaProducto(String idVentaProducto) throws ResourceNotFoundException, IOException, ProductoParseException {
-        VentaProducto ventaProducto = (VentaProducto) ventaProductoRepo.filtrarVentasSimple(ventaProducto1 -> ventaProducto1.getId().equals(idVentaProducto));
-        if (ventaProducto == null) {
-            throw new ResourceNotFoundException("La venta con el id: " + idVentaProducto + " no existe");
+    public VentaProducto obtenerVentaProducto(String idVentaProducto) throws Exception {
+        List<VentaProducto> ventaProducto = ventaProductoRepo.filtrarVentasSimple(ventaProducto1 -> {
+            return ventaProducto1.getId().equals(idVentaProducto); });
+        if (ventaProducto.isEmpty()) {
+            throw new Exception("La venta con el id: " + idVentaProducto + " no existe");
         }
-        return ventaProducto;
+        return ventaProducto.get(0);
     }
 
     /**
@@ -213,7 +228,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
      * @throws ResourceNotFoundException
      */
     @Override
-    public VentaItemDTO obtenerInformacionVenta(String ventaProductoId) throws ResourceNotFoundException, IOException, ProductoParseException {
+    public VentaItemDTO obtenerInformacionVenta(String ventaProductoId) throws Exception {
         VentaProducto ventaProducto = obtenerVentaProducto(ventaProductoId); // Método que obtiene la orden
 
         return mapearAVentaItemDTO(ventaProducto);
@@ -281,81 +296,91 @@ public class VentaProductoServiceImp implements VentaProductoService {
      */
     @Override
     public PaymentResponseDTO makePayment(String ventaProductoId) throws Exception {
-        // Obtener la orden guardada en la base de datos y los ítems de la orden
-        VentaProducto ventaGuardar = obtenerVentaProducto(ventaProductoId);
-        List<PreferenceItemRequest> itemsGateway = new ArrayList<>();
+        try {
+            // Obtener la orden guardada en la base de datos y los ítems de la orden
+            System.out.println("ID DE LA VENTA: " + ventaProductoId);
+            VentaProducto ventaGuardar = obtenerVentaProducto(ventaProductoId);
+            System.out.println("Venta guardar "+ventaGuardar);
 
-        // Comprobar si hay un cupón de descuento en la orden
-        Promocion promocion = null;
-        if (ventaGuardar.getPromocionId() != null) {
-            promocion = promocionService.getPromocion(ventaGuardar.getPromocionId());
+
+            List<PreferenceItemRequest> itemsGateway = new ArrayList<>();
+            System.out.println("Productos "+ventaGuardar.getProductos());
+            // Comprobar si hay un cupón de descuento en la orden
+            Promocion promocion = null;
+            if (ventaGuardar.getPromocionId() != null) {
+                promocion = promocionService.getPromocion(ventaGuardar.getPromocionId());
+            }
+
+            // Recorrer los items de la orden y crea los ítems de la pasarela
+            for (DetalleVentaProducto item : ventaGuardar.getProductos()) {
+                // Obtener el evento y la localidad del ítem
+                System.out.println("ID Producto: " + item.getProductoId());
+                Producto producto = productoService.getProducto(item.getProductoId());
+
+                float unitPrice = (promocion != null) ?
+                        Math.max(0, producto.getPrecioUnitario() - (producto.getPrecioUnitario() * promocion.getPorcentajeDescuento())) :
+                        producto.getPrecioUnitario();
+
+
+                // Crear el item de la pasarela
+                PreferenceItemRequest itemRequest =
+                        PreferenceItemRequest.builder()
+                                .id(producto.getId())
+                                .title(producto.getNombre())
+                                .pictureUrl(producto.getImagen())
+                                .categoryId(producto.getCategoria()) // Cambiar a categoryId
+                                .quantity(item.getCantidad())
+                                .currencyId("COP")
+                                .unitPrice(BigDecimal.valueOf(unitPrice))
+                                .build();
+                itemsGateway.add(itemRequest);
+
+
+            }
+
+            //TODO Configurar las credenciales de MercadoPag. Crear cuenta de mercado pago
+            MercadoPagoConfig.setAccessToken("TEST-6796006609981784-041814-00c638c5e870eb13f83b385b87897541-1190282227");
+
+            //TODO
+            // Configurar las urls de retorno de la pasarela (Frontend)
+            PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
+                    .success("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=success")
+                    .failure("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=failure")
+                    .pending("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=pending")
+                    .build();
+
+
+            // Construir la preferencia de la pasarela con los ítems, metadatos y urls de retorno
+            PreferenceRequest preferenceRequest = PreferenceRequest.builder()
+                    .backUrls(backUrls)
+                    .items(itemsGateway)
+                    //TODO agregar id orden
+                    .metadata(Map.of("id_venta", ventaGuardar.getId()))
+                    //TODO Agregar url de Ngrok (Se actualiza constantemente) la ruta debe incluir la direccion al controlador de las notificaciones
+                    .notificationUrl("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/api/public/venta/receive-notification")
+                    .build();
+
+
+            // Crear la preferencia en la pasarela de MercadoPago
+            PreferenceClient client = new PreferenceClient();
+            Preference preference = client.create(preferenceRequest);
+
+
+            // Guardar el código de la pasarela en la orden
+            ventaGuardar.setCodigoPasarela(preference.getId());
+            ventaProductoRepo.actualizarVentaSimple(ventaGuardar);
+
+
+
+            return new PaymentResponseDTO(
+                    preference.getInitPoint(),
+                    ventaProductoId
+            );
+        }catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("Error al crear la preferencia de pago");
         }
-        List<VentaProducto> ventasCliente = obtenerVentasProductoPorCliente(ventaGuardar.getEmailUsario());
 
-        // Recorrer los items de la orden y crea los ítems de la pasarela
-        for (DetalleVentaProducto item : ventaGuardar.getProductos()) {
-            // Obtener el evento y la localidad del ítem
-            Producto producto = productoService.getProducto(item.getProductoId());
-
-            float unitPrice = (promocion != null) ?
-                    Math.max(0, producto.getPrecioUnitario() - (producto.getPrecioUnitario() * promocion.getPorcentajeDescuento())) :
-                    producto.getPrecioUnitario();
-
-
-            // Crear el item de la pasarela
-            PreferenceItemRequest itemRequest =
-                    PreferenceItemRequest.builder()
-                            .id(producto.getId())
-                            .title(producto.getNombre())
-                            .pictureUrl(producto.getImagen())
-                            .categoryId(producto.getCategoria()) // Cambiar a categoryId
-                            .quantity(item.getCantidad())
-                            .currencyId("COP")
-                            .unitPrice(BigDecimal.valueOf(unitPrice))
-                            .build();
-            itemsGateway.add(itemRequest);
-
-
-        }
-
-        //TODO Configurar las credenciales de MercadoPag. Crear cuenta de mercado pago
-        MercadoPagoConfig.setAccessToken("APP_USR-8178646482281064-100513-248819fc76ea7f7577f902e927eaefb7-2014458486");
-
-        //TODO
-        // Configurar las urls de retorno de la pasarela (Frontend)
-        PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                .success("https://smooth-unicorn-trusting.ngrok-free.app/?status=success")
-                .failure("https://smooth-unicorn-trusting.ngrok-free.app/?status=failure")
-                .pending("https://smooth-unicorn-trusting.ngrok-free.app/?status=pending")
-                .build();
-
-
-        // Construir la preferencia de la pasarela con los ítems, metadatos y urls de retorno
-        PreferenceRequest preferenceRequest = PreferenceRequest.builder()
-                .backUrls(backUrls)
-                .items(itemsGateway)
-                //TODO agregar id orden
-                .metadata(Map.of("id_orden", ventaGuardar.getId()))
-                //TODO Agregar url de Ngrok (Se actualiza constantemente) la ruta debe incluir la direccion al controlador de las notificaciones
-                .notificationUrl("https://smooth-unicorn-trusting.ngrok-free.app/api/public/order/receive-notification")
-                .build();
-
-
-        // Crear la preferencia en la pasarela de MercadoPago
-        PreferenceClient client = new PreferenceClient();
-        Preference preference = client.create(preferenceRequest);
-
-
-        // Guardar el código de la pasarela en la orden
-        ventaGuardar.setCodigoPasarela(preference.getId());
-        ventaProductoRepo.guardarVentaProducto(ventaGuardar);
-
-
-
-        return new PaymentResponseDTO(
-                preference.getInitPoint(),
-                ventaProductoId
-        );
     }
 
     /**
@@ -381,18 +406,23 @@ public class VentaProductoServiceImp implements VentaProductoService {
                 com.mercadopago.resources.payment.Payment payment = client.get(Long.parseLong(idPago));
 
                 // Obtener el id de la orden asociada al pago que viene en los metadatos
-                String idOrden = payment.getMetadata().get("id_orden").toString();
+                String idVenta = payment.getMetadata().get("id_venta").toString();
 
                 // Se obtiene la orden guardada en la base de datos y se le asigna el pago, ademas de aumentar la cantidad de entradas vendidas
-                VentaProducto ventaProducto = obtenerVentaProducto(idOrden);
+                VentaProducto ventaProducto = obtenerVentaProducto(idVenta);
+                System.out.println("ID Venta: " + ventaProducto.getId());
                 Pago orderPago = createPayment(payment);
 
                 ventaProducto.setPago(orderPago);
-                ventaProductoRepo.guardarVentaProducto(ventaProducto);
+                ventaProductoRepo.actualizarVentaSimple(ventaProducto);
                 Cuenta cuenta = cuentaService.obtenerCuentaPorEmail(ventaProducto.getEmailUsario());
 
-                List<VentaProducto> ordersClient = obtenerVentasProductoPorCliente(cuenta.getEmail());
+
                 if (ventaProducto.getPago().getStatus().equalsIgnoreCase("APPROVED") && ventaProducto.getPago().getStatusDetail().equalsIgnoreCase("accredited")) {
+                    System.out.println("Tamaño producto:   "+ventaProducto.getProductos().size());
+                    for (DetalleVentaProducto detalleVentaProducto : ventaProducto.getProductos()){
+                        productoService.reducirCantidadProductosStock(detalleVentaProducto.getProductoId(), detalleVentaProducto.getCantidad());
+                    }
                     enviarResumenVenta(cuenta.getEmail(), ventaProducto);
                 }
             }
@@ -434,41 +464,128 @@ public class VentaProductoServiceImp implements VentaProductoService {
         String qrCodeUrl = "https://quickchart.io/qr?text=" + ventaProducto.getId() + "&size=300";
         byte[] qrCodeImage = emailService.downloadImage(qrCodeUrl);
 
-        String subject = "Summary of your purchase";
+        String subject = "Resumen de tu compra en Tienda Sana";
         StringBuilder body = new StringBuilder();
 
-        body.append("<html><body>");
-        body.append("<h1>Hello ").append(cuenta.getUsuario().getNombre()).append("!</h1>");
-        body.append("<p>Thank you for your purchase. Below is a summary of your order:</p>");
+        // Inicio del HTML con estilos CSS incorporados
+        body.append("<!DOCTYPE html>");
+        body.append("<html>");
+        body.append("<head>");
+        body.append("<meta charset='UTF-8'>");
+        body.append("<style>");
+        body.append("body { font-family: 'Helvetica', Arial, sans-serif; color: #333; line-height: 1.6; margin: 0; padding: 0; }");
+        body.append(".container { max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f8f8; }");
+        body.append(".header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }");
+        body.append(".content { background-color: #ffffff; padding: 20px; border-radius: 0 0 5px 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }");
+        body.append("h1 { margin: 0; color: white; font-size: 24px; }");
+        body.append("h2 { color: #4CAF50; font-size: 20px; border-bottom: 2px solid #4CAF50; padding-bottom: 10px; margin-top: 20px; }");
+        body.append(".product { background-color: #f9f9f9; padding: 15px; margin: 10px 0; border-left: 4px solid #4CAF50; border-radius: 4px; }");
+        body.append(".total { background-color: #4CAF50; color: white; padding: 10px; text-align: right; margin-top: 20px; font-size: 18px; border-radius: 4px; }");
+        body.append(".footer { margin-top: 20px; font-size: 12px; text-align: center; color: #777; }");
+        body.append(".qr-code { text-align: center; margin: 20px 0; }");
+        body.append("</style>");
+        body.append("</head>");
 
-        body.append("<h3>Order Summary:</h3>");
-        body.append("<p>Order Number: ").append(ventaProducto.getId()).append("<br>") //El correo se está enviando antes de crear la orden por lo q
-                .append("Purchase Date: ").append(ventaProducto.getFecha()).append("</p>");
+        // Contenido del correo
+        body.append("<body>");
+        body.append("<div class='container'>");
 
+        // Encabezado
+        body.append("<div class='header'>");
+        body.append("<h1>Tienda Sana</h1>");
+        body.append("</div>");
+
+        // Contenido principal
+        body.append("<div class='content'>");
+        body.append("<h2>¡Hola ").append(cuenta.getUsuario().getNombre()).append("!</h2>");
+        body.append("<p>Gracias por tu compra en Tienda Sana. A continuación encontrarás un resumen de tu pedido:</p>");
+
+        // Detalles del pedido
+        body.append("<h2>Detalles del Pedido:</h2>");
+        body.append("<p><strong>Número de Pedido:</strong> #").append(ventaProducto.getId()).append("<br>");
+        body.append("<strong>Fecha de Compra:</strong> ").append(ventaProducto.getFecha()).append("</p>");
+
+        // Información de pago
         if (ventaProducto.getPago() != null) {
-            body.append("<p>Payment Method: ").append(ventaProducto.getPago().getPaymentType().toLowerCase()).append("<br>")
-                    .append("Payment Status: ").append(ventaProducto.getPago().getStatus()).append("</p>");
+            body.append("<p><strong>Método de Pago:</strong> ").append(traducirMetodoPago(ventaProducto.getPago().getPaymentType())).append("<br>");
+            body.append("<strong>Estado del Pago:</strong> ").append(traducirEstadoPago(ventaProducto.getPago().getStatus())).append("</p>");
         }
 
-        body.append("<h3>Event Details:</h3>");
+        // Productos comprados
+        body.append("<h2>Productos Adquiridos:</h2>");
         for (DetalleVentaProducto item : ventaProducto.getProductos()) {
             Producto producto = productoService.getProducto(item.getProductoId());
-            body.append("<p>---------------------------------<br>")
-                    .append("Producto: ").append(producto.getNombre()).append("<br>")
-                    .append("Descripcion: ").append(producto.getDescripcion()).append("<br>")
-                    .append("Cantidad: ").append(item.getCantidad()).append("<br>")
-                    .append("---------------------------------</p>");
+            body.append("<div class='product'>");
+            body.append("<p><strong>").append(producto.getNombre()).append("</strong><br>");
+            body.append("<em>").append(producto.getDescripcion()).append("</em><br>");
+            body.append("Cantidad: ").append(item.getCantidad()).append("<br>");
+            body.append("Precio unitario: $").append(formatearPrecio(producto.getPrecioUnitario())).append("<br>");
+            body.append("Subtotal: $").append(formatearPrecio(producto.getPrecioUnitario() * item.getCantidad())).append("</p>");
+            body.append("</div>");
         }
 
-        body.append("<p>Total Paid: ").append(ventaProducto.getTotal()).append("</p>");
+        // Total
+        body.append("<div class='total'>");
+        body.append("Total pagado: $").append(formatearPrecio(ventaProducto.getTotal()));
+        body.append("</div>");
 
+        // Código QR
+        body.append("<div class='qr-code'>");
+        body.append("<p><strong>Código de confirmación</strong></p>");
+        body.append("<img src='cid:qrCodeImage' alt='Código QR de tu pedido' width='150' height='150'>");
+        body.append("<p>Presenta este código para recoger tu pedido</p>");
+        body.append("</div>");
 
-        body.append("</body></html>");
+        // Pie de página
+        body.append("<div class='footer'>");
+        body.append("<p>Si tienes alguna duda sobre tu pedido, no dudes en contactarnos a través de <a href='mailto:soporte@tiendasana.com'>soporte@tiendasana.com</a>.</p>");
+        body.append("<p>© ").append(java.time.Year.now().getValue()).append(" Tienda Sana. Todos los derechos reservados.</p>");
+        body.append("</div>");
+
+        body.append("</div>"); // Cierre del div content
+        body.append("</div>"); // Cierre del div container
+        body.append("</body>");
+        body.append("</html>");
 
         // Enviar el correo con la imagen embebida
         emailService.sendEmailHtmlWithAttachment(new EmailDTO(subject, body.toString(), email), qrCodeImage, "qrCodeImage");
 
-        return "The summary of your purchase has been sent to your email";
+        return "El resumen de tu compra ha sido enviado a tu correo electrónico";
+    }
+
+    // Métodos auxiliares para traducción
+    private String traducirMetodoPago(String paymentType) {
+        switch (paymentType.toLowerCase()) {
+            case "credit_card":
+                return "Tarjeta de Crédito";
+            case "debit_card":
+                return "Tarjeta de Débito";
+            case "paypal":
+                return "PayPal";
+            case "cash":
+                return "Efectivo";
+            default:
+                return paymentType;
+        }
+    }
+
+    private String traducirEstadoPago(String status) {
+        switch (status.toLowerCase()) {
+            case "completed":
+                return "Completado";
+            case "pending":
+                return "Pendiente";
+            case "failed":
+                return "Fallido";
+            case "refunded":
+                return "Reembolsado";
+            default:
+                return status;
+        }
+    }
+
+    private String formatearPrecio(double precio) {
+        return String.format("%.2f", precio);
     }
 
 

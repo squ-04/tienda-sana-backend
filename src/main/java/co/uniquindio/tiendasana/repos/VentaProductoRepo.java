@@ -28,10 +28,14 @@ public class VentaProductoRepo {
     private String spreadsheetId;
 
     private final String SHEET_NAME = VentaProductoConstantes.HOJA_VENTA;
-    private final String SHEET_NAME_DETALLE = VentaProductoConstantes.CANT_DETALLES;
+    private final String SHEET_NAME_DETALLE = VentaProductoConstantes.HOJA_DETALLE;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * Constructor de la clase
+     * @param sheetsService Servicio de Google Sheets
+     */
     public VentaProductoRepo(Sheets sheetsService) {
         this.sheetsService = sheetsService;
     }
@@ -47,8 +51,14 @@ public class VentaProductoRepo {
         return ventas;
     }
 
+    /**
+     * Asigna los detalles a las ventas de productos
+     * @param ventas Ventas de productos
+     * @throws IOException
+     */
     public void asignarDetalles(List<VentaProducto> ventas) throws IOException {
         List<DetalleVentaProducto> detalles= obtenerDetallesVenta();
+        System.out.println("Detalles: "+detalles);
         for (VentaProducto ventaProducto:ventas) {
             ventaProducto.setProductos(
                     detalles.stream()
@@ -57,7 +67,12 @@ public class VentaProductoRepo {
                             )
                     .collect(Collectors.toList())
             );
+
         }
+        for (VentaProducto ventaProducto:ventas) {
+            System.out.println("Ciclo Venta: "+ventaProducto);
+        }
+
     }
 
     /**
@@ -87,20 +102,36 @@ public class VentaProductoRepo {
         return mapearFilasVentas(filas);
     }
 
+    /**
+     * Optiene todos las ventas de productos sin sus respectivos detalles
+     * @return Ventas de productos sin detalles
+     * @throws IOException
+     */
     private List<List<Object>> obtenerFilasHojaSimples() throws IOException {
         String rango = SHEET_NAME + "!A2:"+ VentaProductoConstantes.COL_REGISTRO_VENTA_FINAL;
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
-        return respuesta.getValues();
+        List<List<Object>> valores=respuesta.getValues();
+        if (valores!=null) {
+            return valores;
+        } else {
+            return new ArrayList<>();
+        }
     }
 
+    /**
+     * Mapea las ventas de productos a partir de los datos de la base de datos,
+     * sin tener en cuenta sus detalles
+     * @param filas Datos en el formato de la base de datos
+     * @return Datos en el formato de las clases de java
+     */
     private List<VentaProducto> mapearFilasVentas(List<List<Object>> filas) {
         List<VentaProducto> ventas = new ArrayList<>();
         for (List<Object> row : filas) {
             try {
-                VentaProducto carrito= mapearVenta(row);
-                ventas.add(carrito);
+                VentaProducto venta= mapearVenta(row);
+                ventas.add(venta);
             } catch (Exception e) {
-                System.err.println("Error al procesar fila: " + row + "\n" + e.getMessage());
+                e.printStackTrace();
             }
         }
         return ventas;
@@ -113,23 +144,27 @@ public class VentaProductoRepo {
      * @return Datos en el formato de las clases de java
      */
     public VentaProducto mapearVenta(List<Object> row) {
-        String id=row.get(0).toString();
-        String emailUsuario=row.get(1).toString();
-        LocalDateTime fecha=LocalDateTime.parse(row.get(2).toString());
-        float total=Float.parseFloat(row.get(3).toString());
-        String promocionId=row.get(4).toString();
-        String codigoPasarela=row.get(5).toString();
+        String id = row.get(0).toString();
+        String emailUsuario = row.get(1).toString();
+        LocalDateTime fecha = LocalDateTime.parse(row.get(2).toString());
+        String totalString = row.get(3).toString();
+        float total = totalString.matches("\\d+(\\.\\d+)?") ? Float.parseFloat(totalString) : 0.0f;
+        String promocionId = row.get(4).toString();
+        String codigoPasarela = row.get(5).toString();
 
-        Pago pago = Pago.builder()
-                .id(row.get(6).toString())
-                .currency(row.get(7).toString())
-                .paymentType(row.get(8).toString())
-                .statusDetail(row.get(9).toString())
-                .authorizationCode(row.get(10).toString())
-                .date(LocalDateTime.parse(row.get(11).toString()))
-                .transactionValue(Float.parseFloat(row.get(12).toString()))
-                .status(row.get(13).toString())
-                .build();
+        Pago pago = null;
+        if (row.size() > 6 && row.get(6) != null) {
+            pago = Pago.builder()
+                    .id(row.get(6) != null ? row.get(6).toString() : "-")
+                    .currency(row.size() > 7 && row.get(7) != null ? row.get(7).toString() : "-")
+                    .paymentType(row.size() > 8 && row.get(8) != null ? row.get(8).toString() : "-")
+                    .statusDetail(row.size() > 9 && row.get(9) != null ? row.get(9).toString() : "-")
+                    .authorizationCode(row.size() > 10 && row.get(10) != null ? row.get(10).toString() : "-")
+                    .date(row.size() > 11 && !row.get(11).toString().equals("-") ? LocalDateTime.parse(row.get(11).toString()) : null)
+                    .transactionValue(row.size() > 12 && !row.get(12).toString().equals("-") ? Float.parseFloat(row.get(12).toString()) : 0.0f)
+                    .status(row.size() > 13 && row.get(13) != null ? row.get(13).toString() : "-")
+                    .build();
+        }
 
         return VentaProducto.builder()
                 .id(id)
@@ -148,22 +183,22 @@ public class VentaProductoRepo {
      * @return datos en formato de la base de datos
      */
     public List<Object> mapearVentaInverso(VentaProducto venta) {
-        Pago pago=venta.getPago();
+        Pago pago = venta.getPago();
         return Arrays.asList(
                 venta.getId(),
                 venta.getEmailUsario(),
-                venta.getFecha().toString(),
-                ""+venta.getTotal(),
+                venta.getFecha() != null ? venta.getFecha().toString() : "-",
+                "" + venta.getTotal(),
                 venta.getPromocionId(),
                 venta.getCodigoPasarela(),
-                pago.getId(),
-                pago.getCurrency(),
-                pago.getPaymentType(),
-                pago.getStatusDetail(),
-                pago.getAuthorizationCode(),
-                pago.getDate().toString(),
-                ""+pago.getTransactionValue(),
-                pago.getStatus()
+                pago != null ? pago.getId() : "-",
+                pago != null ? pago.getCurrency() : "-",
+                pago != null ? pago.getPaymentType() : "-",
+                pago != null ? pago.getStatusDetail() : "-",
+                pago != null ? pago.getAuthorizationCode() : "-",
+                pago != null && pago.getDate() != null ? pago.getDate().toString() : "-",
+                pago != null ? "" + pago.getTransactionValue() : "0",
+                pago != null ? pago.getStatus() : "-"
         );
     }
 
@@ -179,15 +214,26 @@ public class VentaProductoRepo {
      */
     public List<VentaProducto> filtrarVentasSimple (Predicate<VentaProducto> expresion) throws IOException, ProductoParseException {
         List<VentaProducto> ventas = obtenerVentasSimples();
+
         List<VentaProducto> ventasFiltradas =  ventas.stream()
                 .filter(expresion)
                 .collect(Collectors.toList());
         asignarDetalles(ventasFiltradas);
-        return ventas;
+        return ventasFiltradas;
     }
 
-    public int contarCarritosExistintes() throws IOException {
-        String rango = VentaProductoConstantes.CANT_CARRITOS; // Ajusta según columnas
+    /**
+     * Filtra las ventas teniendo en cuenta sus detalles, puede llegar a darse en
+     * O(<span style="color:red;">n</span>+<span style="color:blue;">m</span>)<br>
+     * <span style="color:red;">n</span> siendo la cantidad total de ventas de productos<br>
+     * <span style="color:blue;">m</span> siendo la cantidad total de detalles de todos las ventas juntas
+     * @param expresion expresion lambda que filtra las ventas
+     * @return Ventas de productos
+     * @throws IOException
+     * @throws ProductoParseException
+     */
+    public int contarVentasExistentes() throws IOException {
+        String rango = VentaProductoConstantes.CANT_VENTAS; // Ajusta según columnas
         List<List<Object>> respuesta =
                 sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute().getValues();
         return Integer.parseInt(respuesta.get(0).get(0).toString());
@@ -202,7 +248,7 @@ public class VentaProductoRepo {
      */
     public VentaProducto guardarVentaProductoSimple(VentaProducto venta) throws IOException {
 
-        int detalles=contarCarritosExistintes();
+        int detalles= contarVentasExistentes();
         String range = SHEET_NAME+"!A"+(2+detalles)+":"+ VentaProductoConstantes.COL_REGISTRO_VENTA_FINAL+(2+detalles);
 
         List<List<Object>> values = Arrays.asList(
@@ -235,6 +281,11 @@ public class VentaProductoRepo {
         return venta;
     }
 
+    /**
+     * Busca el indice de la venta de productos en la base de datos
+     * @param id Id de la venta de productos
+     * @return Indice de la venta de productos
+     */
     public int obtenerIndiceVenta(String id) {
         List<VentaProducto> ventas = null;
         int filaCuenta=-1;
@@ -286,12 +337,19 @@ public class VentaProductoRepo {
      */
     public void actualizarVenta(VentaProducto venta) throws IOException {
         actualizarVentaSimple(venta);
-        for (DetalleVentaProducto detalle:venta.getProductos()) {
+        List<DetalleVentaProducto> detallesActualizarVenta=new ArrayList<>(venta.getProductos());
+        detallesActualizarVenta.retainAll(obtenerDetallesVenta());
+        List<DetalleVentaProducto> detallesNuevosVenta=new ArrayList<>(venta.getProductos());
+        detallesNuevosVenta.removeAll(detallesActualizarVenta);
+        for (DetalleVentaProducto detalle:detallesNuevosVenta) {
+            guardarDetalle(detalle);
+        }
+        for (DetalleVentaProducto detalle:detallesActualizarVenta) {
             actualizarDetalle(detalle);
         }
     }
 
-    //-----------DetallesCarrito-----------------------------------------------------------------------
+    //-----------DetallesVenta-----------------------------------------------------------------------
 
     /**
      * Optiene todos los los detalles de todos las ventas de productos
@@ -303,12 +361,23 @@ public class VentaProductoRepo {
         return mapearFilasDetallesVenta(filas);
     }
 
+    /**
+     * Optiene todos los detalles de todos las ventas de productos
+     * @return Detalles de ventas de productos
+     * @throws IOException
+     */
     private List<List<Object>> obtenerFilasHojaDetalle() throws IOException {
         String rango = SHEET_NAME_DETALLE + "!A2:"+VentaProductoConstantes.COL_REGISTRO_DETALLE_FINAL; // Asumiendo que usas columnas: Fecha, IDUsuario, Productos
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
         return respuesta.getValues();
     }
 
+    /**
+     * Mapea los detalles de las ventas de productos a partir de los datos de la base de datos
+     * @param filas Datos en el formato de la base de datos
+     * @return Datos en el formato de las clases de java
+     * @throws IOException
+     */
     private List<DetalleVentaProducto> mapearFilasDetallesVenta(List<List<Object>> filas) throws IOException {
         List<DetalleVentaProducto> detalles = new ArrayList<>();
         for (List<Object> row : filas) {
@@ -354,6 +423,15 @@ public class VentaProductoRepo {
         );
     }
 
+    /**
+     * Filtra los detalles de las ventas teniendo en cuenta sus detalles, puede llegar a darse en
+     * O(<span style="color:red;">n</span>+<span style="color:blue;">m</span>)<br>
+     * <span style="color:red;">n</span> siendo la cantidad total de detalles de productos<br>
+     * <span style="color:blue;">m</span> siendo la cantidad total de detalles de todos las ventas juntas
+     * @param expresion expresion lambda que filtra los detalles
+     * @return Detalles de ventas de productos
+     * @throws IOException
+     */
     public List<DetalleVentaProducto> filtrarDetalles (Predicate<DetalleVentaProducto> expresion) throws IOException {
         List<DetalleVentaProducto> detalles = obtenerDetallesVenta();
         return detalles.stream()
@@ -361,6 +439,15 @@ public class VentaProductoRepo {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Filtra los detalles de las ventas teniendo en cuenta sus detalles, puede llegar a darse en
+     * O(<span style="color:red;">n</span>+<span style="color:blue;">m</span>)<br>
+     * <span style="color:red;">n</span> siendo la cantidad total de detalles de productos<br>
+     * <span style="color:blue;">m</span> siendo la cantidad total de detalles de todos las ventas juntas
+     * @param expresion expresion lambda que filtra los detalles
+     * @return Detalles de ventas de productos
+     * @throws IOException
+     */
     public int contarDetallesExistintes() throws IOException {
         String rango = VentaProductoConstantes.CANT_DETALLES;// Ajusta según columnas
         List<List<Object>> respuesta =
@@ -368,6 +455,12 @@ public class VentaProductoRepo {
         return Integer.parseInt(respuesta.get(0).get(0).toString());
     }
 
+    /**
+     * Guarda los datos de la venta de productos junto con sus detalles
+     *
+     * @param detalle Detalle de la venta de productos
+     * @throws IOException
+     */
     public void guardarDetalle(DetalleVentaProducto detalle) throws IOException {
 
         int detalles=contarDetallesExistintes();
@@ -387,6 +480,12 @@ public class VentaProductoRepo {
         System.out.println("Numero de celdas actualizadas: " + result.getUpdatedCells());
     }
 
+    /**
+     * Busca el indice del detalle de la venta de productos en la base de datos
+     * @param idCarrito Id de la venta de productos
+     * @param productoId Id del producto
+     * @return Indice del detalle de la venta de productos
+     */
     public int obtenerIndiceDetalle(String idCarrito,String productoId) {
         List<DetalleVentaProducto> detalles = null;
         int filaCuenta=-1;
@@ -406,6 +505,11 @@ public class VentaProductoRepo {
         return filaCuenta;
     }
 
+    /**
+     * Actualiza los datos de la base de datos del detalle de la venta de productos
+     * @param detalle Datos del detalle de la venta de productos
+     * @throws IOException
+     */
     public void actualizarDetalle(DetalleVentaProducto detalle) throws IOException {
         int indice=obtenerIndiceDetalle(detalle.getVentaId(),detalle.getProductoId());
         if (indice!=-1) {
@@ -427,6 +531,10 @@ public class VentaProductoRepo {
         }
     }
 
+    /**
+     * Convierte los datos de detalle al formato de la base de datos sin tener en cuenta los detalles
+     * @return datos en formato de la base de datos
+     */
     public List<Object> mapearBorrado() {
         return Arrays.asList(
                 "-",
@@ -436,6 +544,11 @@ public class VentaProductoRepo {
         );
     }
 
+    /**
+     * Elimina los datos de la base de datos del detalle de la venta de productos
+     * @param detalle Datos del detalle de la venta de productos
+     * @throws IOException
+     */
     public void eliminarDetalle(DetalleVentaProducto detalle) throws IOException {
         int indice=obtenerIndiceDetalle(detalle.getVentaId(),detalle.getProductoId());
         if (indice!=-1) {

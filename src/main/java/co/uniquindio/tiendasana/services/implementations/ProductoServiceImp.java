@@ -119,7 +119,13 @@ public class ProductoServiceImp implements ProductoService {
                 productosItems
         );
     }
-
+    /**
+     * Obtener un producto (Entidad) dado su ID
+     * @param id
+     * @return
+     * @throws ProductoParseException
+     * @throws IOException
+     */
     @Override
     public Producto getProducto(String id) throws ProductoParseException, IOException {
         Optional<Producto> productoOptional= productRepo.obtenerPorId(id);
@@ -128,6 +134,25 @@ public class ProductoServiceImp implements ProductoService {
         }
         Producto producto=productoOptional.get();
         return producto;
+    }
+
+    /**
+     * Metodo para reducir la cantidad de Stock de un producto una vez se tenga un pago aprovado y acreditado
+     *
+     * @param id
+     * @param cantidadComprada
+     * @throws ProductoParseException
+     * @throws IOException
+     */
+    @Override
+    public void reducirCantidadProductosStock(String id, int cantidadComprada) throws Exception {
+        Producto producto= getProducto(id);
+        if (producto.getCantidad()-cantidadComprada < 0) {
+            throw new Exception ("La compra del producto "+producto.getNombre() +" es alta para el stock");
+        }
+        producto.setCantidad(producto.getCantidad()-cantidadComprada);
+        productRepo.actualizar(producto);
+        System.out.println("Se ha actualizado el producto correctamente");
     }
 
 

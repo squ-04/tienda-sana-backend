@@ -30,6 +30,7 @@ public class ProductRepo  {
     private  String spreadsheetId;
 
     private final String SHEET_NAMECLIENTE = ProductoConstantes.HOJACLIENTE;
+    private final String SHEET_GENERAL= ProductoConstantes.HOJAADMIN;
 
     /**
      * Metodo contructor de la clase
@@ -53,17 +54,42 @@ public class ProductRepo  {
        return new ProductosTotal( totalProductos, productos);
     }
 
-    public List<Producto> obtenerProductos() throws IOException, ProductoParseException {
-        List<List<Object>> filas = obtenerFilasHoja();
+    /**
+     * Método obtener las filas de una hoja como lista de productos
+     * @param hoja, hoja a la cual se le desean extraer las filas
+     * @return Lista de productos
+     * @throws IOException
+     * @throws ProductoParseException
+     */
+    public List<Producto> obtenerProductos(String hoja) throws IOException, ProductoParseException {
+        List<List<Object>> filas = obtenerFilasHoja(hoja);
         return mapearFilasProductos(filas);
     }
 
-    private List<List<Object>> obtenerFilasHoja() throws IOException {
-        String rango = SHEET_NAMECLIENTE + "!A2:"+ ProductoConstantes.COL_REGISTRO_FINAL; // ID, Nombre, Estado, Localidad, PrecioReserva
+    /**
+     * Este metodo sirve para obtener todas las filas de una hoja dada, esto se representa como una lista de listas
+     * de objetos, debido a que cada una de las filas se representa como una lista de onjetos
+     * @param hoja, hoja a la cual se le extraen las filas ne formato Java
+     * @return
+     * @throws IOException
+     */
+    private List<List<Object>> obtenerFilasHoja(String hoja) throws IOException {
+        String rango = hoja + "!A2:"+ ProductoConstantes.COL_REGISTRO_FINAL; // ID, Nombre, Estado, Localidad, PrecioReserva
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
-        return respuesta.getValues();
+        List<List<Object>> valores=respuesta.getValues();
+        if (valores!=null) {
+            return valores;
+        } else {
+            return new ArrayList<>();
+        }
     }
 
+    /**
+     * Método que cuenta trae la celda que cuenta la cantidad de productos en la hoja destinada a los productos que se
+     * le van a mostrar al cliente
+     * @return int que indidca la cantidad de productos que hay en la hoja de productos del cliente
+     * @throws IOException
+     */
     public int contarProductosExistintes() throws IOException {
         String rango = SHEET_NAMECLIENTE + ProductoConstantes.CANT_PRODUCTOS; // Ajusta según columnas
         List<List<Object>> respuesta =
@@ -106,35 +132,18 @@ public class ProductRepo  {
                 Producto producto=mapearProducto(row);
                 productos.add(producto);
             }catch (NumberFormatException e){
+                e.printStackTrace();
                 throw new ProductoParseException("Error en el parseo de cantidad o precio unitario del producto en fila "+ row);
             }
         }
         return productos;
     }
-    /**
-    private List<Producto> mapearFilasProductos(List<List<Object>> filas) throws ProductoParseException {
-        List<Producto> productos = new ArrayList<>();
-        for (List<Object> row : filas) {
-            try {
-                Producto producto = Producto.builder()
-                        .nombre(!row.isEmpty() ? row.get(0).toString() : null)
-                        .descripcion(row.size() > 1 ? row.get(1).toString() : null)
-                        .categoria(row.size() > 2 ? row.get(2).toString() : null)
-                        .estado(row.size() > 3 ? row.get(3).toString() : null)
-                        .cantidad(row.size() > 4 ? Integer.parseInt(row.get(4).toString()) : -1)
-                        .imagen(row.size() > 5 ? row.get(5).toString() : null)
-                        .precioUnitario(row.size() > 6 ? Float.parseFloat(row.get(6).toString()) : -1.0f)
-                        .id(row.size() > 7 ? row.get(7).toString() : null)
-                        .build();
-                productos.add(producto);
-            }catch (NumberFormatException e){
-                throw new ProductoParseException("Error en el parseo de cantidad o precio unitario del producto en fila "+ row);
-            }
-        }
-        return productos;
-    }
-    */
 
+    /**
+     * Métddo con el cual una lista de objetos se transforma en un producto (Entidad)
+     * @param row Lista de objetos a transformar (Castear) en producto
+     * @return
+     */
     public Producto mapearProducto(List<Object> row) {
         String nombre = row.get(0).toString();
         String descripcion= row.get(1).toString();
@@ -157,6 +166,12 @@ public class ProductRepo  {
                 .build();
     }
 
+    /**
+     * Método para mapear un producto como Lista de objetos, ya que es este tipo de dato el que la integracion
+     * con Google Sheets permite para hacer la escritura sobre la hoja de calculo
+     * @param producto el cual será el producto para tranforma en lista de objetos
+     * @return Lista de objetos que representa el producto
+     */
     //TODO verificar si es valido para el estado
     public List<Object> mapearProductoInverso(Producto producto) {
         return Arrays.asList(
@@ -164,25 +179,39 @@ public class ProductRepo  {
                 producto.getDescripcion(),
                 producto.getCategoria(),
                 producto.getEstado(),
-                ""+producto.getCantidad(),
+                producto.getCantidad(),
                 producto.getImagen(),
-                ""+((int)producto.getPrecioUnitario()),
+                ((int)producto.getPrecioUnitario()),
                 producto.getId()
         );
     }
 
-    public List<Producto> filtrar (Predicate<Producto> expresion) throws IOException, ProductoParseException {
-        List<Producto> productos = obtenerProductos();
+    /**
+     * Método para fitrar dada una expresión de tipo Predictate y una hoja en la cual se debe de filtrar
+     * @param expresion
+     * @param hoja
+     * @return
+     * @throws IOException
+     * @throws ProductoParseException
+     */
+    public List<Producto> filtrar (Predicate<Producto> expresion, String hoja) throws IOException, ProductoParseException {
+        List<Producto> productos = obtenerProductos(hoja);
         return productos.stream()
                 .filter(expresion)
                 .collect(Collectors.toList());
     }
 
-    public int obtenerIndiceProducto(String id) {
+    /**
+     * Método para obtener el indice de un producto en una hoja que tiene como parametro
+     * @param id
+     * @param hoja, hoja donde se buscara el producto
+     * @return int que indica la posicion del producto en las filas validas de la hoja de cáclculo
+     */
+    public int obtenerIndiceProducto(String id, String hoja) {
         List<Producto> productos = null;
         int filaCuenta=-1;
         try {
-            productos = obtenerProductos();
+            productos = obtenerProductos(hoja);
         } catch (IOException | ProductoParseException e) {
             throw new RuntimeException();
         }
@@ -196,10 +225,18 @@ public class ProductRepo  {
         return filaCuenta;
     }
 
+
+
+    /**
+     * Metodo que busca actualizar una de las filas en la hoja de cálculo de productos que se comparte con Softr,
+     * actualiza toda la fila dada la nueva información de la entidad producto
+     * @param producto
+     * @throws IOException
+     */
     public void actualizar(Producto producto) throws IOException {
-        int indice=obtenerIndiceProducto(producto.getId());
+        int indice= obtenerIndiceProducto(producto.getId(),SHEET_GENERAL);
         if (indice!=-1) {
-            String range = SHEET_NAMECLIENTE +"!A"+(2+indice)+":"+ ProductoConstantes.COL_REGISTRO_FINAL+(2+indice);
+            String range = SHEET_GENERAL +"!A"+(2+indice)+":"+ ProductoConstantes.COL_REGISTRO_FINAL+(2+indice);
             List<List<Object>> values = Arrays.asList(
                     mapearProductoInverso(producto)
             );
@@ -217,9 +254,17 @@ public class ProductRepo  {
         }
     }
 
+    /**
+     * Método para obtener un producto como entidad, dado un id, buscandolo en la base de datos de
+     * Google sheets
+     * @param id
+     * @return Optional del producto
+     * @throws IOException
+     * @throws ProductoParseException
+     */
     public Optional<Producto> obtenerPorId(String id) throws IOException, ProductoParseException {
         List<Producto> productosObtenidos=
-                filtrar(producto -> producto.getId().equals(id));
+                filtrar(producto -> producto.getId().equals(id), SHEET_NAMECLIENTE);
         if (productosObtenidos.isEmpty()) {
             return Optional.empty();
         }
