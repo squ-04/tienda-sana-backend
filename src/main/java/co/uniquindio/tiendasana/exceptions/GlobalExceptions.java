@@ -1,6 +1,7 @@
 package co.uniquindio.tiendasana.exceptions;
 
 import co.uniquindio.tiendasana.dto.jwtdtos.MessageDTO;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -20,9 +21,16 @@ public class GlobalExceptions {
      * @return
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<MessageDTO<String>> generalException(Exception e) {
-        return ResponseEntity.internalServerError().body(new MessageDTO<>(true, e.getMessage())
-        );
+    public ResponseEntity<MessageDTO<String>> generalException(Exception e, HttpServletRequest request) {
+        String path = request.getRequestURI();
+
+        if (path.startsWith("/actuator")) {
+            // Deja que el actuator maneje sus propias excepciones
+             e.printStackTrace();
+        }
+
+        return ResponseEntity.internalServerError()
+                .body(new MessageDTO<>(true, e.getMessage()));
     }
 
     /**
