@@ -40,7 +40,7 @@ public class CarritoComprasRepo {
     /**
      * Optiene todos los carritos de compras con sus respectivos detalles
      * @return Carritos de compras
-     * @throws IOException
+     * @throws IOException Error al acceder a la base de datos
      */
     public List<CarritoCompras> obtenerCarritos() throws IOException {
         List<CarritoCompras> carritos=obtenerCarritosSimples();
@@ -48,6 +48,11 @@ public class CarritoComprasRepo {
         return carritos;
     }
 
+    /**
+     * Asigna los detalles a los carritos de compra
+     * @param carritos Carritos de compra
+     * @throws IOException Error al acceder a la base de datos
+     */
     public void asignarDetalles(List<CarritoCompras> carritos) throws IOException {
         List<DetalleCarrito> detalles=obtenerDetallesCarrito();
         for (CarritoCompras carritoCompras:carritos) {
@@ -66,9 +71,9 @@ public class CarritoComprasRepo {
      * O(<span style="color:red;">n</span>*<span style="color:blue;">m</span>)<br>
      * <span style="color:red;">n</span> siendo la cantidad total de carritos de compra<br>
      * <span style="color:blue;">m</span> siendo la cantidad total de detalles de todos los carritos juntos
-     * @param expresion
-     * @return
-     * @throws IOException
+     * @param expresion Operacion de filtrado
+     * @return Datos filtrados
+     * @throws IOException Error al acceder a la base de datos
      */
     public List<CarritoCompras> filtrar (Predicate<CarritoCompras> expresion) throws IOException {
         List<CarritoCompras> carritos = obtenerCarritos();
@@ -80,13 +85,18 @@ public class CarritoComprasRepo {
     /**
      * Optiene todos los carritos de compras sin sus respectivos detalles
      * @return Carritos de compras sin detalles
-     * @throws IOException
+     * @throws IOException Error al acceder a la base de datos
      */
     public List<CarritoCompras> obtenerCarritosSimples() throws IOException {
         List<List<Object>> filas = obtenerFilasHojaSimples();
         return mapearFilasCarritos(filas);
     }
 
+    /**
+     * Obtiene los carritos de compra de la base de datos sin tener en cuenta sus detalles
+     * @return Datos obtenidos de la base de datos
+     * @throws IOException Error al obtener los datos de la pbase de datos
+     */
     private List<List<Object>> obtenerFilasHojaSimples() throws IOException {
         String rango = SHEET_NAME + "!A2:"+CarritoConstantes.COL_REGISTRO_CARRITO_FINAL;
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
@@ -98,6 +108,11 @@ public class CarritoComprasRepo {
         }
     }
 
+    /**
+     * Convierte los datos obtenidos desde la base de datos al formato de java
+     * @param filas Datos de la base de datos
+     * @return Lista de datos en formato de la respectiva clase de java
+     */
     private List<CarritoCompras> mapearFilasCarritos(List<List<Object>> filas) {
         List<CarritoCompras> carritos = new ArrayList<>();
         for (List<Object> row : filas) {
@@ -148,10 +163,9 @@ public class CarritoComprasRepo {
      * O(<span style="color:red;">n</span>+<span style="color:blue;">m</span>)<br>
      * <span style="color:red;">n</span> siendo la cantidad total de carritos de compra<br>
      * <span style="color:blue;">m</span> siendo la cantidad total de detalles de todos los carritos juntos
-     * @param expresion
-     * @return
-     * @throws IOException
-     * @throws ProductoParseException
+     * @param expresion Operacion de filtrado
+     * @return Datos filtrados
+     * @throws IOException Error al acceder a la base de datos
      */
     public List<CarritoCompras> filtrarCarritosSimple (Predicate<CarritoCompras> expresion) throws IOException {
         List<CarritoCompras> carritos = obtenerCarritosSimples();
@@ -162,6 +176,11 @@ public class CarritoComprasRepo {
         return carritosFiltrados;
     }
 
+    /**
+     * Cuenta el total de registros de carritos en la base de datos
+     * @return Cantidad de registros
+     * @throws IOException Error al consultar la base de datos
+     */
     public int contarCarritosExistintes() throws IOException {
         String rango = CarritoConstantes.CANT_CARRITOS; // Ajusta según columnas
         List<List<Object>> respuesta =
@@ -205,6 +224,11 @@ public class CarritoComprasRepo {
         }
     }
 
+    /**
+     * Obtiene el indice o posicion de un carrito en la base de datos
+     * @param idUsuario Email del usuario
+     * @return Indice donde se encuentra el registro respectivo
+     */
     public int obtenerIndiceCarrito(String idUsuario) {
         List<CarritoCompras> carritos = null;
         int filaCuenta=-1;
@@ -226,7 +250,7 @@ public class CarritoComprasRepo {
     /**
      * Actualiza los datos de la base de datos del carrito de compras teniendo en cuenta sus detalles
      * @param carrito Datos del carrito de compras sin detalles
-     * @throws IOException
+     * @throws IOException Error al acceder a la base de datos
      */
     public void actualizarCarritoSimple(CarritoCompras carrito) throws IOException {
         int indice=obtenerIndiceCarrito(carrito.getIdUsuario());
@@ -252,7 +276,7 @@ public class CarritoComprasRepo {
     /**
      * Actualiza los datos de la base de datos del carrito de compras teniendo en cuenta sus detalles
      * @param carrito Datos del carrito de compras
-     * @throws IOException
+     * @throws IOException Error al acceder de la base de datos
      */
     public void actualizarCarrito(CarritoCompras carrito) throws IOException {
         actualizarCarritoSimple(carrito);
@@ -273,13 +297,18 @@ public class CarritoComprasRepo {
     /**
      * Optiene todos los los detalles de todos los carritos de compras
      * @return Detalles de carritos de compras
-     * @throws IOException
+     * @throws IOException Error al obtener los datos de la base de datos
      */
     public List<DetalleCarrito> obtenerDetallesCarrito() throws IOException {
         List<List<Object>> filas = obtenerFilasHojaDetalle();
         return mapearFilasDetallesCarrito(filas);
     }
 
+    /**
+     * Obtiene los detalles de los carritos de compra de la base de datos
+     * @return Datos obtenidos de la base de datos
+     * @throws IOException Error al obtener los datos de la base de datos
+     */
     private List<List<Object>> obtenerFilasHojaDetalle() throws IOException {
         String rango = SHEET_NAME_DETALLE + "!A2:"+CarritoConstantes.COL_REGISTRO_DETALLE_FINAL; // Asumiendo que usas columnas: Fecha, IDUsuario, Productos
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
@@ -291,6 +320,11 @@ public class CarritoComprasRepo {
         }
     }
 
+    /**
+     * Mapea  detalles de un carrito de compra a partir de los datos de la base de datos
+     * @param filas Datos en el formato de la base de datos
+     * @return Datos en el formato de las clases de java
+     */
     private List<DetalleCarrito> mapearFilasDetallesCarrito(List<List<Object>> filas) throws IOException {
         List<DetalleCarrito> detalles = new ArrayList<>();
         for (List<Object> row : filas) {
@@ -336,6 +370,12 @@ public class CarritoComprasRepo {
         );
     }
 
+    /**
+     * Filtra los detalles de los carritos de compras
+     * @param expresion Operacion de filtrado
+     * @return Datos filtrados
+     * @throws IOException Error al acceder a la base de datos
+     */
     public List<DetalleCarrito> filtrarDetalles (Predicate<DetalleCarrito> expresion) throws IOException {
         List<DetalleCarrito> detalles = obtenerDetallesCarrito();
         return detalles.stream()
@@ -343,6 +383,11 @@ public class CarritoComprasRepo {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Cuenta el total de registros de detalles de carritos en la base de datos
+     * @return Cantidad de registros
+     * @throws IOException Error al consultar la base de datos
+     */
     public int contarDetallesExistintes() throws IOException {
         String rango = CarritoConstantes.CANT_DETALLES;// Ajusta según columnas
         List<List<Object>> respuesta =
@@ -350,6 +395,11 @@ public class CarritoComprasRepo {
         return Integer.parseInt(respuesta.get(0).get(0).toString());
     }
 
+    /**
+     * Guarda los datos del detalle de carrito de compras
+     * @param detalle Deatlle de carrito de compras junto con sus detalles
+     * @throws IOException Error al acceder a la base de datos
+     */
     public void guardarDetalle(DetalleCarrito detalle) throws IOException {
 
         int detalles=contarDetallesExistintes();
@@ -369,6 +419,12 @@ public class CarritoComprasRepo {
         System.out.println("Numero de celdas actualizadas: " + result.getUpdatedCells());
     }
 
+    /**
+     * Obtiene el indice o posicion de un detalle de un carrito de compras en la base de datos
+     * @param idCarrito Id del carrito del detalle
+     * @param productoId Id del producto del detalle
+     * @return Indice donde se encuentra el registro respectivo
+     */
     public int obtenerIndiceDetalle(String idCarrito,String productoId) {
         List<DetalleCarrito> detalles = null;
         int filaCuenta=-1;
@@ -388,6 +444,11 @@ public class CarritoComprasRepo {
         return filaCuenta;
     }
 
+    /**
+     * Actualiza los datos de la base de datos de los detalles de carritos compras
+     * @param detalle Datos del carrito de compras sin detalles
+     * @throws IOException Error al acceder a la base de datos
+     */
     public void actualizarDetalle(DetalleCarrito detalle) throws IOException {
         int indice=obtenerIndiceDetalle(detalle.getIdCarrito(),detalle.getProductoId());
         if (indice!=-1) {
@@ -409,6 +470,10 @@ public class CarritoComprasRepo {
         }
     }
 
+    /**
+     * Convierte los datos de detalle eliminado de manera logica al formato de la base de datos
+     * @return Datos en formato de la base de datos
+     */
     public List<Object> mapearBorrado() {
         return Arrays.asList(
                 "-",
@@ -418,6 +483,11 @@ public class CarritoComprasRepo {
         );
     }
 
+    /**
+     * Elimina un detalle de un carrito de compras de forma logica de la base de datos
+     * @param detalle Detalle a eliminar
+     * @throws IOException Error al acceder en la base de datos
+     */
     public void eliminarDetalle(DetalleCarrito detalle) throws IOException {
         int indice=obtenerIndiceDetalle(detalle.getIdCarrito(),detalle.getProductoId());
         if (indice!=-1) {
@@ -439,6 +509,12 @@ public class CarritoComprasRepo {
         }
     }
 
+    /**
+     * Obteiene un carrito de compras por el id o email de un usuario
+     * @param idUsuario Email del usuario
+     * @return Carrito de compras envontrado
+     * @throws IOException Error al acceder a la base de datos o al encontrar mas de un carrito de un mismo usuario
+     */
     public Optional<CarritoCompras> obtenerPorIdUsuario(String idUsuario) throws IOException {
         List<CarritoCompras> carritosObtenidos=
                 filtrar(carrito -> carrito.getIdUsuario().equals(idUsuario));
@@ -451,6 +527,11 @@ public class CarritoComprasRepo {
         return Optional.of(carritosObtenidos.get(0));
     }
 
+    /**
+     * Elimina de forma logica los detalles en la base de datos
+     * @param detallesEliminar Detalles a eliminar
+     * @throws IOException Error al acceder a la base de datos
+     */
     public void eliminarDetalles(List<DetalleCarrito> detallesEliminar) throws IOException {
         for (DetalleCarrito detalle : detallesEliminar) {
             eliminarDetalle(detalle);
