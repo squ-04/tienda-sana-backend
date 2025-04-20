@@ -43,6 +43,10 @@ public class ServicioProductoTest {
     private AssertTrueValidator assertTrueValidator;
      */
 
+    /**
+     * Metodo que crea una cuenta de usuario para pruebas
+     * @return Cuenta
+     */
     public Cuenta quemarCuenta() {
         Usuario usuario = Usuario.builder()
                 .dni("1090")
@@ -73,6 +77,10 @@ public class ServicioProductoTest {
                 .build();
     }
 
+    /**
+     * Metodo que crea un producto para pruebas
+     * @return Producto
+     */
     public Producto quemarProducto() {
         return Producto.builder()
                 .nombre("Ensalada Mediterranea")
@@ -86,6 +94,10 @@ public class ServicioProductoTest {
                 .build();
     }
 
+    /**
+     * Metodo que crea un detalle de carrito de compras para pruebas
+     * @return DetalleCarrito
+     */
     public DetalleCarrito quemarDetalleCarrito(String idCarrito,String productoId) {
         return DetalleCarrito.builder()
                 .productoId(productoId)
@@ -95,6 +107,10 @@ public class ServicioProductoTest {
                 .build();
     }
 
+    /**
+     * Metodo que crea un carrito de compras para pruebas
+     * @return CarritoCompras
+     */
     public CarritoCompras quemarCarritoCompras(String idUsuario) {
         return CarritoCompras.builder()
                 .id("2014b7e7-182a-45fe-8275-80e415a5d4e6")
@@ -106,6 +122,10 @@ public class ServicioProductoTest {
                 .build();
     }
 
+    /**
+     * Metodo que crea un detalle de venta de producto para pruebas
+     * @return DetalleVentaProducto
+     */
     public DetalleVentaProducto quemarDetalleVentaProducto(String idVenta,String productoId) {
         return DetalleVentaProducto.builder()
                 .productoId(productoId)
@@ -115,6 +135,10 @@ public class ServicioProductoTest {
                 .build();
     }
 
+    /**
+     * Metodo que crea una venta de producto para pruebas
+     * @return VentaProducto
+     */
     public VentaProducto quemarVentaProducto(String idUsuario,String productoId) {
         Pago pago = Pago.builder()
                 .id("1334999969")
@@ -142,6 +166,9 @@ public class ServicioProductoTest {
                 .build();
     }
 
+    /**
+     * Metodo para probar la obtencion de cuentas
+     */
     @Test
     public void obtenerCuentas() {
         try {
@@ -153,6 +180,9 @@ public class ServicioProductoTest {
         }
     }
 
+    /**
+     * Metodo para probar la obtencion de productos
+     */
     @Test
     public void obtenerProductos() {
         try {
@@ -164,6 +194,9 @@ public class ServicioProductoTest {
         }
     }
 
+    /**
+     * Metodo para probar la obtencion de productos que se le muestran al cliente
+     */
     @Test
     public void obtenerProductosCliente() {
         try {
@@ -175,6 +208,9 @@ public class ServicioProductoTest {
         }
     }
 
+    /**
+     * Metodo para probar la obtencion de detalles de carrito de compras
+     */
     @Test
     public void obtenerDetallesCarritoCompras() {
         try {
@@ -186,6 +222,9 @@ public class ServicioProductoTest {
         }
     }
 
+    /**
+     * Metodo para probar la obtencion de carritos de compras sin sus detalles
+     */
     @Test
     public void obtenerCarritosComprasSimples() {
         try {
@@ -205,6 +244,9 @@ public class ServicioProductoTest {
         }
     }
 
+    /**
+     * Metodo para probar la obtencion de detalles de venta de productos
+     */
     @Test
     public void obtenerDetallesVentaProducto() {
         try {
@@ -216,6 +258,9 @@ public class ServicioProductoTest {
         }
     }
 
+    /**
+     * Metodo para probar la obtencion de ventas de productos sin sus detalles
+     */
     @Test
     public void obtenerVentaProducto() {
         try {
@@ -235,6 +280,9 @@ public class ServicioProductoTest {
         }
     }
 
+    /**
+     * Metodo para probar el mapeo de cuentas
+     */
     @Test
     public void mapearCuentas() {
         Cuenta cuenta=quemarCuenta();
@@ -272,6 +320,9 @@ public class ServicioProductoTest {
 
     }
 
+    /**
+     * Metodo para probar el mapeo de productos desde la base de datos
+     */
     @Test
     public void mapearProductos() {
         Producto producto=quemarProducto();
@@ -296,6 +347,9 @@ public class ServicioProductoTest {
         );
     }
 
+    /**
+     * Metodo para probar el mapeo de los detalles de carritos de compras desde la base de datos
+     */
     @Test
     public void mapearDetallesCarritoCompras() {
         Cuenta cuenta=quemarCuenta();
@@ -317,6 +371,9 @@ public class ServicioProductoTest {
         );
     }
 
+    /**
+     * Metodo para probar el mapeo de los carritos de compras desde la base de datos
+     */
     @Test
     public void mapearCarritoCompras() {
         Cuenta cuenta=quemarCuenta();
@@ -336,6 +393,9 @@ public class ServicioProductoTest {
         );
     }
 
+    /**
+     * Metodo para probar el mapeo de los detalles de venta de productos desde la base de datos
+     */
     @Test
     public void mapearDetallesVentaProducto() {
         Producto producto=quemarProducto();
@@ -357,6 +417,9 @@ public class ServicioProductoTest {
         );
     }
 
+    /**
+     * Metodo para probar el mapeo de las ventas de productos desde la base de datos
+     */
     @Test
     public void mapearVentaProducto() {
         Cuenta cuenta=quemarCuenta();
