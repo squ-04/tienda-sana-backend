@@ -191,7 +191,7 @@ public class CarritoComprasRepo {
     /**
      * Guarda los datos del carrito de compras sin tener en cuenta los detalles
      * @param carrito Carrito de compras junto con sus detalles
-     * @throws IOException
+     * @throws IOException Error al acceder a la base de datos
      */
     public void guardarCarritoCompraSimple(CarritoCompras carrito) throws IOException {
 
@@ -510,7 +510,7 @@ public class CarritoComprasRepo {
     }
 
     /**
-     * Obteiene un carrito de compras por el id o email de un usuario
+     * Obtiene un carrito de compras por el id o email de un usuario
      * @param idUsuario Email del usuario
      * @return Carrito de compras envontrado
      * @throws IOException Error al acceder a la base de datos o al encontrar mas de un carrito de un mismo usuario
