@@ -23,8 +23,8 @@ public class CuentaController {
 
     /**
      * Controlador para actualizar los datos de una cuenta
-     * @param cuenta
-     * @return
+     * @param cuenta Datos para actualizar la cuenta
+     * @return Respuesta a la solicitud
      * @throws Exception
      */
     @PutMapping("/update-account")
@@ -35,8 +35,8 @@ public class CuentaController {
 
     /**
      * Controlador para eliminar (Lógicamente) una cuenta
-     * @param email
-     * @return
+     * @param email Email de la cuenta
+     * @return Respuesta a la solicitud
      * @throws Exception
      */
     @DeleteMapping("/delete/{email}")
@@ -47,8 +47,8 @@ public class CuentaController {
 
     /**
      * Controlador para obtener la informacion relacionada con una cuenta dado su email (llave principal)
-     * @param email
-     * @return
+     * @param email Email de la cuenta
+     * @return Respuesta a la solicitud
      * @throws Exception
      */
     @GetMapping("/get/{email}")

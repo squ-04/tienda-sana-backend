@@ -27,7 +27,7 @@ public class AutenticacionController {
 
     /**
      * Controlador para recibir la intruccion de loging, los datos y devolver un token
-     * @param loginDTO
+     * @param loginDTO Datos para iniciar sesion
      * @return Token de inicio de sesión
      * @throws Exception
      */
@@ -37,6 +37,7 @@ public class AutenticacionController {
         return ResponseEntity.ok(new MessageDTO<>(false, token));
     }
 
+    //Metodo para implementar en el futuro
     public ResponseEntity<MessageDTO<TokenDTO>> refresh (Map<String,Object> claims) throws Exception{
         TokenDTO token = cuentaService.refresh(claims);
         return ResponseEntity.ok(new MessageDTO<>(true, token));
@@ -45,7 +46,7 @@ public class AutenticacionController {
     /**
      * Controlador para crear una cuenta de un usuario dada cierta informacion
      * @param cuenta (DTO con la informacion para crear la cuenta)
-     * @return
+     * @return Respuesta a la solicitud
      * @throws Exception
      */
     @PostMapping("/create-account")
@@ -56,8 +57,8 @@ public class AutenticacionController {
 
     /**
      * Controlador para enviar un codigo de recuperación de contraseña al correo de la cuenta
-     * @param email
-     * @return
+     * @param email Email de la cuenta
+     * @return Respuesta a la solicitud
      * @throws Exception
      */
     @PutMapping("/send-recover/{email}")
@@ -68,8 +69,8 @@ public class AutenticacionController {
 
     /**
      * Controlador para hacer el cambio de contraseña dada la informacion del codigo, nueva contraseña y el correo
-     * @param cambiarContraseniaDTO
-     * @return
+     * @param cambiarContraseniaDTO Datos para cambiar la contraseña
+     * @return Respuesta a la solicitud
      * @throws Exception
      */
     @PutMapping("/change-password")
@@ -81,8 +82,8 @@ public class AutenticacionController {
 
     /**
      * Controlador para validar una cuenta y darle el estado a activa dado el codigo de activacion
-     * @param activarCuentaDTO
-     * @return
+     * @param activarCuentaDTO Datos necesarios para activar la cuenta
+     * @return Respuesta a la solicitud
      * @throws Exception
      */
     @PutMapping("/validate-account")
@@ -93,8 +94,8 @@ public class AutenticacionController {
 
     /**
      * Controlador para reenviar el codigo de validacion de una cuenta y que el usuario pueda activarla
-     * @param email
-     * @return
+     * @param email Email de la cuenta
+     * @return Respuesta a la solicitud
      * @throws Exception
      */
     @PutMapping("/resend-validation/{email}")

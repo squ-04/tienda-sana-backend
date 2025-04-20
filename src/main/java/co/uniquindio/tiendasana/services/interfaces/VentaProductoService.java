@@ -31,7 +31,7 @@ public interface VentaProductoService {
 
     /**
      * Actualizar una venta de producto
-     * @param ventaProducto VentaProducto con la información actualizada
+     * @param idVentaProducto VentaProducto con la información actualizada
      * @return ID de la venta actualizada
      * @throws Exception
      */
@@ -56,7 +56,7 @@ public interface VentaProductoService {
 
     /**
      * Listar todas las ventas de un vendedor
-     * @param vendedorId ID del vendedor
+     * @param ventaProductoId ID del vendedor
      * @return Lista de VentaItemDTO con la información de las ventas
      * @throws IOException
      * @throws ProductoParseException
@@ -65,8 +65,6 @@ public interface VentaProductoService {
 
     /**
      * Enviar resumen de compra por correo electrónico
-     * @param email Correo electrónico del cliente
-     * @param ventaProducto VentaProducto con la información de la venta
      * @return ID de la venta
      * @throws Exception
      */
