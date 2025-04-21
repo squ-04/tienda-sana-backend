@@ -38,7 +38,8 @@ public class PublicoController {
 
     /**
      *  Endporint mediante el cual se obtienen los productos que verán los clientes
-     * @return
+     * @param pagina Pagina de los productos
+     * @return Respuesta a la solicitud
      * @throws Exception
      */
 
@@ -50,8 +51,8 @@ public class PublicoController {
 
     /**
      * Endpoint mediante el cual se recibe la notificación de Mercado Pago
-     * @param request
-     * @return
+     * @param request Datos para poder recibir notificacion
+     * @return Respuesta a la solicitud
      */
     @PostMapping("/venta/receive-notification")
     public ResponseEntity<MessageDTO<String>> receiveNotificationFromMercadoPago(@RequestBody Map<String, Object> request){
@@ -62,7 +63,7 @@ public class PublicoController {
     /**
      * Endpoint mediante el cual se obtiene la información de un producto
      * @param id Id del producto
-     * @return
+     * @return Respuesta a la solicitud
      * @throws Exception
      */
     @GetMapping("/productos/get-info/{id}")

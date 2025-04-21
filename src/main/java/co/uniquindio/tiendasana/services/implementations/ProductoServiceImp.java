@@ -39,7 +39,13 @@ public class ProductoServiceImp implements ProductoService {
     }
 
 
-    // Nuevo método para insertar valores en la hoja de cálculo
+    /**
+     * Inserta una fila de datos en la hoja 'Test' (columnas A, B y C).
+     * @param value1 Valor que irá en la columna A.
+     * @param value2 Valor que irá en la columna B.
+     * @param value3 Valor que irá en la columna C.
+     * @throws IOException Si falla la llamada a la API de Sheets.
+     */
     public void insertDataIntoSheet(String value1, String value2, String value3) throws IOException {
         // Definir el rango de celdas a insertar (Hoja 'Test', columnas A, B, y C)
         String range = "Test!A4:C4"; // Esto corresponde a las columnas A a C de la hoja 'Test'
@@ -63,9 +69,9 @@ public class ProductoServiceImp implements ProductoService {
 
     /**
      * Metodo usado para obtener los detalles de un producto
-     *
-     * @param id
-     * @return
+     * @param id ID del producto.
+     * @return DTO con toda la información del producto.
+     * @throws Exception Si el producto no existe o hay error al acceder en la base de datos
      */
     @Override
     public ProductoInfoDTO obtenerInfoProducto(String id) throws Exception {
@@ -94,9 +100,10 @@ public class ProductoServiceImp implements ProductoService {
     /**
      * Metodo usado para obtener lo informacion de los productos que los clientes
      * verán en primera instancia
-     * @return Lista de items de productos
-     * @throws IOException
-     * @throws ProductoParseException
+     * @param pagina Número de pagina (empezando en 0).
+     * @return Objeto con total de páginas y lista de items de productos.
+     * @throws IOException Si al acceder a la base de datos
+     * @throws ProductoParseException  Si al parsear un producto ocurre un error.
      */
     @Override
     public ListaProductos obtenerProductosCliente(int pagina) throws IOException, ProductoParseException {
@@ -119,12 +126,13 @@ public class ProductoServiceImp implements ProductoService {
                 productosItems
         );
     }
+
     /**
      * Obtener un producto (Entidad) dado su ID
-     * @param id
-     * @return
-     * @throws ProductoParseException
-     * @throws IOException
+     * @param id Id del producto
+     * @return Producto obtenido
+     * @throws ProductoParseException Si el producto no existe
+     * @throws IOException Error al acceder a la base de datos
      */
     @Override
     public Producto getProducto(String id) throws ProductoParseException, IOException {
@@ -138,11 +146,10 @@ public class ProductoServiceImp implements ProductoService {
 
     /**
      * Metodo para reducir la cantidad de Stock de un producto una vez se tenga un pago aprovado y acreditado
-     *
-     * @param id
-     * @param cantidadComprada
-     * @throws ProductoParseException
-     * @throws IOException
+     * @param id Id del producto
+     * @param cantidadComprada Cantidad que del producto que se compro y que se va a deducir
+     * @throws Exception Error al acceder a la base de datos
+     * o la cantidad a comprar es mal alta que el stock
      */
     @Override
     public void reducirCantidadProductosStock(String id, int cantidadComprada) throws Exception {

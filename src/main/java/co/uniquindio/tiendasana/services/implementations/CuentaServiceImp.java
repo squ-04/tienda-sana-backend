@@ -40,8 +40,8 @@ public class CuentaServiceImp implements CuentaService {
     /**
      * Metodo que crea una cuenta apartir de la inforamción de un formulario de la vista
      * @param cuentaDTO Data transfer object que tiene la informacion del formulario de registro
-     * @return
-     * @throws Exception
+     * @return Email de la cuenta
+     * @throws Exception Error en caso de que una cuenta ya tenga el correo o dni indicado
      */
     @Override
     public String crearCuenta(CrearCuentaDTO cuentaDTO) throws Exception {
@@ -92,8 +92,8 @@ public class CuentaServiceImp implements CuentaService {
     /**
      * Meotod para actualizar los datos de una cuenta dada la información del formulario de actualizacion
      * @param cuentaDTO Data Transfer Object con la información del formulario de actualización
-     * @return
-     * @throws Exception
+     * @return Mensaje de exito
+     * @throws Exception Error al acceeder a la base de datos
      */
     @Override
     public String actualizarCuenta(ActualizarCuentaDTO cuentaDTO) throws Exception {
@@ -113,8 +113,8 @@ public class CuentaServiceImp implements CuentaService {
     /**
      * Metodo para eliminar una cuenta (Eliminación logica mendiante el estado de Eliminada) dado el email
      * @param email el email asociado de cada cuenta se establece como unico en el negocio
-     * @return
-     * @throws Exception
+     * @return Mensaje de exito
+     * @throws Exception Error al acceder a la base de datos
      */
     @Override
     public String eliminarCuenta(String email) throws Exception {
@@ -127,8 +127,9 @@ public class CuentaServiceImp implements CuentaService {
     /**
      * Método para obtener la inforamción relacionada a una cuenta de un usuario dado un usario
      * @param email el email asociado de cada cuenta se establece como unico en el negocio
-     * @return
-     * @throws Exception
+     * @return Informacion de la cuenta
+     * @throws Exception Error al acceder a la base de datos
+     * o que mas de una cuenta tenga el email indicado
      */
     @Override
     public InfoCuentaDTO obtenerInfoCuenta(String email) throws Exception {
@@ -143,11 +144,11 @@ public class CuentaServiceImp implements CuentaService {
     }
 
     /**
-     * Método para obtener una cuenta dado el email
-     * (Este no es un método llamado por controladores pero que apoya a los servicios que si son llamados)
-     * @param email
-     * @return
-     * @throws Exception
+     * Metodo para obtener una cuenta dado el email
+     * (Este no es un metodo llamado por controladores pero que apoya a los servicios que si son llamados)
+     * @param email Email de la cuenta
+     * @return Cuenta encontrada
+     * @throws Exception Error al acceder a la base de datos o que la cuenta indicada no exista
      */
     @Override
     public Cuenta obtenerCuentaPorEmail(String email) throws Exception {
@@ -160,9 +161,9 @@ public class CuentaServiceImp implements CuentaService {
 
     /**
      * Metodo para enviar un código de recuperación de contraseña y asociarlo a la cuenta del usuario
-     * @param email
-     * @return
-     * @throws Exception
+     * @param email Email de la cuenta
+     * @return Email de la cuenta
+     * @throws Exception Error al acceder a la base de datos
      */
     @Override
     public String enviarCodigoRecuperacion(String email) throws Exception {
@@ -178,17 +179,18 @@ public class CuentaServiceImp implements CuentaService {
     }
 
     /**
-     * Método para cambiar la contraseña actual de una cuenta dado el codigo de recuperación
+     * Metodo para cambiar la contraseña actual de una cuenta dado el codigo de recuperación
      * y la nueva contraseña
      * @param dto contiene el correo asociado a al cuenta, la nueva contraseña y el código de recuperación
-     * @return
-     * @throws Exception
+     * @return Email de la cuenta
+     * @throws Exception Error al acceder a la base de datos, que email indicado no este registrado
+     * o el codigo de verificacion no sea correcto
      */
     @Override
     public String cambiarContrasenia(CambiarContraseniaDTO dto) throws Exception {
         Optional<Cuenta> cuentaOptional = cuentaRepo.obtenerPorEmail(dto.email());
         if (cuentaOptional.isEmpty()) {
-            throw new ResourceNotFoundException("This email is not registered");
+            throw new ResourceNotFoundException("Este email no esta registrado");
         }
         Cuenta cuenta = cuentaOptional.get();
 
@@ -211,11 +213,11 @@ public class CuentaServiceImp implements CuentaService {
     }
 
     /**
-     * Método para validar (Activar) una cuenta dado un código de validación en el correo de los usuarios
+     * Metodo para validar (Activar) una cuenta dado un código de validación en el correo de los usuarios
      * @param activarCuentaDTO, posee el correo asociado a la cuenta y el código de validación indicado por el
      *                          usuario
-     * @return
-     * @throws Exception
+     * @return Mensaje de exito
+     * @throws Exception Error al acceder a la base de datos, el l codigo de registro ha expirado o es incorrecto
      */
     @Override
     public String validarCodigoRegistro(ActivarCuentaDTO activarCuentaDTO) throws Exception {
@@ -229,21 +231,21 @@ public class CuentaServiceImp implements CuentaService {
                     cuentaRepo.actualizar(cuenta);
                     //TODO tener en cuenta que antes aqui habia el codigo del cupon
                 } else {
-                    throw new Exception("Registration validation code has expired");
+                    throw new Exception("El codigo de registro ha expirado");
                 }
             } else {
-                throw new Exception("This registration validation code is incorrect");
+                throw new Exception("Este codigo de registro es incorrecto");
             }
         }
         return "La cuenta ha sido verificada exitosamente";
     }
 
     /**
-     * Método el cual es usado para reenviar y asociar un nuevo código de valicdación en caso de que el usuario no
+     * Metodo el cual es usado para reenviar y asociar un nuevo código de valicdación en caso de que el usuario no
      * pudiera validar su cuenta ocn el primer código enviado en el registro
      * @param email, correo asociado a una cuenta, se verificara si la cuenta ya está activa antes de reasignar
-     * @return
-     * @throws Exception
+     * @return Email de la cuenta
+     * @throws Exception Error al acceder a la base de datos o la cuenta ya ha sido activada
      */
     @Override
     public String reenviarCodigoRegistro(String email) throws Exception {
@@ -262,11 +264,12 @@ public class CuentaServiceImp implements CuentaService {
     }
 
     /**
-     * Método para iniciar sesión el cual devuelve un JWT con los datos de la cuenta que esta iniciando sesión para
+     * Metodo para iniciar sesión el cual devuelve un JWT con los datos de la cuenta que esta iniciando sesión para
      * que sea almacenada en el sessión storage del frontend
-     * @param loginDTO
-     * @return
-     * @throws Exception
+     * @param loginDTO DTO con los datos para poder iniciar sesion
+     * @return Token JWT con los datos de la cuenta
+     * @throws Exception La contraseña de la cuenta es incorrecta, no existe una cuenta con con el
+     * correo indicada o no ha sido activada
      */
     @Override
     public TokenDTO login(LoginDTO loginDTO) throws Exception {
@@ -287,6 +290,11 @@ public class CuentaServiceImp implements CuentaService {
         return new TokenDTO(jwtUtils.generarToken(cuenta.getEmail(), map));
     }
 
+    /**
+     * Convierte los datos de la cuenta en un formato clave valor
+     * @param cuenta Cuenta
+     * @return Datos de la cuenta
+     */
     private Map<String, Object> buildClaims(Cuenta cuenta) {
         return Map.of(
                 "rol", cuenta.getRol(),
@@ -296,6 +304,7 @@ public class CuentaServiceImp implements CuentaService {
         );
     }
 
+    //Metodo proximo a implementar
     @Override
     public TokenDTO refresh(Map<String, Object> claims) {
         return null;
@@ -318,8 +327,8 @@ public class CuentaServiceImp implements CuentaService {
 
     /**
      * Metodo para encriptar las contraseñas de los usuarios en la base de datos
-     * @param Contrasenia
-     * @return
+     * @param Contrasenia Contraseña a encriptar
+     * @return Contraseña encriptada
      */
     private String encriptarContrasenia(String Contrasenia) {
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();

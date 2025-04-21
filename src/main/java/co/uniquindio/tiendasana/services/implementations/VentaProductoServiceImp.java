@@ -63,7 +63,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
     }
 
     /**
-     * Método para crear una venta de productos
+     * Metodo para crear una venta de productos
      * @param crearVentaProductoDTO DTO con la información de la venta
      * @return ID de la venta creada
      * @throws Exception
@@ -119,7 +119,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
 
 
     /**
-     * Método para obtener los detalles de la orden a partir del carrito de compras
+     * Metodo para obtener los detalles de la orden a partir del carrito de compras
      * @param carritoCompras Carrito de compras del cliente
      * @return Lista de detalles de la orden
      */
@@ -147,7 +147,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
     }
 
     /**
-     * Método para calcular el total de la venta
+     * Metodo para calcular el total de la venta
      * @param items Lista de detalles de la venta
      * @param promocionId ID de la promoción
      * @param usuarioId ID del usuario
@@ -179,7 +179,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
     }
 
     /**
-     * Método para obtener las ventas de un cliente
+     * Metodo para obtener las ventas de un cliente
      * @param emailCliente ID del cliente
      * @return Lista de ventas del cliente
      */
@@ -188,7 +188,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
     }
 
     /**
-     * Método para obtener una venta de producto por su ID
+     * Metodo para obtener una venta de producto por su ID
      * @param idVentaProducto ID de la venta de producto
      * @return Venta de producto
      * @throws ResourceNotFoundException
@@ -204,7 +204,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
     }
 
     /**
-     * Método para borrar una venta de producto
+     * Metodo para borrar una venta de producto
      * @param idVentaProducto ID de la venta de producto
      * @return Mensaje de éxito
      * @throws Exception
@@ -222,7 +222,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
     }
 
     /**
-     * Método para obtener la información de una venta
+     * Metodo para obtener la información de una venta
      * @param ventaProductoId ID de la venta de producto
      * @return Información de la venta
      * @throws ResourceNotFoundException
@@ -235,7 +235,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
     }
 
     /**
-     * Método para mapear una venta de producto a un DTO
+     * Metodo para mapear una venta de producto a un DTO
      * @param ventaProducto Venta de producto
      * @return DTO de la venta
      */
@@ -254,7 +254,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
     }
 
     /**
-     * Método para listar las ventas de un cliente
+     * Metodo para listar las ventas de un cliente
      * @param emailCliente ID del cliente
      * @return Lista de ventas del cliente
      */
@@ -265,7 +265,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
     }
 
     /**
-     * Método para mapear una lista de ventas a un DTO
+     * Metodo para mapear una lista de ventas a un DTO
      * @param ventas Lista de ventas
      * @return Lista de DTOs de ventas
      */
@@ -276,7 +276,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
     }
 
     /**
-     * Método para mapear una lista de productos a un DTO
+     * Metodo para mapear una lista de productos a un DTO
      * @param productos Lista de productos
      * @return Lista de DTOs de productos
      */
@@ -289,7 +289,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
     }
 
     /**
-     * Método para realizar el pago de una venta
+     * Metodo para realizar el pago de una venta
      * @param ventaProductoId ID de la venta de producto
      * @return Respuesta de la pasarela de pago
      * @throws Exception
@@ -338,11 +338,8 @@ public class VentaProductoServiceImp implements VentaProductoService {
 
             }
 
-            //TODO Configurar las credenciales de MercadoPag. Crear cuenta de mercado pago
             MercadoPagoConfig.setAccessToken("TEST-6796006609981784-041814-00c638c5e870eb13f83b385b87897541-1190282227");
 
-            //TODO
-            // Configurar las urls de retorno de la pasarela (Frontend)
             PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
                     .success("https://tienda-sana-frontend.vercel.app/carrito?status=success")
                     .failure("https://tienda-sana-frontend.vercel.app/carrito?status=failure")
@@ -354,7 +351,6 @@ public class VentaProductoServiceImp implements VentaProductoService {
             PreferenceRequest preferenceRequest = PreferenceRequest.builder()
                     .backUrls(backUrls)
                     .items(itemsGateway)
-                    //TODO agregar id orden
                     .metadata(Map.of("id_venta", ventaGuardar.getId()))
                     //TODO Agregar url de Ngrok (Se actualiza constantemente) la ruta debe incluir la direccion al controlador de las notificaciones
                     .notificationUrl("https://tienda-sana-backend.onrender.com/api/public/venta/receive-notification")
@@ -384,7 +380,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
     }
 
     /**
-     * Método para recibir notificaciones de MercadoPago
+     * Metodo para recibir notificaciones de MercadoPago
      * @param request Notificación de MercadoPago
      */
     @Override
@@ -433,7 +429,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
     }
 
     /**
-     * Método para crear un objeto Pago a partir de un objeto Payment
+     * Metodo para crear un objeto Pago a partir de un objeto Payment
      * @param payment Objeto Payment de MercadoPago
      * @return Objeto Pago
      */
@@ -451,7 +447,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
     }
 
     /**
-     * Método para enviar un resumen de la venta al correo del cliente
+     * Metodo para enviar un resumen de la venta al correo del cliente
      * @param email Correo del cliente
      * @param ventaProducto Venta de producto
      * @return Mensaje de éxito

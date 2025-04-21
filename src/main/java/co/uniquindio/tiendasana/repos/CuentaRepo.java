@@ -41,11 +41,21 @@ public class CuentaRepo {
         this.sheetsService = sheetsService;
     }
 
+    /**
+     * Optiene todos las cuentas
+     * @return Cuentas
+     * @throws IOException Error al acceder a la base de datos
+     */
     public List<Cuenta> obtenerCuentas() throws IOException {
         List<List<Object>> filas = obtenerFilasHoja();
         return mapearFilasCuentas(filas);
     }
 
+    /**
+     * Obtiene las cuenats de la base de dato
+     * @return Datos obtenidos de la base de datos
+     * @throws IOException Error al obtener los datos de la pbase de datos
+     */
     private List<List<Object>> obtenerFilasHoja() throws IOException {
         String rango = SHEET_NAME + "!A2:"+CuentaConstantes.COL_REGISTRO_FINAL; // Ajusta según columnas
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
@@ -58,6 +68,11 @@ public class CuentaRepo {
         }
     }
 
+    /**
+     * Convierte los datos obtenidos desde la base de datos al formato de java
+     * @param filas Datos de la base de datos
+     * @return Lista de datos en formato de la respectiva clase de java
+     */
     private List<Cuenta> mapearFilasCuentas(List<List<Object>> filas) {
         List<Cuenta> cuentas = new ArrayList<>();
         for (List<Object> row : filas) {
@@ -71,8 +86,11 @@ public class CuentaRepo {
         return cuentas;
     }
 
-
-
+    /**
+     * Cuenta el total de registros de cuentas en la base de datos
+     * @return Cantidad de cuenats
+     * @throws IOException Error al consultar la base de datos
+     */
     public int contarCuentasExistintes() throws IOException {
         String rango = CuentaConstantes.CANT_CUENTAS; // Ajusta según columnas
         List<List<Object>> respuesta =
@@ -80,6 +98,11 @@ public class CuentaRepo {
         return Integer.parseInt(respuesta.get(0).get(0).toString());
     }
 
+    /**
+     * Mapea la cuenta a partir de los datos de la base de datos
+     * @param row Datos en el formato de la base de datos
+     * @return Datos en el formato de las clases de java
+     */
     public Cuenta mapearCuenta(List<Object> row) {
         Usuario usuario = Usuario.builder()
                 .dni(row.get(0).toString())
@@ -116,6 +139,11 @@ public class CuentaRepo {
                 .build();
     }
 
+    /**
+     * Convierte los datos de la cuenta al formato de la base de datos
+     * @param cuenta Datos de la cuenta
+     * @return datos en formato de la base de datos
+     */
     public List<Object> mapearCuentaInverso(Cuenta cuenta) {
         Usuario  usuario=cuenta.getUsuario();
         CodigoValidacion codigoValidacionRegistro=cuenta.getCodigoValidacionRegistro();
@@ -139,6 +167,11 @@ public class CuentaRepo {
         );
     }
 
+    /**
+     * Guarda los datos de la cuenta
+     * @param cuenta Cuneta
+     * @throws IOException Error al acceder a la base de datos
+     */
     public void guardar(Cuenta cuenta) throws IOException {
 
         int cuentas=contarCuentasExistintes();
@@ -158,6 +191,12 @@ public class CuentaRepo {
         System.out.println("Numero de celdas actualizadas: " + result.getUpdatedCells());
     }
 
+    /**
+     * Filtra los las cuentas
+     * @param expresion Operacion de filtrado
+     * @return Datos filtrados
+     * @throws IOException Error al acceder a la base de datos
+     */
     public List<Cuenta> filtrar (Predicate<Cuenta> expresion) throws IOException {
         List<Cuenta> cuentas = obtenerCuentas();
         return cuentas.stream()
@@ -165,6 +204,11 @@ public class CuentaRepo {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Obtiene el indice o posicion de una cuenta en la base de datos
+     * @param email Email de la cuenta
+     * @return Indice donde se encuentra el registro respectivo
+     */
     public int obtenerIndiceCuenta(String email) {
         List<Cuenta> cuentas = null;
         int filaCuenta=-1;
@@ -183,6 +227,11 @@ public class CuentaRepo {
         return filaCuenta;
     }
 
+    /**
+     * Actualiza los datos de la base de datos de las cuentas
+     * @param cuenta Datos de la cuenta
+     * @throws IOException Error al acceder a la base de datos
+     */
     public void actualizar(Cuenta cuenta) throws IOException {
         int indice=obtenerIndiceCuenta(cuenta.getEmail());
         if (indice!=-1) {
@@ -204,6 +253,13 @@ public class CuentaRepo {
         }
     }
 
+    /**
+     * Obtiene una cuenta por medio de su dni
+     * @param dni DNI o cedula del propietario de la cuenta
+     * @return Cuenta obtenida
+     * @throws IOException Error al acceder a la base de datos
+     * o mas de una cuenta tiene el dni indicado
+     */
     public Optional<Cuenta> obtenerPorDNI(String dni) throws IOException {
         List<Cuenta> cuentasObtenidas=
                 filtrar(cuenta -> cuenta.getUsuario().getDni().equals(dni));
@@ -216,6 +272,13 @@ public class CuentaRepo {
         return Optional.of(cuentasObtenidas.get(0));
     }
 
+    /**
+     * Obtiene una cuenta por medio de su email
+     * @param email Email de la cuenta
+     * @return Cuenta obtenida
+     * @throws IOException Error al acceder a la base de datos
+     * o mas de una cuenta tiene el email indicado
+     */
     public Optional<Cuenta> obtenerPorEmail(String email) throws IOException {
         List<Cuenta> cuentasObtenidas=
                 filtrar(cuenta -> cuenta.getEmail().equals(email));
@@ -228,6 +291,13 @@ public class CuentaRepo {
         return Optional.of(cuentasObtenidas.get(0));
     }
 
+    /**
+     * Obtiene una cuenta por medio de su email o dni
+     * @param dni DNI o cedula del propietario de la cuenta
+     * @param email Email de la cuenta
+     * @return Cuentas obtenidas
+     * @throws IOException Error al acceder a la base de datos
+     */
     public List<Cuenta> obtenerPorDniOEmail(String dni, String email) throws IOException {
         return filtrar(cuenta ->
             cuenta.getUsuario().getDni().equals(dni) || cuenta.getEmail().equals(email)

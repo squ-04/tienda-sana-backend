@@ -11,78 +11,91 @@ public interface CuentaService {
     /**
      * Metodo que crea una cuenta apartir de la inforamción de un formulario de la vista
      * @param cuentaDTO Data transfer object que tiene la informacion del formulario de registro
-     * @return
-     * @throws Exception
+     * @return Email de la cuenta
+     * @throws Exception Error en caso de que una cuenta ya tenga el correo o dni indicado
      */
     String crearCuenta(CrearCuentaDTO cuentaDTO) throws Exception;
+
     /**
      * Meotod para actualizar los datos de una cuenta dada la información del formulario de actualizacion
      * @param cuentaDTO Data Transfer Object con la información del formulario de actualización
-     * @return
-     * @throws Exception
+     * @return Mensaje de exito
+     * @throws Exception Error al acceeder a la base de datos
      */
     String actualizarCuenta(ActualizarCuentaDTO cuentaDTO) throws Exception;
+
     /**
      * Metodo para eliminar una cuenta (Eliminación logica mendiante el estado de Eliminada) dado el email
      * @param email el email asociado de cada cuenta se establece como unico en el negocio
-     * @return
-     * @throws Exception
+     * @return Mensaje de exito
+     * @throws Exception Error al acceder a la base de datos
      */
     String eliminarCuenta(String email) throws Exception;
+
     /**
-     * Método para obtener la inforamción relacionada a una cuenta de un usuario dado un usario
-     * @param id el email asociado de cada cuenta se establece como unico en el negocio
-     * @return
-     * @throws Exception
+     * Metodo para obtener la inforamción relacionada a una cuenta de un usuario dado un usario
+     * @param id El email asociado de cada cuenta se establece como unico en el negocio
+     * @return Informacion de la cuenta
+     * @throws Exception Error al acceder a la base de datos
+     * o que mas de una cuenta tenga el email indicado
      */
     InfoCuentaDTO obtenerInfoCuenta(String id) throws Exception;
+
     /**
-     * Método para obtener una cuenta dado el email
-     * (Este no es un método llamado por controladores pero que apoya a los servicios que si son llamados)
-     * @param email
-     * @return
-     * @throws Exception
+     * Metodo para obtener una cuenta dado el email
+     * (Este no es un metodo llamado por controladores pero que apoya a los servicios que si son llamados)
+     * @param email Email de la cuenta
+     * @return Cuenta encontrada
+     * @throws Exception Error al acceder a la base de datos o que la cuenta indicada no exista
      */
     Cuenta obtenerCuentaPorEmail(String email) throws Exception;
+
     /**
      * Metodo para enviar un código de recuperación de contraseña y asociarlo a la cuenta del usuario
-     * @param email
-     * @return
-     * @throws Exception
+     * @param email Email de la cuenta
+     * @return Email de la cuenta
+     * @throws Exception Error al acceder a la base de datos
      */
     String enviarCodigoRecuperacion(String email) throws Exception;
+
     /**
-     * Método para cambiar la contraseña actual de una cuenta dado el codigo de recuperación
+     * Metodo para cambiar la contraseña actual de una cuenta dado el codigo de recuperación
      * y la nueva contraseña
      * @param dto contiene el correo asociado a al cuenta, la nueva contraseña y el código de recuperación
-     * @return
-     * @throws Exception
+     * @return Email de la cuenta
+     * @throws Exception Error al acceder a la base de datos, que email indicado no este registrado
+     * o el codigo de verificacion no sea correcto
      */
     String cambiarContrasenia(CambiarContraseniaDTO dto) throws Exception;
+
     /**
-     * Método para validar (Activar) una cuenta dado un código de validación en el correo de los usuarios
+     * Metodo para validar (Activar) una cuenta dado un código de validación en el correo de los usuarios
      * @param activarCuentaDTO, posee el correo asociado a la cuenta y el código de validación indicado por el
      *                          usuario
-     * @return
-     * @throws Exception
+     * @return Mensaje de exito
+     * @throws Exception Error al acceder a la base de datos, el l codigo de registro ha expirado o es incorrecto
      */
     String validarCodigoRegistro(ActivarCuentaDTO activarCuentaDTO) throws Exception;
+
     /**
-     * Método el cual es usado para reenviar y asociar un nuevo código de valicdación en caso de que el usuario no
+     * Metodo el cual es usado para reenviar y asociar un nuevo código de valicdación en caso de que el usuario no
      * pudiera validar su cuenta ocn el primer código enviado en el registro
      * @param email, correo asociado a una cuenta, se verificara si la cuenta ya está activa antes de reasignar
-     * @return
-     * @throws Exception
+     * @return Email de la cuenta
+     * @throws Exception Error al acceder a la base de datos o la cuenta ya ha sido activada
      */
     String reenviarCodigoRegistro(String email) throws Exception;
+
     /**
-     * Método para iniciar sesión el cual devuelve un JWT con los datos de la cuenta que esta iniciando sesión para
+     * Metodo para iniciar sesión el cual devuelve un JWT con los datos de la cuenta que esta iniciando sesión para
      * que sea almacenada en el sessión storage del frontend
-     * @param loginDTO
-     * @return
-     * @throws Exception
+     * @param loginDTO DTO con los datos para poder iniciar sesion
+     * @return Token JWT con los datos de la cuenta
+     * @throws Exception La contraseña de la cuenta es incorrecta, no existe una cuenta con con el
+     * correo indicada o no ha sido activada
      */
     TokenDTO login(@Valid LoginDTO loginDTO) throws Exception;
 
+    //Metodo proximo a implementar
     TokenDTO refresh(Map<String, Object> claims);
 }
