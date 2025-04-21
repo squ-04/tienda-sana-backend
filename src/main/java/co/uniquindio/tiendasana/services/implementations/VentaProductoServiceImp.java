@@ -338,7 +338,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
 
             }
 
-            MercadoPagoConfig.setAccessToken("TEST-6796006609981784-041814-00c638c5e870eb13f83b385b87897541-1190282227");
+            MercadoPagoConfig.setAccessToken("APP_USR-6796006609981784-041814-87d21826ba6abfcd2a184f10b8a56673-1190282227");
 
             PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
                     .success("https://tienda-sana-frontend.vercel.app/carrito?status=success")
