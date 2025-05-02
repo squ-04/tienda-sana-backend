@@ -33,7 +33,8 @@ public class Mesa {
     */
 
     @Builder
-    public Mesa(String nombre, EstadoMesa estado, String localidad, float precioReserva,int capacidad,String imagen) {
+    public Mesa(String id,String nombre, EstadoMesa estado, String localidad, float precioReserva,int capacidad,String imagen) {
+        this.id = id;
         this.nombre = nombre;
         this.estado = estado;
         this.localidad = localidad;
