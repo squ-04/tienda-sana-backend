@@ -122,7 +122,7 @@ public class ProductoServiceImp implements ProductoService {
                 .collect(Collectors.toList());
 
         return new ListaProductos(
-                (paginaProductos.totalProductos()/ProductoConstantes.ELEMENTOSPAGINA)+1,
+                (int) Math.ceil((double) paginaProductos.totalProductos() / ProductoConstantes.ELEMENTOSPAGINA),
                 productosItems
         );
     }
