@@ -30,7 +30,7 @@ public interface ReservaService {
      * @param idReserva ID de la reserva a borrar
      * @return Mensaje indicando el resultado de la operación.
      */
-    String borrarReserva(String idReserva);
+    String cancelarReserva(String idReserva);
 
     /**
      * Actualiza la información de una reserva existente.
@@ -51,10 +51,10 @@ public interface ReservaService {
     /**
      * Lista todas las reservas de un cliente.
      *
-     * @param clienteId ID del cliente cuyas reservas se desean listar.
+     * @param emailUsuario email del cliente cuyas reservas se desean listar.
      * @return Lista de objetos ReservaItemDTO con la información de las reservas del cliente.
      */
-    List<ReservaItemDTO> listarReservasCliente(String clienteId);
+    List<ReservaItemDTO> listarReservasCliente(String emailUsuario);
 
     /**
      * Realiza el pago de una reserva.

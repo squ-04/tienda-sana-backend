@@ -5,13 +5,13 @@ import co.uniquindio.tiendasana.dto.carritoCompras.BorrarDetalleCarritoDTO;
 import co.uniquindio.tiendasana.dto.carritoCompras.EditarDetalleCarritoDTO;
 import co.uniquindio.tiendasana.dto.carritoCompras.VistaItemCarritoDTO;
 import co.uniquindio.tiendasana.dto.jwtdtos.MessageDTO;
+import co.uniquindio.tiendasana.dto.reservadtos.CrearReservaDTO;
+import co.uniquindio.tiendasana.dto.reservadtos.PaymentResponseReservaDTO;
+import co.uniquindio.tiendasana.dto.reservadtos.ReservaItemDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.CrearVentaProductoDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.PaymentResponseDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.VentaItemDTO;
-import co.uniquindio.tiendasana.services.interfaces.CarritoComprasService;
-import co.uniquindio.tiendasana.services.interfaces.ProductoService;
-import co.uniquindio.tiendasana.services.interfaces.PromocionService;
-import co.uniquindio.tiendasana.services.interfaces.VentaProductoService;
+import co.uniquindio.tiendasana.services.interfaces.*;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +33,7 @@ public class ClienteController {
     private final ProductoService productoService;
     private final VentaProductoService ventaProductoService;
     private final PromocionService promocionService;
+    private final ReservaService reservaService;
 
     /**
      * Controlador para agregar un producto al carrito de compras
@@ -99,6 +100,18 @@ public class ClienteController {
     }
 
     /**
+     * Controlador para hacer el pago de una reserva de mesa
+     * @param reservaId Id de la reserva
+     * @return ResponseEntity con el id de la reserva
+     * @throws Exception
+     */
+    @PostMapping("/reserva/make-payment/{reservaId}")
+    public ResponseEntity<MessageDTO<PaymentResponseReservaDTO>> makePaymentReserva(@PathVariable String reservaId) throws Exception {
+        PaymentResponseReservaDTO paymentResponse = reservaService.procesarPagoReserva(reservaId);
+        return ResponseEntity.ok(new MessageDTO<>(false, paymentResponse));
+    }
+
+    /**
      * Controlador para crear una venta
      * @param crearVentaProductoDTO Detalle de la venta a crear
      * @return ResponseEntity con el id de la venta
@@ -111,6 +124,18 @@ public class ClienteController {
     }
 
     /**
+     * Controlador para crear una reserva de mesa
+     * @param crearReservaDTO Detalle de la reserva a crear
+     * @return ResponseEntity con el id de la reserva
+     * @throws Exception
+     */
+    @PostMapping("/reserva/create")
+    public ResponseEntity<MessageDTO<String>> crearReserva(@Valid @RequestBody CrearReservaDTO crearReservaDTO) throws Exception{
+        String reservaId= reservaService.reservarMesa(crearReservaDTO);
+        return ResponseEntity.ok(new MessageDTO<>(false, reservaId));
+    }
+
+    /**
      * Controlador para borrar una venta
      * @param ventaProductoId Id de la venta a borrar
      * @return ResponseEntity con el id de la venta
@@ -120,7 +145,18 @@ public class ClienteController {
     public ResponseEntity<MessageDTO<String>> borrarVentaProducto(@PathVariable String ventaProductoId) throws Exception {
         String result = ventaProductoService.borrarVentaProducto(ventaProductoId);
         return ResponseEntity.ok(new MessageDTO<>(false,result));
+    }
 
+    /**
+     * Controlador para cancelar una reserva
+     * @param reservaId Id de la reserva a cancelar
+     * @return ResponseEntity con el id de la reserva
+     * @throws Exception
+     */
+    @DeleteMapping("/reserva/cancel/{reservaId}")
+    public ResponseEntity<MessageDTO<String>> cancelarReserva(@PathVariable String reservaId) throws Exception {
+        String result = reservaService.cancelarReserva(reservaId);
+        return ResponseEntity.ok(new MessageDTO<>(false,result));
     }
 
     /**
@@ -136,6 +172,18 @@ public class ClienteController {
     }
 
     /**
+     * Controlador para listar las reservas de un cliente
+     * @param emailUsuario Email del usuario
+     * @return ResponseEntity con la lista de reservas del cliente
+     * @throws Exception
+     */
+    @GetMapping("/reserva/history/{emailUsuario}")
+    public ResponseEntity<MessageDTO<List<ReservaItemDTO>>> listarReservasCliente(@PathVariable String emailUsuario) throws Exception{
+        List<ReservaItemDTO> reservas= reservaService.listarReservasCliente(emailUsuario);
+        return ResponseEntity.ok(new MessageDTO<>(false, reservas));
+    }
+
+    /**
      * Controlador para obtener la información de una venta
      * @param orderId Id de la venta
      * @return ResponseEntity con la información de la venta
@@ -145,6 +193,18 @@ public class ClienteController {
     public ResponseEntity<MessageDTO<VentaItemDTO>> obtenerInfoVenta(@PathVariable String orderId) throws Exception{
         VentaItemDTO ventaInfo = ventaProductoService.obtenerInformacionVenta(orderId);
         return ResponseEntity.ok(new MessageDTO<>(false, ventaInfo));
+    }
+
+    /**
+     * Controlador para obtener la información de una reserva
+     * @param reservaId Id de la reserva
+     * @return ResponseEntity con la información de la reserva
+     * @throws Exception
+     */
+    @GetMapping("/reserva/get-info/{reservaId}")
+    public ResponseEntity<MessageDTO<ReservaItemDTO>> obtenerInfoReserva(@PathVariable String reservaId) throws Exception{
+        ReservaItemDTO reservaInfo = reservaService.obtenerInformacionReserva(reservaId);
+        return ResponseEntity.ok(new MessageDTO<>(false, reservaInfo));
     }
     
 

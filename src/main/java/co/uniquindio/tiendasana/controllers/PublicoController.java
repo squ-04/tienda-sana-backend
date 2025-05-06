@@ -5,13 +5,13 @@ import co.uniquindio.tiendasana.dto.cuentadtos.CambiarContraseniaDTO;
 import co.uniquindio.tiendasana.dto.cuentadtos.CrearCuentaDTO;
 import co.uniquindio.tiendasana.dto.cuentadtos.LoginDTO;
 import co.uniquindio.tiendasana.dto.jwtdtos.MessageDTO;
+import co.uniquindio.tiendasana.dto.mesadtos.ListaMesas;
 import co.uniquindio.tiendasana.dto.productodtos.ListaProductos;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoInfoDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoItemDTO;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
-import co.uniquindio.tiendasana.services.interfaces.CuentaService;
-import co.uniquindio.tiendasana.services.interfaces.ProductoService;
-import co.uniquindio.tiendasana.services.interfaces.VentaProductoService;
+import co.uniquindio.tiendasana.services.implementations.ReservaServiceImp;
+import co.uniquindio.tiendasana.services.interfaces.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +35,8 @@ public class PublicoController {
     private final ProductoService productService;
     private final CuentaService cuentaService;
     private final VentaProductoService ventaProductoService;
+    private final ReservaService reservaService;
+    private final MesaService mesaService;
 
     /**
      *  Endporint mediante el cual se obtienen los productos que verán los clientes
@@ -42,7 +44,6 @@ public class PublicoController {
      * @return Respuesta a la solicitud
      * @throws Exception
      */
-
     @GetMapping("/productos/get-all/{pagina}")
     public ResponseEntity<MessageDTO<ListaProductos>> listarProductosCliente(@PathVariable int pagina) throws Exception {
         ListaProductos productos= productService.obtenerProductosCliente(pagina);
@@ -50,13 +51,37 @@ public class PublicoController {
     }
 
     /**
-     * Endpoint mediante el cual se recibe la notificación de Mercado Pago
+     * Endpoint mediante el cual se obtiene las mesas que verán los clientes
+     * @param pagina Pagina de las mesas
+     * @return Respuesta a la solicitud
+     * @throws Exception
+     */
+    @GetMapping("/mesas/get-all")
+    public ResponseEntity<MessageDTO<ListaMesas>> listarMesasCliente(@PathVariable int pagina) throws Exception {
+        ListaMesas mesas= mesaService.obtenerMesasCliente(pagina);
+        return ResponseEntity.ok( new MessageDTO<>(false, mesas));
+    }
+
+    /**
+     * Endpoint mediante el cual se recibe la notificación de Mercado Pago para ventas
      * @param request Datos para poder recibir notificacion
      * @return Respuesta a la solicitud
      */
     @PostMapping("/venta/receive-notification")
     public ResponseEntity<MessageDTO<String>> receiveNotificationFromMercadoPago(@RequestBody Map<String, Object> request){
         ventaProductoService.receiveNotificationFromMercadoPago(request);
+        return ResponseEntity.ok(new MessageDTO<>(false,"Notification received"));
+    }
+
+
+    /**
+     * Endpoint mediante el cual se recibe la notificación de Mercado Pago para reservas
+     * @param request Datos para poder recibir notificacion
+     * @return Respuesta a la solicitud
+     */
+    @PostMapping("/reserva/receive-notification")
+    public ResponseEntity<MessageDTO<String>> receiveNotificationFromMercadoPagoReserva(@RequestBody Map<String, Object> request){
+        reservaService.receiveNotificationFromMercadoPago(request);
         return ResponseEntity.ok(new MessageDTO<>(false,"Notification received"));
     }
 

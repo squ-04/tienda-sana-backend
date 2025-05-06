@@ -24,7 +24,7 @@ public class ReservaServiceImp implements ReservaService {
     }
 
     @Override
-    public String borrarReserva(String idReserva) {
+    public String cancelarReserva(String idReserva) {
         return "";
     }
 
