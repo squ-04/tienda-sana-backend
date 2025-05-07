@@ -1,9 +1,10 @@
 package co.uniquindio.tiendasana.controllers;
 
-import co.uniquindio.tiendasana.dto.carritoCompras.AgregarDetalleCarritoDTO;
-import co.uniquindio.tiendasana.dto.carritoCompras.BorrarDetalleCarritoDTO;
-import co.uniquindio.tiendasana.dto.carritoCompras.EditarDetalleCarritoDTO;
-import co.uniquindio.tiendasana.dto.carritoCompras.VistaItemCarritoDTO;
+import co.uniquindio.tiendasana.dto.carritoComprasdtos.AgregarDetalleCarritoDTO;
+import co.uniquindio.tiendasana.dto.carritoComprasdtos.BorrarDetalleCarritoDTO;
+import co.uniquindio.tiendasana.dto.carritoComprasdtos.EditarDetalleCarritoDTO;
+import co.uniquindio.tiendasana.dto.carritoComprasdtos.VistaItemCarritoDTO;
+import co.uniquindio.tiendasana.dto.gestorReservasdtos.BorrarMesaGestorDTO;
 import co.uniquindio.tiendasana.dto.jwtdtos.MessageDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.CrearReservaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.PaymentResponseReservaDTO;
@@ -11,6 +12,8 @@ import co.uniquindio.tiendasana.dto.reservadtos.ReservaItemDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.CrearVentaProductoDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.PaymentResponseDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.VentaItemDTO;
+import co.uniquindio.tiendasana.model.documents.MesaDTO;
+import co.uniquindio.tiendasana.model.vo.GestorReservas;
 import co.uniquindio.tiendasana.services.interfaces.*;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
@@ -34,6 +37,7 @@ public class ClienteController {
     private final VentaProductoService ventaProductoService;
     private final PromocionService promocionService;
     private final ReservaService reservaService;
+    private final GestorReservasService gestorReservasService;
 
     /**
      * Controlador para agregar un producto al carrito de compras
@@ -43,11 +47,20 @@ public class ClienteController {
      */
     @PutMapping("/carrito/add-item")
     public ResponseEntity<MessageDTO<String>> agregarDetalleCarrito
-    (@Valid @RequestBody AgregarDetalleCarritoDTO addShoppingCarDetailDTO) throws Exception{
+            (@Valid @RequestBody AgregarDetalleCarritoDTO addShoppingCarDetailDTO) throws Exception{
         String shoppingCarId;
         shoppingCarId= carritoComprasService.agregarDetalleCarrito(addShoppingCarDetailDTO);
         return ResponseEntity.ok(new MessageDTO<>(false, shoppingCarId));
     }
+
+    @PutMapping("/gestor-reservas/add-item")
+    public ResponseEntity<MessageDTO<String>> agregarMesaGestorReservas
+            (@Valid @RequestBody MesaDTO mesaDTO) throws Exception{
+        String gestorReservaId = gestorReservasService.agregarMesaGestorReservas(mesaDTO);
+        return ResponseEntity.ok(new MessageDTO<>(false, gestorReservaId));
+    }
+
+
 
     /**
      * Controlador para editar un producto en el carrito de compras
@@ -73,6 +86,12 @@ public class ClienteController {
         return ResponseEntity.ok(new MessageDTO<>(false, shoppingCarId));
     }
 
+    @DeleteMapping("/gestor-reservas/delete-item")
+    public ResponseEntity<MessageDTO<String>> borrarMesaGestorReservas(@Valid @RequestBody BorrarMesaGestorDTO mesaBorrarDTO) throws Exception{
+        String gestorReservasId= gestorReservasService.borrarMesaGestorReservas(mesaBorrarDTO);
+        return ResponseEntity.ok(new MessageDTO<>(false, gestorReservasId));
+    }
+
     /**
      * Controlador para listar los productos del carrito de compras
      * @param emailUsuario Email del usuario
@@ -83,6 +102,13 @@ public class ClienteController {
     public ResponseEntity<MessageDTO<List<VistaItemCarritoDTO>>> listarDetallesCarrito(@PathVariable String emailUsuario) throws Exception{
         List<VistaItemCarritoDTO> carItems = carritoComprasService.listarDetallesCarrito(emailUsuario);
         return ResponseEntity.ok(new MessageDTO<>(false, carItems));
+    }
+
+
+    @GetMapping("/gestor-reservas/get-items/{emailUsuario}")
+    public ResponseEntity<MessageDTO<List<MesaDTO>>> listarMesasGestorReservas(@PathVariable String emailUsuario) throws Exception{
+        List<MesaDTO> gestorItems = gestorReservasService.obtenerMesasGestorReservas(emailUsuario);
+        return ResponseEntity.ok(new MessageDTO<>(false, gestorItems));
     }
 
     /**

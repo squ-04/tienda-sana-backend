@@ -1,12 +1,11 @@
 package co.uniquindio.tiendasana.services.interfaces;
 
-import co.uniquindio.tiendasana.dto.carritoCompras.AgregarDetalleCarritoDTO;
-import co.uniquindio.tiendasana.dto.carritoCompras.BorrarDetalleCarritoDTO;
-import co.uniquindio.tiendasana.dto.carritoCompras.EditarDetalleCarritoDTO;
-import co.uniquindio.tiendasana.dto.carritoCompras.VistaItemCarritoDTO;
+import co.uniquindio.tiendasana.dto.carritoComprasdtos.AgregarDetalleCarritoDTO;
+import co.uniquindio.tiendasana.dto.carritoComprasdtos.BorrarDetalleCarritoDTO;
+import co.uniquindio.tiendasana.dto.carritoComprasdtos.EditarDetalleCarritoDTO;
+import co.uniquindio.tiendasana.dto.carritoComprasdtos.VistaItemCarritoDTO;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.CarritoCompras;
-import co.uniquindio.tiendasana.model.vo.DetalleCarrito;
 import jakarta.validation.Valid;
 
 import java.io.IOException;

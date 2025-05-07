@@ -1,4 +1,4 @@
-package co.uniquindio.tiendasana.dto.carritoCompras;
+package co.uniquindio.tiendasana.dto.carritoComprasdtos;
 
 import jakarta.validation.constraints.NotBlank;
 
