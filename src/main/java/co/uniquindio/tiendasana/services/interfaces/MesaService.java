@@ -2,8 +2,7 @@ package co.uniquindio.tiendasana.services.interfaces;
 
 import co.uniquindio.tiendasana.dto.mesadtos.ListaMesas;
 import co.uniquindio.tiendasana.dto.mesadtos.MesaInfoDTO;
-import co.uniquindio.tiendasana.dto.mesadtos.MesaItemDTO;
-import co.uniquindio.tiendasana.model.documents.Mesa;
+import co.uniquindio.tiendasana.model.documents.MesaDTO;
 
 public interface MesaService {
 
@@ -29,7 +28,7 @@ public interface MesaService {
      * @return Mesa con la informacion de la mesa
      * @throws Exception
      */
-    Mesa obtenerMesa(String mesaId) throws Exception;
+    MesaDTO obtenerMesa(String mesaId) throws Exception;
 
     /**
      * Metodo que cambia el estado de una mesa

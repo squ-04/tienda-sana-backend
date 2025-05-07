@@ -1,6 +1,6 @@
 package co.uniquindio.tiendasana.repos;
 
-import co.uniquindio.tiendasana.model.documents.Mesa;
+import co.uniquindio.tiendasana.model.documents.MesaDTO;
 import co.uniquindio.tiendasana.model.enums.EstadoMesa;
 import co.uniquindio.tiendasana.utils.MesaConstantes;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
@@ -29,7 +29,7 @@ public class MesaRepo {
         this.sheetsService = sheetsService;
     }
 
-    public List<Mesa> obtenerMesas() throws IOException {
+    public List<MesaDTO> obtenerMesas() throws IOException {
         List<List<Object>> filas = obtenerFilasHoja();
         return mapearFilasMesas(filas);
     }
@@ -45,12 +45,12 @@ public class MesaRepo {
         }
     }
 
-    private List<Mesa> mapearFilasMesas(List<List<Object>> filas) {
-        List<Mesa> mesas = new ArrayList<>();
+    private List<MesaDTO> mapearFilasMesas(List<List<Object>> filas) {
+        List<MesaDTO> mesas = new ArrayList<>();
 
         for (List<Object> row : filas) {
             try {
-                Mesa mesa=mapearMesa(row);
+                MesaDTO mesa=mapearMesa(row);
                 mesas.add(mesa);
             } catch (Exception e) {
                 System.err.println("❌ Error al procesar fila de Mesa: " + row + "\n" + e.getMessage());
@@ -60,7 +60,7 @@ public class MesaRepo {
         return mesas;
     }
 
-    public Mesa mapearMesa(List<Object> row) {
+    public MesaDTO mapearMesa(List<Object> row) {
         String nombre = row.get(0).toString();
         EstadoMesa estado = EstadoMesa.valueOf(row.get(1).toString().toUpperCase().replace(" ", "_"));
         int capacidad = Integer.parseInt(row.get(2).toString());
@@ -68,7 +68,7 @@ public class MesaRepo {
         float precioReserva = Float.parseFloat(row.get(4).toString());
         String imagen = row.get(5).toString();
 
-        Mesa mesa = Mesa.builder()
+        MesaDTO mesa = MesaDTO.builder()
                 .nombre(nombre)
                 .estado(estado)
                 .capacidad(capacidad)
@@ -82,7 +82,7 @@ public class MesaRepo {
     }
 
     //TODO verificar si es valido para el estado y precio
-    public List<Object> mapearMesaInverso(Mesa mesa) {
+    public List<Object> mapearMesaInverso(MesaDTO mesa) {
         return Arrays.asList(
                 mesa.getNombre(),
                 mesa.getEstado(),
@@ -93,15 +93,15 @@ public class MesaRepo {
         );
     }
 
-    public List<Mesa> filtrar (Predicate<Mesa> expresion) throws IOException {
-        List<Mesa> mesas = obtenerMesas();
+    public List<MesaDTO> filtrar (Predicate<MesaDTO> expresion) throws IOException {
+        List<MesaDTO> mesas = obtenerMesas();
         return mesas.stream()
                 .filter(expresion)
                 .collect(Collectors.toList());
     }
 
     public int obtenerIndiceMesa(String id) {
-        List<Mesa> mesas = null;
+        List<MesaDTO> mesas = null;
         int filaCuenta=-1;
         try {
             mesas = obtenerMesas();
@@ -118,7 +118,7 @@ public class MesaRepo {
         return filaCuenta;
     }
 
-    public void actualizar(Mesa mesa) throws IOException {
+    public void actualizar(MesaDTO mesa) throws IOException {
         int indice=obtenerIndiceMesa(mesa.getId());
         if (indice!=-1) {
             String range = SHEET_NAME+"!A"+(2+indice)+":"+ MesaConstantes.COL_REGISTRO_FINAL+(2+indice);

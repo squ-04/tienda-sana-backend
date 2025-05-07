@@ -2,7 +2,7 @@ package co.uniquindio.tiendasana.services.implementations;
 
 import co.uniquindio.tiendasana.dto.mesadtos.ListaMesas;
 import co.uniquindio.tiendasana.dto.mesadtos.MesaInfoDTO;
-import co.uniquindio.tiendasana.model.documents.Mesa;
+import co.uniquindio.tiendasana.model.documents.MesaDTO;
 import co.uniquindio.tiendasana.services.interfaces.MesaService;
 import org.springframework.stereotype.Service;
 
@@ -20,7 +20,7 @@ public class MesaServiceImp implements MesaService {
     }
 
     @Override
-    public Mesa obtenerMesa(String mesaId) throws Exception {
+    public MesaDTO obtenerMesa(String mesaId) throws Exception {
         return null;
     }
 

@@ -6,14 +6,13 @@ import java.util.List;
 public record VentaItemDTO (
         String clienteId,
         LocalDateTime fecha,
-        List<DetalleOrdenDTO> productos,
+        List<DetalleVentaDTO> productos,
         String tipoPago,
         String estado,
         LocalDateTime fechaPago,
-        float valorTranasccion,//?
+        float valorTransaccion,
         String id,
         float total,
         String promocionId
-
 ){
 }
