@@ -4,18 +4,14 @@ plugins {
     id 'io.spring.dependency-management' version '1.1.6'
 }
 
-
 group = 'co.edu.uniquindio'
 version = '0.0.1-SNAPSHOT'
 description = 'Proyecto Backend Tienda Sana'
-
 
 java {
     sourceCompatibility = '17'
     targetCompatibility = '17'
 }
-
-
 
 configurations {
     compileOnly {
@@ -23,52 +19,72 @@ configurations {
     }
     all {
         exclude group: 'commons-logging', module: 'commons-logging'
+        exclude group: 'com.google.collections', module: 'google-collections' // evitar conflicto
     }
 }
 
-
 repositories {
     mavenCentral()
+    maven {
+        url 'https://repo1.maven.org/maven2/' // Ya incluido en mavenCentral
+    }
 }
 
-
 dependencies {
+    // Versión forzada de Guava compatible con Firebase y MercadoPago
+    implementation 'com.google.guava:guava:31.1-jre'
 
-    //Dependencies for payment gateway
-    implementation 'com.mercadopago:sdk-java:2.1.27'
+    // Payment gateway
+    implementation('com.mercadopago:sdk-java:2.1.27') {
+        exclude group: 'com.google.collections', module: 'google-collections'
+    }
+
+    // Firebase
+    implementation('com.google.firebase:firebase-admin:9.2.0') {
+        exclude group: 'com.google.collections', module: 'google-collections'
+    }
+
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-web'
-    //Dependencies for mail service
+
+    // Mail
     implementation 'org.simplejavamail:simple-java-mail:8.11.2'
     implementation 'org.simplejavamail:batch-module:8.10.1'
-    //Dependency for firebase implementation
-    implementation 'com.google.firebase:firebase-admin:9.2.0'
 
-    //Dependencies for JWT (Java Web Tokens)
+    // JWT
     implementation 'org.springframework.security:spring-security-crypto:6.3.3'
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
-    //Lombok
+
+    // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
-    //Swagger
+
+    // Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
+    // Prometheus
+    implementation 'io.micrometer:micrometer-registry-prometheus'
 
-    //testing dependencies
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testImplementation 'org.mockito:mockito-core:5.3.1'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
-    //Google sheets dependencies
+    // Google Sheets API
     implementation 'com.google.api-client:google-api-client:2.0.0'
     implementation 'com.google.oauth-client:google-oauth-client-jetty:1.34.1'
     implementation 'com.google.apis:google-api-services-sheets:v4-rev20220927-2.0.0'
 
-    implementation 'io.micrometer:micrometer-registry-prometheus'
+    // Selenium
+    implementation 'org.seleniumhq.selenium:selenium-java:4.12.0'
+    //implementation 'org.seleniumhq.selenium:selenium-devtools-v136:4.21.0'
+
+
+    // Tests
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.seleniumhq.selenium:selenium-java:4.21.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.mockito:mockito-core:5.3.1'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
 }
 
 test {
