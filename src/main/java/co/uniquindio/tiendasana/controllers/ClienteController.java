@@ -1,5 +1,6 @@
 package co.uniquindio.tiendasana.controllers;
 
+import co.uniquindio.tiendasana.dto.MesaDTO;
 import co.uniquindio.tiendasana.dto.carritoComprasdtos.AgregarDetalleCarritoDTO;
 import co.uniquindio.tiendasana.dto.carritoComprasdtos.BorrarDetalleCarritoDTO;
 import co.uniquindio.tiendasana.dto.carritoComprasdtos.EditarDetalleCarritoDTO;
@@ -54,7 +55,7 @@ public class ClienteController {
 
     @PutMapping("/gestor-reservas/add-item")
     public ResponseEntity<MessageDTO<String>> agregarMesaGestorReservas
-            (@Valid @RequestBody Mesa mesaDTO) throws Exception{
+            (@Valid @RequestBody MesaDTO mesaDTO) throws Exception{
         String gestorReservaId = gestorReservasService.agregarMesaGestorReservas(mesaDTO);
         return ResponseEntity.ok(new MessageDTO<>(false, gestorReservaId));
     }
@@ -105,8 +106,8 @@ public class ClienteController {
 
 
     @GetMapping("/gestor-reservas/get-items/{emailUsuario}")
-    public ResponseEntity<MessageDTO<List<Mesa>>> listarMesasGestorReservas(@PathVariable String emailUsuario) throws Exception{
-        List<Mesa> gestorItems = gestorReservasService.obtenerMesasGestorReservas(emailUsuario);
+    public ResponseEntity<MessageDTO<List<MesaDTO>>> listarMesasGestorReservas(@PathVariable String emailUsuario) throws Exception{
+        List<MesaDTO> gestorItems = gestorReservasService.obtenerMesasGestorReservas(emailUsuario);
         return ResponseEntity.ok(new MessageDTO<>(false, gestorItems));
     }
 

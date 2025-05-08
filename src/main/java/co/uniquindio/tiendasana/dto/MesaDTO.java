@@ -2,7 +2,7 @@ package co.uniquindio.tiendasana.dto;
 
 import co.uniquindio.tiendasana.model.enums.EstadoMesa;
 
-public record mesaDTO(
+public record MesaDTO(
         String id,
         String nombre,
         EstadoMesa estado,

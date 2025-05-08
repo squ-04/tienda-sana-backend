@@ -1,5 +1,6 @@
 package co.uniquindio.tiendasana.services.implementations;
 
+import co.uniquindio.tiendasana.dto.MesaDTO;
 import co.uniquindio.tiendasana.dto.gestorReservasdtos.BorrarMesaGestorDTO;
 import co.uniquindio.tiendasana.model.documents.Mesa;
 import co.uniquindio.tiendasana.model.vo.GestorReservas;
@@ -26,7 +27,7 @@ public class GestorReservasServiceImp implements GestorReservasService {
     }
 
     @Override
-    public String agregarMesaGestorReservas(Mesa mesaDTO) {
+    public String agregarMesaGestorReservas(MesaDTO mesaDTO) {
         return "";
     }
 
@@ -36,7 +37,7 @@ public class GestorReservasServiceImp implements GestorReservasService {
     }
 
     @Override
-    public List<Mesa> obtenerMesasGestorReservas(String emailUsuario) {
+    public List<MesaDTO> obtenerMesasGestorReservas(String emailUsuario) {
         return List.of();
     }
 }
