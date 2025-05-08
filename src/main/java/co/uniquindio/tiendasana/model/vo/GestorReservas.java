@@ -1,6 +1,6 @@
 package co.uniquindio.tiendasana.model.vo;
 
-import co.uniquindio.tiendasana.model.documents.MesaDTO;
+import co.uniquindio.tiendasana.model.documents.Mesa;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -18,10 +18,10 @@ public class GestorReservas {
 
     private LocalDateTime date;
     private String emailUsuario;
-    private List<MesaDTO> mesas;
+    private List<Mesa> mesas;
 
     @Builder
-    public GestorReservas(LocalDateTime date, String emailUsuario, List<MesaDTO> mesas) {
+    public GestorReservas(LocalDateTime date, String emailUsuario, List<Mesa> mesas) {
         this.date = date;
         this.emailUsuario = emailUsuario;
         this.mesas = mesas;

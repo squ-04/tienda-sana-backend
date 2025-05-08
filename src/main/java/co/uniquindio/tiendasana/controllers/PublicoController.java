@@ -1,23 +1,19 @@
 package co.uniquindio.tiendasana.controllers;
 
-import co.uniquindio.tiendasana.dto.TokenDTO;
-import co.uniquindio.tiendasana.dto.cuentadtos.CambiarContraseniaDTO;
-import co.uniquindio.tiendasana.dto.cuentadtos.CrearCuentaDTO;
-import co.uniquindio.tiendasana.dto.cuentadtos.LoginDTO;
 import co.uniquindio.tiendasana.dto.jwtdtos.MessageDTO;
+import co.uniquindio.tiendasana.dto.mesadtos.FiltroMesaDTO;
 import co.uniquindio.tiendasana.dto.mesadtos.ListaMesas;
+import co.uniquindio.tiendasana.dto.mesadtos.MesaItemDTO;
+import co.uniquindio.tiendasana.dto.productodtos.FiltroProductoDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ListaProductos;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoInfoDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoItemDTO;
-import co.uniquindio.tiendasana.exceptions.ProductoParseException;
-import co.uniquindio.tiendasana.services.implementations.ReservaServiceImp;
 import co.uniquindio.tiendasana.services.interfaces.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -92,9 +88,21 @@ public class PublicoController {
      * @throws Exception
      */
     @GetMapping("/productos/get-info/{id}")
-    public ResponseEntity<MessageDTO<ProductoInfoDTO>> getInfoEvenClient(@PathVariable String id) throws Exception{
+    public ResponseEntity<MessageDTO<ProductoInfoDTO>> obtenerInfoProducto(@PathVariable String id) throws Exception{
         ProductoInfoDTO productoInfo = productService.obtenerInfoProducto(id);
         return ResponseEntity.ok(new MessageDTO<>(false,productoInfo));
+    }
+
+    @PostMapping("/productos/filter-products")
+    public ResponseEntity<MessageDTO<List<ProductoItemDTO>>> filtrarProductos(@Valid @RequestBody FiltroProductoDTO filtroProductoDTO) throws Exception{
+        List<ProductoItemDTO> productos = productService.filtrarProductos(filtroProductoDTO);
+        return ResponseEntity.ok(new MessageDTO<>(false,productos));
+    }
+
+    @PostMapping("/mesas/filter-tables")
+    public ResponseEntity<MessageDTO<List<MesaItemDTO>>> filtrarMesas(@Valid @RequestBody FiltroMesaDTO filtroMesaDTO) throws Exception{
+        List<MesaItemDTO> mesas = mesaService.filtrarMesas(filtroMesaDTO);
+        return ResponseEntity.ok(new MessageDTO<>(false,mesas));
     }
 
 }

@@ -23,10 +23,10 @@ public class Reserva {
     private Pago pago;
     private int cantidadPersonas;
     private float valorReserva;
-    private List<MesaDTO> mesas;
+    private List<Mesa> mesas;
 
     @Builder
-    public Reserva(String usuarioId, LocalDateTime fechaReserva, EstadoReserva estadoReserva, String codigoPasarela, Pago pago, int cantidadPersonas, float valorReserva, List<MesaDTO> mesas) {
+    public Reserva(String usuarioId, LocalDateTime fechaReserva, EstadoReserva estadoReserva, String codigoPasarela, Pago pago, int cantidadPersonas, float valorReserva, List<Mesa> mesas) {
         this.usuarioId = usuarioId;
         this.fechaReserva = fechaReserva;
         this.estadoReserva = estadoReserva;

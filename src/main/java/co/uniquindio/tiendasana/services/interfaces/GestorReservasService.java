@@ -1,7 +1,7 @@
 package co.uniquindio.tiendasana.services.interfaces;
 
 import co.uniquindio.tiendasana.dto.gestorReservasdtos.BorrarMesaGestorDTO;
-import co.uniquindio.tiendasana.model.documents.MesaDTO;
+import co.uniquindio.tiendasana.model.documents.Mesa;
 import co.uniquindio.tiendasana.model.vo.GestorReservas;
 
 import java.util.List;
@@ -34,7 +34,7 @@ public interface GestorReservasService {
      * @param mesaDTO
      * @return
      */
-    String agregarMesaGestorReservas (MesaDTO mesaDTO);
+    String agregarMesaGestorReservas (Mesa mesaDTO);
 
     /**
      * Elimina una mesa específica del gestor de reservas del usuario
@@ -48,5 +48,5 @@ public interface GestorReservasService {
      * @param emailUsuario
      * @return
      */
-    List<MesaDTO> obtenerMesasGestorReservas(String emailUsuario);
+    List<Mesa> obtenerMesasGestorReservas(String emailUsuario);
 }

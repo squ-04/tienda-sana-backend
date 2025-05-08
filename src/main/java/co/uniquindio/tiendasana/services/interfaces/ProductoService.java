@@ -1,5 +1,6 @@
 package co.uniquindio.tiendasana.services.interfaces;
 
+import co.uniquindio.tiendasana.dto.productodtos.FiltroProductoDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ListaProductos;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoInfoDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoItemDTO;
@@ -46,4 +47,6 @@ public interface ProductoService {
      * o la cantidad a comprar es mal alta que el stock
      */
     void reducirCantidadProductosStock(String id, int cantidadComprada) throws Exception;
+
+    List<ProductoItemDTO> filtrarProductos(FiltroProductoDTO filtroProductoDTO) throws Exception;
 }

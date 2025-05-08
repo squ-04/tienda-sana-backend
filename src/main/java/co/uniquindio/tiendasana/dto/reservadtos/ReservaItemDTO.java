@@ -1,6 +1,6 @@
 package co.uniquindio.tiendasana.dto.reservadtos;
 
-import co.uniquindio.tiendasana.model.documents.MesaDTO;
+import co.uniquindio.tiendasana.model.documents.Mesa;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,6 +16,6 @@ public record ReservaItemDTO(
         String id,
         float total,
         String cantidadPersonas,
-        List<MesaDTO> mesas
+        List<Mesa> mesas
 ) {
 }

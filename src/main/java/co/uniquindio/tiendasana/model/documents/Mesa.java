@@ -8,7 +8,7 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
-public class MesaDTO {
+public class Mesa {
 
     @EqualsAndHashCode.Include
     private String id;
@@ -24,7 +24,7 @@ public class MesaDTO {
 
 
     @Builder
-    public MesaDTO(String id, String nombre, EstadoMesa estado, String localidad, float precioReserva, int capacidad, String imagen) {
+    public Mesa(String id, String nombre, EstadoMesa estado, String localidad, float precioReserva, int capacidad, String imagen) {
         this.id = id;
         this.nombre = nombre;
         this.estado = estado;

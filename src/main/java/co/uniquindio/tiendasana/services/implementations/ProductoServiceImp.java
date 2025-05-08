@@ -1,9 +1,6 @@
 package co.uniquindio.tiendasana.services.implementations;
 
-import co.uniquindio.tiendasana.dto.productodtos.ListaProductos;
-import co.uniquindio.tiendasana.dto.productodtos.ProductoInfoDTO;
-import co.uniquindio.tiendasana.dto.productodtos.ProductoItemDTO;
-import co.uniquindio.tiendasana.dto.productodtos.ProductosTotal;
+import co.uniquindio.tiendasana.dto.productodtos.*;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.Producto;
 import co.uniquindio.tiendasana.repos.ProductRepo;
@@ -160,6 +157,11 @@ public class ProductoServiceImp implements ProductoService {
         producto.setCantidad(producto.getCantidad()-cantidadComprada);
         productRepo.actualizar(producto);
         System.out.println("Se ha actualizado el producto correctamente");
+    }
+
+    @Override
+    public List<ProductoItemDTO> filtrarProductos(FiltroProductoDTO filtroProductoDTO) throws Exception {
+        return List.of();
     }
 
 
