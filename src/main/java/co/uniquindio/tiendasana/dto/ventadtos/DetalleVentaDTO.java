@@ -1,6 +1,6 @@
 package co.uniquindio.tiendasana.dto.ventadtos;
 
-public record DetalleOrdenDTO (
+public record DetalleVentaDTO(
         String productoId,
         float valor,
         int cantidad

@@ -1,9 +1,9 @@
 package co.uniquindio.tiendasana.services.implementations;
 
-import co.uniquindio.tiendasana.dto.carritoCompras.AgregarDetalleCarritoDTO;
-import co.uniquindio.tiendasana.dto.carritoCompras.BorrarDetalleCarritoDTO;
-import co.uniquindio.tiendasana.dto.carritoCompras.EditarDetalleCarritoDTO;
-import co.uniquindio.tiendasana.dto.carritoCompras.VistaItemCarritoDTO;
+import co.uniquindio.tiendasana.dto.carritoComprasdtos.AgregarDetalleCarritoDTO;
+import co.uniquindio.tiendasana.dto.carritoComprasdtos.BorrarDetalleCarritoDTO;
+import co.uniquindio.tiendasana.dto.carritoComprasdtos.EditarDetalleCarritoDTO;
+import co.uniquindio.tiendasana.dto.carritoComprasdtos.VistaItemCarritoDTO;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.CarritoCompras;
 import co.uniquindio.tiendasana.model.documents.Producto;
@@ -11,7 +11,6 @@ import co.uniquindio.tiendasana.model.vo.DetalleCarrito;
 import co.uniquindio.tiendasana.repos.CarritoComprasRepo;
 import co.uniquindio.tiendasana.services.interfaces.CarritoComprasService;
 import co.uniquindio.tiendasana.services.interfaces.ProductoService;
-import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

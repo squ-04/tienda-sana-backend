@@ -1,30 +1,40 @@
 package co.uniquindio.tiendasana.services.implementations;
 
+import co.uniquindio.tiendasana.dto.mesadtos.FiltroMesaDTO;
+import co.uniquindio.tiendasana.dto.mesadtos.ListaMesas;
+import co.uniquindio.tiendasana.dto.mesadtos.MesaInfoDTO;
+import co.uniquindio.tiendasana.dto.mesadtos.MesaItemDTO;
+import co.uniquindio.tiendasana.model.documents.Mesa;
 import co.uniquindio.tiendasana.services.interfaces.MesaService;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class MesaServiceImp implements MesaService {
 
-/*
     @Override
-    public void createUpdatePTable(tableDTO tableInfo) {
-        Optional<Mesa> obtainedTable=tableRepo.findByName(tableInfo.name());
-        Optional<Locations> location=locationRepo.findByName(tableInfo.name());
-        Mesa table=new Mesa(
-                tableInfo.name(),
-                tableInfo.status(),
-                location.get().getId().toString()
-        );
-        if (obtainedTable.isPresent()) {
-            table.setId(obtainedTable.get().getId());
-        }
-        tableRepo.save(table);
+    public MesaInfoDTO obtenerInfoMesa(String mesaId) throws Exception {
+        return null;
     }
 
     @Override
-    public void deleteTable(tableDTO table) {
-        Optional<Mesa> tableObtained=tableRepo.findByName(table.name());
-        tableRepo.delete(tableObtained.get());
-    }*/
+    public ListaMesas obtenerMesasCliente(int pagina) throws Exception {
+        return null;
+    }
+
+    @Override
+    public Mesa obtenerMesa(String mesaId) throws Exception {
+        return null;
+    }
+
+    @Override
+    public void cambiarEstadoMesa(String mesaId, String estado) throws Exception {
+
+    }
+
+    @Override
+    public List<MesaItemDTO> filtrarMesas(FiltroMesaDTO filtroMesaDTO) throws Exception {
+        return List.of();
+    }
 }

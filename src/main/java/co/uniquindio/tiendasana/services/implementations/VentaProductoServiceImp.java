@@ -8,7 +8,7 @@ import java.util.stream.Collectors;
 
 import co.uniquindio.tiendasana.dto.EmailDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.CrearVentaProductoDTO;
-import co.uniquindio.tiendasana.dto.ventadtos.DetalleOrdenDTO;
+import co.uniquindio.tiendasana.dto.ventadtos.DetalleVentaDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.PaymentResponseDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.VentaItemDTO;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
@@ -251,6 +251,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
                 ventaProducto.getId(),
                 ventaProducto.getTotal(),
                 ventaProducto.getPromocionId() != null ? ventaProducto.getPromocionId() : null);
+
     }
 
     /**
@@ -280,8 +281,8 @@ public class VentaProductoServiceImp implements VentaProductoService {
      * @param productos Lista de productos
      * @return Lista de DTOs de productos
      */
-    private @NotNull List<DetalleOrdenDTO> mapearADetalleVentaProducto(List<DetalleVentaProducto> productos) {
-        return productos.stream().map(e -> new DetalleOrdenDTO(
+    private @NotNull List<DetalleVentaDTO> mapearADetalleVentaProducto(List<DetalleVentaProducto> productos) {
+        return productos.stream().map(e -> new DetalleVentaDTO(
                 e.getProductoId(),
                 e.getValor(),
                 e.getCantidad()
