@@ -16,7 +16,10 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static co.uniquindio.tiendasana.utils.ProductoConstantes.HOJACLIENTE;
 
 @Service
 public class ProductoServiceImp implements ProductoService {
@@ -161,8 +164,42 @@ public class ProductoServiceImp implements ProductoService {
 
     @Override
     public List<ProductoItemDTO> filtrarProductos(FiltroProductoDTO filtroProductoDTO) throws Exception {
-        return List.of();
+        Predicate<Producto> filtro = producto -> {
+            boolean matches = true;
+
+            if (filtroProductoDTO.nombre() != null) {
+                matches &= producto.getNombre().toLowerCase().contains(filtroProductoDTO.nombre().toLowerCase());
+            }
+            if (filtroProductoDTO.cantidad() != 0) {
+                matches &= producto.getCantidad() >= filtroProductoDTO.cantidad();
+            }
+            if (filtroProductoDTO.categoria() != null) {
+                matches &= producto.getCategoria().toLowerCase().contains(filtroProductoDTO.categoria().toLowerCase());
+            }
+
+            return matches;
+        };
+
+        List<Producto> mesasFiltradas = productRepo.filtrar(filtro, HOJACLIENTE);
+
+        int pageSize = 9;
+        int pageNumber = filtroProductoDTO.pagina();
+        int startItem = pageNumber * pageSize;
+        int endItem = Math.min(startItem + pageSize, mesasFiltradas.size());
+
+        List<Producto> paginatedList = mesasFiltradas.subList(startItem, endItem);
+
+        return paginatedList.stream()
+                .map(producto -> new ProductoItemDTO(
+                        producto.getId(),
+                        producto.getNombre(),
+                        producto.getCategoria(),
+                        producto.getImagen(),
+                        producto.getPrecioUnitario()
+                ))
+                .collect(Collectors.toList());
     }
+
 
 
 }

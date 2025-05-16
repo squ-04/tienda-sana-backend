@@ -5,7 +5,7 @@ import co.uniquindio.tiendasana.model.enums.EstadoMesa;
 public record MesaItemDTO(
         String id,
         String nombre,
-        EstadoMesa estado,
+        String estado,
         String localidad,
         float precioReserva,
         int capacidad,
