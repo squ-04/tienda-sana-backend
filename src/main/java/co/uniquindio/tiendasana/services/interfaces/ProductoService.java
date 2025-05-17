@@ -6,6 +6,8 @@ import co.uniquindio.tiendasana.dto.productodtos.ProductoInfoDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoItemDTO;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.Producto;
+import co.uniquindio.tiendasana.model.enums.CategoriaProducto;
+import co.uniquindio.tiendasana.model.enums.Localidad;
 
 import java.io.IOException;
 import java.util.List;
@@ -48,5 +50,7 @@ public interface ProductoService {
      */
     void reducirCantidadProductosStock(String id, int cantidadComprada) throws Exception;
 
-    List<ProductoItemDTO> filtrarProductos(FiltroProductoDTO filtroProductoDTO) throws Exception;
+    ListaProductos filtrarProductos(FiltroProductoDTO filtroProductoDTO) throws Exception;
+
+    List<CategoriaProducto> listarTipos() throws Exception;
 }

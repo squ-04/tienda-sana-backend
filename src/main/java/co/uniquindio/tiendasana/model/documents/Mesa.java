@@ -1,6 +1,8 @@
 package co.uniquindio.tiendasana.model.documents;
 
+import co.uniquindio.tiendasana.model.enums.CategoriaProducto;
 import co.uniquindio.tiendasana.model.enums.EstadoMesa;
+import co.uniquindio.tiendasana.model.enums.Localidad;
 import lombok.*;
 
 @Setter
@@ -17,7 +19,7 @@ public class Mesa {
     @Getter(AccessLevel.NONE)
     private EstadoMesa estado;
 
-    private String localidad;
+    private Localidad localidad;
     private float precioReserva;
     private int capacidad;
     private String imagen;
@@ -28,7 +30,7 @@ public class Mesa {
         this.id = id;
         this.nombre = nombre;
         this.estado = estado;
-        this.localidad = localidad;
+        this.localidad = Localidad.fromLocalidad(localidad);
         this.precioReserva = precioReserva;
         this.capacidad = capacidad;
         this.imagen = imagen;

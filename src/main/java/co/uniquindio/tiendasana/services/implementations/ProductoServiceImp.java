@@ -3,6 +3,8 @@ package co.uniquindio.tiendasana.services.implementations;
 import co.uniquindio.tiendasana.dto.productodtos.*;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.Producto;
+import co.uniquindio.tiendasana.model.enums.CategoriaProducto;
+import co.uniquindio.tiendasana.model.enums.Localidad;
 import co.uniquindio.tiendasana.repos.ProductRepo;
 import co.uniquindio.tiendasana.services.interfaces.ProductoService;
 import co.uniquindio.tiendasana.utils.ProductoConstantes;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -163,33 +166,60 @@ public class ProductoServiceImp implements ProductoService {
     }
 
     @Override
-    public List<ProductoItemDTO> filtrarProductos(FiltroProductoDTO filtroProductoDTO) throws Exception {
+    public ListaProductos filtrarProductos(FiltroProductoDTO filtroProductoDTO) throws Exception {
+        boolean filtroVacio = (filtroProductoDTO.nombre() == null || filtroProductoDTO.nombre().isEmpty()) &&
+                (filtroProductoDTO.categoria() == null || filtroProductoDTO.categoria().isEmpty()) &&
+                filtroProductoDTO.cantidad() == 0;
+
+        if (filtroVacio) {
+            throw new Exception("Debe proporcionar al menos un criterio de filtro.");
+        }
+
         Predicate<Producto> filtro = producto -> {
             boolean matches = true;
 
-            if (filtroProductoDTO.nombre() != null) {
-                matches &= producto.getNombre().toLowerCase().contains(filtroProductoDTO.nombre().toLowerCase());
+            System.out.println("Nombre: " + filtroProductoDTO.nombre());
+            System.out.println("Cantidad: " + filtroProductoDTO.cantidad());
+            System.out.println("Categoria: " + filtroProductoDTO.categoria());
+            if (filtroProductoDTO.nombre() != null && !filtroProductoDTO.nombre().isEmpty()) {
+                matches &= (producto.getNombre() != null &&
+                        producto.getNombre().toLowerCase().contains(filtroProductoDTO.nombre().toLowerCase()));
             }
+
             if (filtroProductoDTO.cantidad() != 0) {
                 matches &= producto.getCantidad() >= filtroProductoDTO.cantidad();
             }
-            if (filtroProductoDTO.categoria() != null) {
-                matches &= producto.getCategoria().toLowerCase().contains(filtroProductoDTO.categoria().toLowerCase());
+
+            if (filtroProductoDTO.categoria() != null && !filtroProductoDTO.categoria().isEmpty()) {
+                matches &= (producto.getCategoria() != null &&
+                        producto.getCategoria().toLowerCase().contains(filtroProductoDTO.categoria().toLowerCase()));
             }
 
             return matches;
         };
 
-        List<Producto> mesasFiltradas = productRepo.filtrar(filtro, HOJACLIENTE);
+        List<Producto> productosFiltrados = productRepo.filtrar(filtro, HOJACLIENTE);
 
         int pageSize = 9;
+        int totalItems = productosFiltrados.size();
+        int totalPaginas = (totalItems == 0) ? 0 : (int) Math.ceil((double) totalItems / pageSize);
+
         int pageNumber = filtroProductoDTO.pagina();
-        int startItem = pageNumber * pageSize;
-        int endItem = Math.min(startItem + pageSize, mesasFiltradas.size());
+        if (pageNumber < 0) {
+            pageNumber = 0;
+        }
 
-        List<Producto> paginatedList = mesasFiltradas.subList(startItem, endItem);
 
-        return paginatedList.stream()
+        List<Producto> paginatedList;
+        if (totalItems == 0 || pageNumber * pageSize >= totalItems) {
+            paginatedList = Collections.emptyList();
+        } else {
+            int startItem = pageNumber * pageSize;
+            int endItem = Math.min(startItem + pageSize, totalItems);
+            paginatedList = productosFiltrados.subList(startItem, endItem);
+        }
+
+        List<ProductoItemDTO> productosItems = paginatedList.stream()
                 .map(producto -> new ProductoItemDTO(
                         producto.getId(),
                         producto.getNombre(),
@@ -198,8 +228,19 @@ public class ProductoServiceImp implements ProductoService {
                         producto.getPrecioUnitario()
                 ))
                 .collect(Collectors.toList());
+
+        return new ListaProductos(totalPaginas, productosItems);
     }
 
+    @Override
+    public List<CategoriaProducto> listarTipos() throws Exception {
+        List<CategoriaProducto> tipos= Arrays.asList(CategoriaProducto.values());
+        if (tipos.isEmpty()){
+            throw new Exception("No existen localidades para las mesas");
+
+        }
+        return tipos;
+    }
 
 
 }
