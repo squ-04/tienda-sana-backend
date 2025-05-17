@@ -1,7 +1,7 @@
 package co.uniquindio.tiendasana.repos;
 
 
-import co.uniquindio.tiendasana.dto.productodtos.ProductosTotal;
+import co.uniquindio.tiendasana.dto.productodtos.ProductosTotalDTO;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.Producto;
 import co.uniquindio.tiendasana.utils.ProductoConstantes;
@@ -47,11 +47,11 @@ public class ProductRepo  {
      * @throws IOException Error al acceder a la base de datos
      * @throws ProductoParseException Error en el parseo del producto
      */
-    public ProductosTotal obtenerProductos(int pagina, int cantidadElementos) throws IOException, ProductoParseException {
+    public ProductosTotalDTO obtenerProductos(int pagina, int cantidadElementos) throws IOException, ProductoParseException {
         int totalProductos= contarProductosExistintes();
         List<List<Object>> filas = obtenerFilasHoja(pagina,cantidadElementos,totalProductos);
         List<Producto> productos = mapearFilasProductos(filas);
-       return new ProductosTotal( totalProductos, productos);
+       return new ProductosTotalDTO( totalProductos, productos);
     }
 
     /**

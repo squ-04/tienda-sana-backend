@@ -129,7 +129,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
         details.forEach(carDetail -> {
             try {
 
-                Producto producto = productoService.getProducto(String.valueOf(carDetail.getProductoId()));
+                Producto producto = productoService.obtenerProducto(String.valueOf(carDetail.getProductoId()));
 
                 DetalleVentaProducto orderDetail = new DetalleVentaProducto();
                 orderDetail.setProductoId(carDetail.getProductoId());
@@ -316,7 +316,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
             for (DetalleVentaProducto item : ventaGuardar.getProductos()) {
                 // Obtener el evento y la localidad del ítem
                 System.out.println("ID Producto: " + item.getProductoId());
-                Producto producto = productoService.getProducto(item.getProductoId());
+                Producto producto = productoService.obtenerProducto(item.getProductoId());
 
                 float unitPrice = (promocion != null) ?
                         Math.max(0, producto.getPrecioUnitario() - (producto.getPrecioUnitario() * promocion.getPorcentajeDescuento())) :
@@ -510,7 +510,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
         // Productos comprados
         body.append("<h2>Productos Adquiridos:</h2>");
         for (DetalleVentaProducto item : ventaProducto.getProductos()) {
-            Producto producto = productoService.getProducto(item.getProductoId());
+            Producto producto = productoService.obtenerProducto(item.getProductoId());
             body.append("<div class='product'>");
             body.append("<p><strong>").append(producto.getNombre()).append("</strong><br>");
             body.append("<em>").append(producto.getDescripcion()).append("</em><br>");

@@ -1,6 +1,5 @@
-package co.uniquindio.tiendasana.model.vo;
+package co.uniquindio.tiendasana.model.documents;
 
-import co.uniquindio.tiendasana.model.documents.Mesa;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -16,13 +15,13 @@ public class GestorReservas {
     @EqualsAndHashCode.Include
     private String id;
 
-    private LocalDateTime date;
+    private LocalDateTime fecha;
     private String emailUsuario;
     private List<Mesa> mesas;
 
     @Builder
-    public GestorReservas(LocalDateTime date, String emailUsuario, List<Mesa> mesas) {
-        this.date = date;
+    public GestorReservas(String id, LocalDateTime fecha, String emailUsuario, List<Mesa> mesas) {
+        this.fecha = fecha;
         this.emailUsuario = emailUsuario;
         this.mesas = mesas;
     }

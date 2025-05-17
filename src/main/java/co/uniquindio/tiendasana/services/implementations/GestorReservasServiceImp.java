@@ -2,8 +2,7 @@ package co.uniquindio.tiendasana.services.implementations;
 
 import co.uniquindio.tiendasana.dto.MesaDTO;
 import co.uniquindio.tiendasana.dto.gestorReservasdtos.BorrarMesaGestorDTO;
-import co.uniquindio.tiendasana.model.documents.Mesa;
-import co.uniquindio.tiendasana.model.vo.GestorReservas;
+import co.uniquindio.tiendasana.model.documents.GestorReservas;
 import co.uniquindio.tiendasana.services.interfaces.GestorReservasService;
 import org.springframework.stereotype.Service;
 

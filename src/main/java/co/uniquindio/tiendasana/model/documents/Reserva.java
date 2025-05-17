@@ -17,16 +17,18 @@ public class Reserva {
     private String id;
 
     private String usuarioId;
+    private List<Mesa> mesas;
     private LocalDateTime fechaReserva;
+    private float valorReserva;
+    private int cantidadPersonas;
     private EstadoReserva estadoReserva;
     private String codigoPasarela;
     private Pago pago;
-    private int cantidadPersonas;
-    private float valorReserva;
-    private List<Mesa> mesas;
+
 
     @Builder
-    public Reserva(String usuarioId, LocalDateTime fechaReserva, EstadoReserva estadoReserva, String codigoPasarela, Pago pago, int cantidadPersonas, float valorReserva, List<Mesa> mesas) {
+    public Reserva(String id, String usuarioId, List<Mesa> mesas, LocalDateTime fechaReserva, float valorReserva, int cantidadPersonas, EstadoReserva estadoReserva, String codigoPasarela, Pago pago) {
+        this.id = id;
         this.usuarioId = usuarioId;
         this.fechaReserva = fechaReserva;
         this.estadoReserva = estadoReserva;

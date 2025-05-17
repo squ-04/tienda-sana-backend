@@ -65,7 +65,7 @@ public class CarritoComprasServiceImp implements CarritoComprasService {
     @Override
     public String agregarDetalleCarrito(AgregarDetalleCarritoDTO addShoppingCarDetailDTO) throws IOException, ProductoParseException {
         CarritoCompras carritoCompras = crearCarritoCompras(addShoppingCarDetailDTO.idUsuario());
-        Producto producto = productoService.getProducto(addShoppingCarDetailDTO.idProducto());
+        Producto producto = productoService.obtenerProducto(addShoppingCarDetailDTO.idProducto());
 
         DetalleCarrito detalleCarrito = new DetalleCarrito();
         detalleCarrito.setCantidad(addShoppingCarDetailDTO.cantidad());
@@ -91,7 +91,7 @@ public class CarritoComprasServiceImp implements CarritoComprasService {
         List<DetalleCarrito> detalles = carritoCompras.getProductos();
         detalles.forEach(e -> {
             try {
-                Producto producto=productoService.getProducto(editarCarritoDetalleDTO.idProducto());
+                Producto producto=productoService.obtenerProducto(editarCarritoDetalleDTO.idProducto());
                 if (e.getProductoId().equals(editarCarritoDetalleDTO.idProducto())) {
                     if (!producto.estaStockDisponible(editarCarritoDetalleDTO.cantidad())) {
                         throw new Exception("Cantidad de stock insuficiente");
@@ -175,7 +175,7 @@ public class CarritoComprasServiceImp implements CarritoComprasService {
     private Optional<VistaItemCarritoDTO> convertToCarItemViewDTO(DetalleCarrito itemView) {
         try {
 
-            Producto producto = productoService.getProducto(itemView.getProductoId());
+            Producto producto = productoService.obtenerProducto(itemView.getProductoId());
 
             return Optional.of(new VistaItemCarritoDTO(
                     producto.getId(),

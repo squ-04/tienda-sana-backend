@@ -1,9 +1,8 @@
 package co.uniquindio.tiendasana.services.interfaces;
 
 import co.uniquindio.tiendasana.dto.mesadtos.FiltroMesaDTO;
-import co.uniquindio.tiendasana.dto.mesadtos.ListaMesas;
+import co.uniquindio.tiendasana.dto.mesadtos.ListaMesasDTO;
 import co.uniquindio.tiendasana.dto.mesadtos.MesaInfoDTO;
-import co.uniquindio.tiendasana.dto.mesadtos.MesaItemDTO;
 import co.uniquindio.tiendasana.model.documents.Mesa;
 import co.uniquindio.tiendasana.model.enums.Localidad;
 
@@ -25,7 +24,7 @@ public interface MesaService {
      * @return ListaMesas con la lista de mesas
      * @throws Exception
      */
-    ListaMesas obtenerMesasCliente(int pagina) throws Exception;
+    ListaMesasDTO obtenerMesasCliente(int pagina) throws Exception;
 
     /**
      * Metodo que obtiene una mesa por su id
@@ -43,7 +42,7 @@ public interface MesaService {
      */
     void cambiarEstadoMesa(String mesaId, String estado) throws Exception;
 
-    ListaMesas filtrarMesas(FiltroMesaDTO filtroMesaDTO) throws Exception;
+    ListaMesasDTO filtrarMesas(FiltroMesaDTO filtroMesaDTO) throws Exception;
 
     List<Localidad> listarLocalidades() throws Exception;
 }

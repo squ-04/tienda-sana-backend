@@ -1,13 +1,11 @@
 package co.uniquindio.tiendasana.services.interfaces;
 
 import co.uniquindio.tiendasana.dto.productodtos.FiltroProductoDTO;
-import co.uniquindio.tiendasana.dto.productodtos.ListaProductos;
+import co.uniquindio.tiendasana.dto.productodtos.ListaProductosDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoInfoDTO;
-import co.uniquindio.tiendasana.dto.productodtos.ProductoItemDTO;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.Producto;
 import co.uniquindio.tiendasana.model.enums.CategoriaProducto;
-import co.uniquindio.tiendasana.model.enums.Localidad;
 
 import java.io.IOException;
 import java.util.List;
@@ -30,7 +28,7 @@ public interface ProductoService {
      * @throws IOException Si al acceder a la base de datos
      * @throws ProductoParseException  Si al parsear un producto ocurre un error.
      */
-    ListaProductos obtenerProductosCliente(int pagina) throws IOException, ProductoParseException;
+    ListaProductosDTO obtenerProductosCliente(int pagina) throws IOException, ProductoParseException;
 
     /**
      * Obtener un producto (Entidad) dado su ID
@@ -39,7 +37,7 @@ public interface ProductoService {
      * @throws ProductoParseException Si el producto no existe
      * @throws IOException Error al acceder a la base de datos
      */
-    Producto getProducto(String id) throws ProductoParseException, IOException;
+    Producto obtenerProducto(String id) throws ProductoParseException, IOException;
 
     /**
      * Metodo para reducir la cantidad de Stock de un producto una vez se tenga un pago aprovado y acreditado
@@ -50,7 +48,7 @@ public interface ProductoService {
      */
     void reducirCantidadProductosStock(String id, int cantidadComprada) throws Exception;
 
-    ListaProductos filtrarProductos(FiltroProductoDTO filtroProductoDTO) throws Exception;
+    ListaProductosDTO filtrarProductos(FiltroProductoDTO filtroProductoDTO) throws Exception;
 
     List<CategoriaProducto> listarTipos() throws Exception;
 }

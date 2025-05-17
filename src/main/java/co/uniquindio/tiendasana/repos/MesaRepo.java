@@ -1,5 +1,6 @@
 package co.uniquindio.tiendasana.repos;
 
+import co.uniquindio.tiendasana.dto.mesadtos.MesasTotalDTO;
 import co.uniquindio.tiendasana.model.documents.Mesa;
 import co.uniquindio.tiendasana.model.enums.EstadoMesa;
 import co.uniquindio.tiendasana.utils.MesaConstantes;
@@ -13,6 +14,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -44,6 +46,37 @@ public class MesaRepo {
             return new ArrayList<>();
         }
     }
+
+    public MesasTotalDTO obtenerMesas(int pagina, int cantidadElementos) throws IOException {
+        int totalMesas= contarMesasExistentes();
+        List<List<Object>> filas = obtenerFilasHoja(pagina,cantidadElementos,totalMesas);
+        List<Mesa> mesas = mapearFilasMesas(filas);
+        return new MesasTotalDTO( totalMesas, mesas);
+    }
+
+    public int contarMesasExistentes() throws IOException {
+        String rango = SHEET_NAME + MesaConstantes.CANT_MESAS; // Ajusta según columnas
+        List<List<Object>> respuesta =
+                sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute().getValues();
+        return Integer.parseInt(respuesta.get(0).get(0).toString());
+    }
+
+    private List<List<Object>> obtenerFilasHoja(int pagina, int cantidad, int cantidadTotal) throws IOException {
+
+        int cantidadPaginas=cantidadTotal/cantidad;
+
+        if(pagina > cantidadPaginas){
+            throw new RuntimeException("La página no existe");//TODO cambiar excepcion por Exception
+        }
+        int filaInicio = 2 + (pagina * cantidad); // A2 es la primera fila de datos
+        int filaFin = filaInicio + cantidad - 1;
+
+        String rango = SHEET_NAME + "!A" + filaInicio + ":G" + filaFin;
+        ValueRange respuesta= sheetsService.spreadsheets().values().get(spreadsheetId,rango).execute();
+
+        return respuesta.getValues();
+    }
+
 
     private List<Mesa> mapearFilasMesas(List<List<Object>> filas) {
         List<Mesa> mesas = new ArrayList<>();
@@ -100,6 +133,29 @@ public class MesaRepo {
                 .collect(Collectors.toList());
     }
 
+    public List<Mesa> filtrar (Predicate<Mesa> expresion, String hoja) throws IOException {
+        List<Mesa> mesas = obtenerMesas(hoja);
+        return mesas.stream()
+                .filter(expresion)
+                .collect(Collectors.toList());
+    }
+
+    private List<List<Object>> obtenerFilasHoja(String hoja) throws IOException {
+        String rango = hoja + "!A2:"+ MesaConstantes.COL_REGISTRO_FINAL;
+        ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
+        List<List<Object>> valores=respuesta.getValues();
+        if (valores!=null) {
+            return valores;
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
+    public List<Mesa> obtenerMesas(String hoja) throws IOException {
+        List<List<Object>> filas = obtenerFilasHoja(hoja);
+        return mapearFilasMesas(filas);
+    }
+
     public int obtenerIndiceMesa(String id) {
         List<Mesa> mesas = null;
         int filaCuenta=-1;
@@ -137,6 +193,18 @@ public class MesaRepo {
         } else {
             throw new IOException("Registro no encontrado");
         }
+    }
+
+    public Optional<Mesa> obtenerPorId(String id) throws IOException {
+        List<Mesa> mesasObtenidas=
+                filtrar(mesa -> mesa.getId().equals(id), SHEET_NAME);
+        if (mesasObtenidas.isEmpty()) {
+            return Optional.empty();
+        }
+        if (mesasObtenidas.size()>1) {
+            throw new IOException("Mas de una mesa tiene ese id");
+        }
+        return Optional.of(mesasObtenidas.get(0));
     }
 
 }

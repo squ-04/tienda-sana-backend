@@ -4,7 +4,6 @@ import co.uniquindio.tiendasana.dto.productodtos.*;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.Producto;
 import co.uniquindio.tiendasana.model.enums.CategoriaProducto;
-import co.uniquindio.tiendasana.model.enums.Localidad;
 import co.uniquindio.tiendasana.repos.ProductRepo;
 import co.uniquindio.tiendasana.services.interfaces.ProductoService;
 import co.uniquindio.tiendasana.utils.ProductoConstantes;
@@ -109,8 +108,8 @@ public class ProductoServiceImp implements ProductoService {
      * @throws ProductoParseException  Si al parsear un producto ocurre un error.
      */
     @Override
-    public ListaProductos obtenerProductosCliente(int pagina) throws IOException, ProductoParseException {
-        ProductosTotal paginaProductos = productRepo.obtenerProductos(pagina, ProductoConstantes.ELEMENTOSPAGINA);
+    public ListaProductosDTO obtenerProductosCliente(int pagina) throws IOException, ProductoParseException {
+        ProductosTotalDTO paginaProductos = productRepo.obtenerProductos(pagina, ProductoConstantes.ELEMENTOSPAGINA);
         List<Producto> productos=paginaProductos.productos();
         List<ProductoItemDTO> productosItems = productos.stream()
                 .filter(producto -> "Disponible".equalsIgnoreCase(producto.getEstado()))
@@ -124,7 +123,7 @@ public class ProductoServiceImp implements ProductoService {
                 ))
                 .collect(Collectors.toList());
 
-        return new ListaProductos(
+        return new ListaProductosDTO(
                 (int) Math.ceil((double) paginaProductos.totalProductos() / ProductoConstantes.ELEMENTOSPAGINA),
                 productosItems
         );
@@ -138,7 +137,7 @@ public class ProductoServiceImp implements ProductoService {
      * @throws IOException Error al acceder a la base de datos
      */
     @Override
-    public Producto getProducto(String id) throws ProductoParseException, IOException {
+    public Producto obtenerProducto(String id) throws ProductoParseException, IOException {
         Optional<Producto> productoOptional= productRepo.obtenerPorId(id);
         if (productoOptional.isEmpty()) {
             throw new ProductoParseException("Producto no encontrado");
@@ -156,7 +155,7 @@ public class ProductoServiceImp implements ProductoService {
      */
     @Override
     public void reducirCantidadProductosStock(String id, int cantidadComprada) throws Exception {
-        Producto producto= getProducto(id);
+        Producto producto= obtenerProducto(id);
         if (producto.getCantidad()-cantidadComprada < 0) {
             throw new Exception ("La compra del producto "+producto.getNombre() +" es alta para el stock");
         }
@@ -166,7 +165,7 @@ public class ProductoServiceImp implements ProductoService {
     }
 
     @Override
-    public ListaProductos filtrarProductos(FiltroProductoDTO filtroProductoDTO) throws Exception {
+    public ListaProductosDTO filtrarProductos(FiltroProductoDTO filtroProductoDTO) throws Exception {
         boolean filtroVacio = (filtroProductoDTO.nombre() == null || filtroProductoDTO.nombre().isEmpty()) &&
                 (filtroProductoDTO.categoria() == null || filtroProductoDTO.categoria().isEmpty()) &&
                 filtroProductoDTO.cantidad() == 0;
@@ -229,7 +228,7 @@ public class ProductoServiceImp implements ProductoService {
                 ))
                 .collect(Collectors.toList());
 
-        return new ListaProductos(totalPaginas, productosItems);
+        return new ListaProductosDTO(totalPaginas, productosItems);
     }
 
     @Override
