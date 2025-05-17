@@ -8,6 +8,8 @@ import co.uniquindio.tiendasana.dto.productodtos.FiltroProductoDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ListaProductos;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoInfoDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoItemDTO;
+import co.uniquindio.tiendasana.model.enums.CategoriaProducto;
+import co.uniquindio.tiendasana.model.enums.Localidad;
 import co.uniquindio.tiendasana.services.interfaces.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -94,15 +96,28 @@ public class PublicoController {
     }
 
     @PostMapping("/productos/filter-products")
-    public ResponseEntity<MessageDTO<List<ProductoItemDTO>>> filtrarProductos(@Valid @RequestBody FiltroProductoDTO filtroProductoDTO) throws Exception{
-        List<ProductoItemDTO> productos = productService.filtrarProductos(filtroProductoDTO);
+    public ResponseEntity<MessageDTO<ListaProductos>> filtrarProductos(@Valid @RequestBody FiltroProductoDTO filtroProductoDTO) throws Exception{
+        System.out.println("Llega a filtro");
+        ListaProductos productos = productService.filtrarProductos(filtroProductoDTO);
         return ResponseEntity.ok(new MessageDTO<>(false,productos));
     }
 
     @PostMapping("/mesas/filter-tables")
-    public ResponseEntity<MessageDTO<List<MesaItemDTO>>> filtrarMesas(@Valid @RequestBody FiltroMesaDTO filtroMesaDTO) throws Exception{
-        List<MesaItemDTO> mesas = mesaService.filtrarMesas(filtroMesaDTO);
+    public ResponseEntity<MessageDTO<ListaMesas>> filtrarMesas(@Valid @RequestBody FiltroMesaDTO filtroMesaDTO) throws Exception{
+        ListaMesas mesas = mesaService.filtrarMesas(filtroMesaDTO);
         return ResponseEntity.ok(new MessageDTO<>(false,mesas));
+    }
+
+    @GetMapping("/productos/get-types")
+    public ResponseEntity<MessageDTO<List<CategoriaProducto>>>  listarTipos() throws Exception{
+        List<CategoriaProducto> tiposProduco = productService.listarTipos();
+        return ResponseEntity.ok(new MessageDTO<>(false,tiposProduco));
+    }
+
+    @GetMapping("/mesas/get-locality")
+    public ResponseEntity<MessageDTO<List<Localidad>>>  listarLocalidades() throws Exception{
+        List<Localidad> localidadesMesa = mesaService.listarLocalidades();
+        return ResponseEntity.ok(new MessageDTO<>(false,localidadesMesa));
     }
 
 }
