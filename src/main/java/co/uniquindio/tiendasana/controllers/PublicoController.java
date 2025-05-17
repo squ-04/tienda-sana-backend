@@ -54,7 +54,6 @@ public class PublicoController {
      */
     @GetMapping("/mesas/get-all/{pagina}")
     public ResponseEntity<MessageDTO<ListaMesasDTO>> listarMesasCliente(@PathVariable int pagina) throws Exception {
-        System.out.println("pagina: "+pagina);
         ListaMesasDTO mesas= mesaService.obtenerMesasCliente(pagina);
         return ResponseEntity.ok( new MessageDTO<>(false, mesas));
     }

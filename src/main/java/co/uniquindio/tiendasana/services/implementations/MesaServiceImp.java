@@ -49,7 +49,6 @@ public class MesaServiceImp implements MesaService {
     @Override
     public ListaMesasDTO obtenerMesasCliente(int pagina) throws Exception {
         MesasTotalDTO paginaMesas = mesaRepo.obtenerMesas(pagina, MesaConstantes.ELEMENTOSPAGINA);
-        System.out.println("Numero elem: "+MesaConstantes.ELEMENTOSPAGINA);
         List<Mesa> mesas=paginaMesas.mesas();
         List<MesaItemDTO> mesasItems = mesas.stream()
                 .map(mesa -> new MesaItemDTO(
@@ -111,7 +110,6 @@ public class MesaServiceImp implements MesaService {
 
             if (filtroMesaDTO.localidad() != null && !filtroMesaDTO.localidad().isEmpty()) {
                 matches &= (mesa.getLocalidad() != null &&
-                        mesa.getLocalidad().getLocalidad() != null && // Chequeo para el String de localidad
                         mesa.getLocalidad().getLocalidad().toLowerCase().contains(filtroMesaDTO.localidad().toLowerCase()));
             }
             return matches;
@@ -138,7 +136,7 @@ public class MesaServiceImp implements MesaService {
             paginatedList = mesasFiltradas.subList(startItem, endItem);
         }
 
-        // Mapear a MesaItemDTO
+
         List<MesaItemDTO> mesasItems = paginatedList.stream()
                 .map(mesa -> new MesaItemDTO(
                         mesa.getId(),

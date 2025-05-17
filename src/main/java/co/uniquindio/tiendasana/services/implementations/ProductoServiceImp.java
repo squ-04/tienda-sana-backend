@@ -166,6 +166,7 @@ public class ProductoServiceImp implements ProductoService {
 
     @Override
     public ListaProductosDTO filtrarProductos(FiltroProductoDTO filtroProductoDTO) throws Exception {
+        System.out.println("Filtro recibido de producto: " + filtroProductoDTO);
         boolean filtroVacio = (filtroProductoDTO.nombre() == null || filtroProductoDTO.nombre().isEmpty()) &&
                 (filtroProductoDTO.categoria() == null || filtroProductoDTO.categoria().isEmpty()) &&
                 filtroProductoDTO.cantidad() == 0;
@@ -177,9 +178,6 @@ public class ProductoServiceImp implements ProductoService {
         Predicate<Producto> filtro = producto -> {
             boolean matches = true;
 
-            System.out.println("Nombre: " + filtroProductoDTO.nombre());
-            System.out.println("Cantidad: " + filtroProductoDTO.cantidad());
-            System.out.println("Categoria: " + filtroProductoDTO.categoria());
             if (filtroProductoDTO.nombre() != null && !filtroProductoDTO.nombre().isEmpty()) {
                 matches &= (producto.getNombre() != null &&
                         producto.getNombre().toLowerCase().contains(filtroProductoDTO.nombre().toLowerCase()));
