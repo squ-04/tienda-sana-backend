@@ -23,7 +23,7 @@ public interface ReservaService {
      * @param idReserva ID de la reserva a buscar.
      * @return Objeto Reserva con la información de la reserva.
      */
-    Reserva obtenerReserva(String idReserva);
+    Reserva obtenerReserva(String idReserva) throws Exception;
 
     /**
      * Metodo para borrar una reserva
