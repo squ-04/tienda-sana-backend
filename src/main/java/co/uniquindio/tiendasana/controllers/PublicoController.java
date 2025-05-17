@@ -106,8 +106,8 @@ public class PublicoController {
     }
 
     @GetMapping("/productos/get-types")
-    public ResponseEntity<MessageDTO<List<CategoriaProducto>>>  listarTipos() throws Exception{
-        List<CategoriaProducto> tiposProduco = productService.listarTipos();
+    public ResponseEntity<MessageDTO<List<String>>>  listarTipos() throws Exception{
+        List<String> tiposProduco = productService.listarTipos();
         return ResponseEntity.ok(new MessageDTO<>(false,tiposProduco));
     }
 

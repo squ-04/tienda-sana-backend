@@ -10,6 +10,7 @@ import co.uniquindio.tiendasana.utils.ProductoConstantes;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -166,6 +167,52 @@ public class ProductoServiceImp implements ProductoService {
 
     @Override
     public ListaProductosDTO filtrarProductos(FiltroProductoDTO filtroProductoDTO) throws Exception {
+        Predicate<Producto> filtro = getProductoPredicate(filtroProductoDTO);
+
+        List<Producto> productosFiltrados = productRepo.filtrar(filtro, HOJACLIENTE);
+        int pageSize = 9;
+        int totalItems = productosFiltrados.size();
+        int totalPaginas = (totalItems == 0) ? 0 : (int) Math.ceil((double) totalItems / pageSize);
+
+        List<Producto> paginatedList = obtenerListaPaginada(productosFiltrados,filtroProductoDTO.pagina(),pageSize,
+                totalPaginas);
+
+        List<ProductoItemDTO> productosItems = paginatedList.stream()
+                .map(producto -> new ProductoItemDTO(
+                        producto.getId(),
+                        producto.getNombre(),
+                        producto.getCategoria(),
+                        producto.getImagen(),
+                        producto.getPrecioUnitario()
+                ))
+                .collect(Collectors.toList());
+
+        return new ListaProductosDTO(totalPaginas, productosItems);
+    }
+    private List<Producto> obtenerListaPaginada (List<Producto> productosFiltrados, int pagina, int pageSize,
+                                                 int totalItems) {
+        List<Producto> paginatedList;
+        int pageNumber = pagina;
+        if (pageNumber < 0) {
+            pageNumber = 0;
+        }
+
+        if (totalItems != 0 && pageNumber * pageSize < totalItems) {
+            int startItem = pageNumber * pageSize;
+            int endItem = Math.min(startItem + pageSize, totalItems);
+            paginatedList = productosFiltrados.subList(startItem, endItem);
+        } else {
+            paginatedList = Collections.emptyList();
+        }
+        return paginatedList;
+    }
+    /**
+     * Metodo para obtener el predicado de un filtro dado un DTO de filtro
+     * @param filtroProductoDTO
+     * @return
+     * @throws Exception
+     */
+    private static @NotNull Predicate<Producto> getProductoPredicate(FiltroProductoDTO filtroProductoDTO) throws Exception {
         System.out.println("Filtro recibido de producto: " + filtroProductoDTO);
         boolean filtroVacio = (filtroProductoDTO.nombre() == null || filtroProductoDTO.nombre().isEmpty()) &&
                 (filtroProductoDTO.categoria() == null || filtroProductoDTO.categoria().isEmpty()) &&
@@ -189,51 +236,22 @@ public class ProductoServiceImp implements ProductoService {
 
             if (filtroProductoDTO.categoria() != null && !filtroProductoDTO.categoria().isEmpty()) {
                 matches &= (producto.getCategoria() != null &&
-                        producto.getCategoria().toLowerCase().contains(filtroProductoDTO.categoria().toLowerCase()));
+                        producto.getCategoria().equalsIgnoreCase(filtroProductoDTO.categoria()));
             }
 
             return matches;
         };
-
-        List<Producto> productosFiltrados = productRepo.filtrar(filtro, HOJACLIENTE);
-
-        int pageSize = 9;
-        int totalItems = productosFiltrados.size();
-        int totalPaginas = (totalItems == 0) ? 0 : (int) Math.ceil((double) totalItems / pageSize);
-
-        int pageNumber = filtroProductoDTO.pagina();
-        if (pageNumber < 0) {
-            pageNumber = 0;
-        }
-
-
-        List<Producto> paginatedList;
-        if (totalItems == 0 || pageNumber * pageSize >= totalItems) {
-            paginatedList = Collections.emptyList();
-        } else {
-            int startItem = pageNumber * pageSize;
-            int endItem = Math.min(startItem + pageSize, totalItems);
-            paginatedList = productosFiltrados.subList(startItem, endItem);
-        }
-
-        List<ProductoItemDTO> productosItems = paginatedList.stream()
-                .map(producto -> new ProductoItemDTO(
-                        producto.getId(),
-                        producto.getNombre(),
-                        producto.getCategoria(),
-                        producto.getImagen(),
-                        producto.getPrecioUnitario()
-                ))
-                .collect(Collectors.toList());
-
-        return new ListaProductosDTO(totalPaginas, productosItems);
+        return filtro;
     }
 
     @Override
-    public List<CategoriaProducto> listarTipos() throws Exception {
-        List<CategoriaProducto> tipos= Arrays.asList(CategoriaProducto.values());
+    public List<String> listarTipos() throws Exception {
+        List<String> tipos= Arrays.stream(CategoriaProducto.values())
+                .map(CategoriaProducto::getCategoria).collect(Collectors.toList());
+
+
         if (tipos.isEmpty()){
-            throw new Exception("No existen localidades para las mesas");
+            throw new Exception("No existen categorias para los producots");
 
         }
         return tipos;
