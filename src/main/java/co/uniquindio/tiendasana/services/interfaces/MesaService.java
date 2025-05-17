@@ -44,5 +44,5 @@ public interface MesaService {
 
     ListaMesasDTO filtrarMesas(FiltroMesaDTO filtroMesaDTO) throws Exception;
 
-    List<Localidad> listarLocalidades() throws Exception;
+    List<String> listarLocalidades() throws Exception;
 }

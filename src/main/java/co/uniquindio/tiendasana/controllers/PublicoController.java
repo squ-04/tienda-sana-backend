@@ -112,8 +112,8 @@ public class PublicoController {
     }
 
     @GetMapping("/mesas/get-locality")
-    public ResponseEntity<MessageDTO<List<Localidad>>>  listarLocalidades() throws Exception{
-        List<Localidad> localidadesMesa = mesaService.listarLocalidades();
+    public ResponseEntity<MessageDTO<List<String>>>  listarLocalidades() throws Exception{
+        List<String> localidadesMesa = mesaService.listarLocalidades();
         return ResponseEntity.ok(new MessageDTO<>(false,localidadesMesa));
     }
 
