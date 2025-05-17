@@ -6,10 +6,12 @@ import co.uniquindio.tiendasana.dto.reservadtos.PaymentResponseReservaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.ReservaItemDTO;
 import co.uniquindio.tiendasana.model.documents.*;
 import co.uniquindio.tiendasana.model.enums.EstadoMesa;
+import co.uniquindio.tiendasana.model.enums.EstadoReserva;
 import co.uniquindio.tiendasana.model.vo.DetalleCarrito;
-import co.uniquindio.tiendasana.model.vo.DetalleVentaProducto;
+import co.uniquindio.tiendasana.model.vo.Pago;
 import co.uniquindio.tiendasana.repos.ReservasRepo;
 import co.uniquindio.tiendasana.services.interfaces.*;
+import com.mercadopago.resources.payment.PaymentStatus;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -105,13 +107,20 @@ public class ReservaServiceImp implements ReservaService {
     }
 
     @Override
-    public String cancelarReserva(String idReserva) {
-        return "";
+    public String cancelarReserva(String idReserva) throws Exception {
+        Reserva reservaCancelar = obtenerReserva(idReserva);
+        reservaCancelar.setEstadoReserva(EstadoReserva.CANCELADA);
+        reservasRepo.actualizarReservaSimple(reservaCancelar);
+        return "La reserva fue cancelada y se le retorná el dinero a su cuenta de MercadoPago";
     }
 
     @Override
-    public String actualizarReserva(ActualizarReservaDTO actualizarReservaDTO) {
-        return "";
+    public String actualizarReserva(ActualizarReservaDTO actualizarReservaDTO) throws Exception {
+        Reserva reservaActualizar = obtenerReserva(actualizarReservaDTO.reservaId());
+        reservaActualizar.setCantidadPersonas(actualizarReservaDTO.cantidadPersonas());
+        reservaActualizar.setFechaReserva(actualizarReservaDTO.fechaReserva());
+        reservasRepo.actualizarReservaSimple(reservaActualizar);
+        return "La reserva fue actualizada";
     }
 
     @Override

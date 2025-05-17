@@ -30,7 +30,7 @@ public interface ReservaService {
      * @param idReserva ID de la reserva a borrar
      * @return Mensaje indicando el resultado de la operación.
      */
-    String cancelarReserva(String idReserva);
+    String cancelarReserva(String idReserva) throws Exception;
 
     /**
      * Actualiza la información de una reserva existente.
@@ -38,7 +38,7 @@ public interface ReservaService {
      * @param actualizarReservaDTO Objeto que contiene la información actualizada de la reserva.
      * @return Un mensaje indicando el resultado de la actualización.
      */
-    String actualizarReserva(ActualizarReservaDTO actualizarReservaDTO);
+    String actualizarReserva(ActualizarReservaDTO actualizarReservaDTO) throws Exception;
 
     /**
      * Obtiene la información de una reserva por su ID.

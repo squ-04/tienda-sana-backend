@@ -2,13 +2,10 @@ package co.uniquindio.tiendasana.repos;
 
 import co.uniquindio.tiendasana.model.documents.Mesa;
 import co.uniquindio.tiendasana.model.documents.Reserva;
-import co.uniquindio.tiendasana.model.documents.VentaProducto;
 import co.uniquindio.tiendasana.model.enums.EstadoMesa;
 import co.uniquindio.tiendasana.model.enums.EstadoReserva;
-import co.uniquindio.tiendasana.model.vo.DetalleVentaProducto;
 import co.uniquindio.tiendasana.model.vo.Pago;
 import co.uniquindio.tiendasana.utils.ReservaConstantes;
-import co.uniquindio.tiendasana.utils.VentaProductoConstantes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
@@ -198,7 +195,7 @@ public class ReservasRepo {
     }
 
     private List<List<Object>> obtenerFilasHojaMesasReservadas() throws IOException {
-        String rango = SHEET_NAME_MESA + "!A2:" + ReservaConstantes.COL_REGISTRO_MESA_FINAL; // Asumiendo que usas columnas: Fecha, IDUsuario, Productos
+        String rango = SHEET_NAME_MESA + "!A2:" + ReservaConstantes.COL_REGISTRO_MESA_FINAL;
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
         return respuesta.getValues();
     }
@@ -259,7 +256,7 @@ public class ReservasRepo {
     }
 
     private List<List<Object>> obtenerFilasHojaSimples() throws IOException {
-            String rango = SHEET_NAME + "!A2:"+ VentaProductoConstantes.COL_REGISTRO_VENTA_FINAL;
+            String rango = SHEET_NAME + "!A2:"+ ReservaConstantes.COL_REGISTRO_RESERVA_FINAL;
             ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
             List<List<Object>> valores=respuesta.getValues();
             if (valores!=null) {
@@ -267,5 +264,44 @@ public class ReservasRepo {
             } else {
                 return new ArrayList<>();
             }
+    }
+
+    public void actualizarReservaSimple(Reserva reservaCancelar) throws IOException {
+        int indice= obtenerIndiceReserva(reservaCancelar.getId());
+        if (indice!=-1) {
+            String range = SHEET_NAME+"!A"+(2+indice)+":"+ ReservaConstantes.COL_REGISTRO_RESERVA_FINAL+(2+indice);
+            List<List<Object>> values = Arrays.asList(
+                    mapearReservaInverso(reservaCancelar)
+            );
+
+            ValueRange body = new ValueRange().setValues(values);
+
+            UpdateValuesResponse result = sheetsService.spreadsheets().values()
+                    .update(spreadsheetId, range, body)
+                    .setValueInputOption("RAW") // "RAW" para insertar como está
+                    .execute();
+
+            System.out.println("Numero de celdas actualizadas: " + result.getUpdatedCells());
+        } else {
+            throw new IOException("Registro no encontrado");
+        }
+    }
+
+    private int obtenerIndiceReserva(String id) {
+        List<Reserva> reservas = null;
+        int filaCuenta=-1;
+        try {
+            reservas = obtenerReservasSimples();
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
+        int tam=reservas.size();
+        for (int i=0;i<tam;i++) {
+            if (reservas.get(i).getId().equals(id)) {
+                filaCuenta=i;
+                break;
+            }
+        }
+        return filaCuenta;
     }
 }
