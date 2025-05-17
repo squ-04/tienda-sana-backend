@@ -2,12 +2,10 @@ package co.uniquindio.tiendasana.controllers;
 
 import co.uniquindio.tiendasana.dto.jwtdtos.MessageDTO;
 import co.uniquindio.tiendasana.dto.mesadtos.FiltroMesaDTO;
-import co.uniquindio.tiendasana.dto.mesadtos.ListaMesas;
-import co.uniquindio.tiendasana.dto.mesadtos.MesaItemDTO;
+import co.uniquindio.tiendasana.dto.mesadtos.ListaMesasDTO;
 import co.uniquindio.tiendasana.dto.productodtos.FiltroProductoDTO;
-import co.uniquindio.tiendasana.dto.productodtos.ListaProductos;
+import co.uniquindio.tiendasana.dto.productodtos.ListaProductosDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ProductoInfoDTO;
-import co.uniquindio.tiendasana.dto.productodtos.ProductoItemDTO;
 import co.uniquindio.tiendasana.model.enums.CategoriaProducto;
 import co.uniquindio.tiendasana.model.enums.Localidad;
 import co.uniquindio.tiendasana.services.interfaces.*;
@@ -43,8 +41,8 @@ public class PublicoController {
      * @throws Exception
      */
     @GetMapping("/productos/get-all/{pagina}")
-    public ResponseEntity<MessageDTO<ListaProductos>> listarProductosCliente(@PathVariable int pagina) throws Exception {
-        ListaProductos productos= productService.obtenerProductosCliente(pagina);
+    public ResponseEntity<MessageDTO<ListaProductosDTO>> listarProductosCliente(@PathVariable int pagina) throws Exception {
+        ListaProductosDTO productos= productService.obtenerProductosCliente(pagina);
         return ResponseEntity.ok( new MessageDTO<>(false, productos));
     }
 
@@ -54,9 +52,9 @@ public class PublicoController {
      * @return Respuesta a la solicitud
      * @throws Exception
      */
-    @GetMapping("/mesas/get-all")
-    public ResponseEntity<MessageDTO<ListaMesas>> listarMesasCliente(@PathVariable int pagina) throws Exception {
-        ListaMesas mesas= mesaService.obtenerMesasCliente(pagina);
+    @GetMapping("/mesas/get-all/{pagina}")
+    public ResponseEntity<MessageDTO<ListaMesasDTO>> listarMesasCliente(@PathVariable int pagina) throws Exception {
+        ListaMesasDTO mesas= mesaService.obtenerMesasCliente(pagina);
         return ResponseEntity.ok( new MessageDTO<>(false, mesas));
     }
 
@@ -96,15 +94,14 @@ public class PublicoController {
     }
 
     @PostMapping("/productos/filter-products")
-    public ResponseEntity<MessageDTO<ListaProductos>> filtrarProductos(@Valid @RequestBody FiltroProductoDTO filtroProductoDTO) throws Exception{
-        System.out.println("Llega a filtro");
-        ListaProductos productos = productService.filtrarProductos(filtroProductoDTO);
+    public ResponseEntity<MessageDTO<ListaProductosDTO>> filtrarProductos(@Valid @RequestBody FiltroProductoDTO filtroProductoDTO) throws Exception{
+        ListaProductosDTO productos = productService.filtrarProductos(filtroProductoDTO);
         return ResponseEntity.ok(new MessageDTO<>(false,productos));
     }
 
     @PostMapping("/mesas/filter-tables")
-    public ResponseEntity<MessageDTO<ListaMesas>> filtrarMesas(@Valid @RequestBody FiltroMesaDTO filtroMesaDTO) throws Exception{
-        ListaMesas mesas = mesaService.filtrarMesas(filtroMesaDTO);
+    public ResponseEntity<MessageDTO<ListaMesasDTO>> filtrarMesas(@Valid @RequestBody FiltroMesaDTO filtroMesaDTO) throws Exception{
+        ListaMesasDTO mesas = mesaService.filtrarMesas(filtroMesaDTO);
         return ResponseEntity.ok(new MessageDTO<>(false,mesas));
     }
 

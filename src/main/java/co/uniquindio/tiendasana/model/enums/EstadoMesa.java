@@ -5,7 +5,9 @@ import lombok.Getter;
 @Getter
 public enum EstadoMesa {
     //Status for the tables
-    DISPONIBLE ("Disponible"), INHABILITADA ("Inhabilitada"), OCUPADA ("Ocupada");
+    DISPONIBLE ("Disponible"),
+    RESERVADA ("Reservada"),
+    OCUPADA ("Ocupada");
 
 
     private final String estado;

@@ -4,7 +4,7 @@ import co.uniquindio.tiendasana.model.documents.Producto;
 
 import java.util.List;
 
-public record ProductosTotal(
+public record ProductosTotalDTO(
         int totalProductos,
         List<Producto> productos
 ) {

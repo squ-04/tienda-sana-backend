@@ -5,7 +5,8 @@ import lombok.Getter;
 
 @Getter
 public enum EstadoProducto {
-    AGOTADO ("Agotado"), DISPONIBLE("Disponible");
+    AGOTADO ("Agotado"),
+    DISPONIBLE("Disponible");
 
     private final String estado;
 

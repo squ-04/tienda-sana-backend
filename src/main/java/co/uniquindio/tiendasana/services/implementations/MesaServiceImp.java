@@ -1,19 +1,18 @@
 package co.uniquindio.tiendasana.services.implementations;
 
-import co.uniquindio.tiendasana.dto.mesadtos.FiltroMesaDTO;
-import co.uniquindio.tiendasana.dto.mesadtos.ListaMesas;
-import co.uniquindio.tiendasana.dto.mesadtos.MesaInfoDTO;
-import co.uniquindio.tiendasana.dto.mesadtos.MesaItemDTO;
-import co.uniquindio.tiendasana.dto.productodtos.ListaProductos;
+import co.uniquindio.tiendasana.dto.mesadtos.*;
 import co.uniquindio.tiendasana.model.documents.Mesa;
+import co.uniquindio.tiendasana.model.enums.EstadoMesa;
 import co.uniquindio.tiendasana.model.enums.Localidad;
 import co.uniquindio.tiendasana.repos.MesaRepo;
 import co.uniquindio.tiendasana.services.interfaces.MesaService;
-import org.springframework.stereotype.Service;
 
+import org.springframework.stereotype.Service;
+import co.uniquindio.tiendasana.utils.MesaConstantes;
+
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,26 +26,68 @@ public class MesaServiceImp implements MesaService {
 
     @Override
     public MesaInfoDTO obtenerInfoMesa(String mesaId) throws Exception {
-        return null;
+        try {
+            Optional<Mesa> mesaObtenida= mesaRepo.obtenerPorId(mesaId);
+            if (mesaObtenida.isEmpty()) {
+                throw new Exception("Mesa no encontrada");
+            }
+            Mesa mesa=mesaObtenida.get();
+            return new MesaInfoDTO(
+                    mesa.getId(),
+                    mesa.getNombre(),
+                    mesa.getEstado(),
+                    mesa.getLocalidad().getLocalidad(),
+                    mesa.getPrecioReserva(),
+                    mesa.getCapacidad(),
+                    mesa.getImagen()
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
-    public ListaMesas obtenerMesasCliente(int pagina) throws Exception {
-        return null;
+    public ListaMesasDTO obtenerMesasCliente(int pagina) throws Exception {
+        MesasTotalDTO paginaMesas = mesaRepo.obtenerMesas(pagina, MesaConstantes.ELEMENTOSPAGINA);
+        List<Mesa> mesas=paginaMesas.mesas();
+        List<MesaItemDTO> mesasItems = mesas.stream()
+                .map(mesa -> new MesaItemDTO(
+                        mesa.getId(),
+                        mesa.getNombre(),
+                        mesa.getEstado(),
+                        mesa.getLocalidad().getLocalidad(),
+                        mesa.getPrecioReserva(),
+                        mesa.getCapacidad(),
+                        mesa.getImagen()
+                ))
+                .collect(Collectors.toList());
+
+        return new ListaMesasDTO(
+                (int) Math.ceil((double) paginaMesas.totalMesas() / MesaConstantes.ELEMENTOSPAGINA),
+                mesasItems
+        );
     }
 
     @Override
     public Mesa obtenerMesa(String mesaId) throws Exception {
-        return null;
+        Optional<Mesa> mesaObtenida= mesaRepo.obtenerPorId(mesaId);
+        if (mesaObtenida.isEmpty()) {
+            throw new Exception("Mesa no encontrada");
+        }
+        return mesaObtenida.get();
     }
 
     @Override
     public void cambiarEstadoMesa(String mesaId, String estado) throws Exception {
+        Mesa mesa= obtenerMesa(mesaId);
+        mesa.setEstado(EstadoMesa.fromEstado(estado));
+        mesaRepo.actualizar(mesa);
+        System.out.println("Se ha actualizado la mesa correctamente");
 
     }
 
     @Override
-    public ListaMesas filtrarMesas(FiltroMesaDTO filtroMesaDTO) throws Exception {
+    public ListaMesasDTO filtrarMesas(FiltroMesaDTO filtroMesaDTO) throws Exception {
         boolean filtroVacio = (filtroMesaDTO.nombre() == null || filtroMesaDTO.nombre().isEmpty()) &&
                 (filtroMesaDTO.localidad() == null || filtroMesaDTO.localidad().isEmpty()) &&
                 filtroMesaDTO.capacidad() == 0;
@@ -69,7 +110,6 @@ public class MesaServiceImp implements MesaService {
 
             if (filtroMesaDTO.localidad() != null && !filtroMesaDTO.localidad().isEmpty()) {
                 matches &= (mesa.getLocalidad() != null &&
-                        mesa.getLocalidad().getLocalidad() != null && // Chequeo para el String de localidad
                         mesa.getLocalidad().getLocalidad().toLowerCase().contains(filtroMesaDTO.localidad().toLowerCase()));
             }
             return matches;
@@ -96,7 +136,7 @@ public class MesaServiceImp implements MesaService {
             paginatedList = mesasFiltradas.subList(startItem, endItem);
         }
 
-        // Mapear a MesaItemDTO
+
         List<MesaItemDTO> mesasItems = paginatedList.stream()
                 .map(mesa -> new MesaItemDTO(
                         mesa.getId(),
@@ -109,7 +149,7 @@ public class MesaServiceImp implements MesaService {
                 ))
                 .collect(Collectors.toList());
 
-        return new ListaMesas(totalPaginas, mesasItems);
+        return new ListaMesasDTO(totalPaginas, mesasItems);
     }
 
     @Override
