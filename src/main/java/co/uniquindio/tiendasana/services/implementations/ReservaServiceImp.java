@@ -95,8 +95,13 @@ public class ReservaServiceImp implements ReservaService {
     }
 
     @Override
-    public Reserva obtenerReserva(String idReserva) {
-        return null;
+    public Reserva obtenerReserva(String idReserva) throws Exception {
+        List<Reserva> reservas = reservasRepo.filtrarReservasSimple(reservaFiltrada -> {
+            return reservaFiltrada.getId().equals(idReserva); });
+        if (reservas.isEmpty()) {
+            throw new Exception("La reserva con el id: " + idReserva + " no existe");
+        }
+        return reservas.get(0);
     }
 
     @Override

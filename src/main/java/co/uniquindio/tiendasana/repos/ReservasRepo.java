@@ -2,8 +2,13 @@ package co.uniquindio.tiendasana.repos;
 
 import co.uniquindio.tiendasana.model.documents.Mesa;
 import co.uniquindio.tiendasana.model.documents.Reserva;
+import co.uniquindio.tiendasana.model.documents.VentaProducto;
+import co.uniquindio.tiendasana.model.enums.EstadoMesa;
+import co.uniquindio.tiendasana.model.enums.EstadoReserva;
+import co.uniquindio.tiendasana.model.vo.DetalleVentaProducto;
 import co.uniquindio.tiendasana.model.vo.Pago;
 import co.uniquindio.tiendasana.utils.ReservaConstantes;
+import co.uniquindio.tiendasana.utils.VentaProductoConstantes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
@@ -12,8 +17,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Repository
 public class ReservasRepo {
@@ -33,15 +42,15 @@ public class ReservasRepo {
 
     public Reserva guardarReserva(Reserva reserva) throws IOException {
         guardarReservaSimple(reserva);
-        for (Mesa mesa:reserva.getMesas()) {
+        for (Mesa mesa : reserva.getMesas()) {
             guardarMesa(mesa);
         }
         return reserva;
     }
 
     private void guardarMesa(Mesa mesa) throws IOException {
-        int detalles=contarMesasExistentes();
-        String range = SHEET_NAME_MESA+"!A"+(2+detalles)+":"+ ReservaConstantes.COL_REGISTRO_MESA_FINAL+(2+detalles);
+        int detalles = contarMesasExistentes();
+        String range = SHEET_NAME_MESA + "!A" + (2 + detalles) + ":" + ReservaConstantes.COL_REGISTRO_MESA_FINAL + (2 + detalles);
 
         List<List<Object>> values = Arrays.asList(
                 mapearMesasInverso(mesa)
@@ -68,9 +77,9 @@ public class ReservasRepo {
         return Arrays.asList(
                 mesa.getNombre(),
                 mesa.getEstado(),
-                ""+mesa.getCapacidad(),
+                "" + mesa.getCapacidad(),
                 mesa.getLocalidad().getLocalidad(),
-                ""+(int)mesa.getPrecioReserva(),
+                "" + (int) mesa.getPrecioReserva(),
                 mesa.getImagen(),
                 mesa.getIdReserva(),
                 mesa.getIdGestorReserva()
@@ -78,11 +87,11 @@ public class ReservasRepo {
     }
 
     private Reserva guardarReservaSimple(Reserva reserva) throws IOException {
-        int detalles= contarReservasExistentes();
-        String range = SHEET_NAME+"!A"+(2+detalles)+":"+ ReservaConstantes.COL_REGISTRO_RESERVA_FINAL+(2+detalles);
+        int detalles = contarReservasExistentes();
+        String range = SHEET_NAME + "!A" + (2 + detalles) + ":" + ReservaConstantes.COL_REGISTRO_RESERVA_FINAL + (2 + detalles);
 
         List<List<Object>> values = Arrays.asList(
-                mapearReservaInverso(reserva )
+                mapearReservaInverso(reserva)
         );
 
         ValueRange body = new ValueRange().setValues(values);
@@ -121,5 +130,142 @@ public class ReservasRepo {
         List<List<Object>> respuesta =
                 sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute().getValues();
         return Integer.parseInt(respuesta.get(0).get(0).toString());
+    }
+
+    public List<Reserva> filtrarReservasSimple(Predicate<Reserva> expresion) throws IOException {
+        List<Reserva> reservas = obtenerReservasSimples();
+
+        List<Reserva> reservasFiltradas = reservas.stream()
+                .filter(expresion)
+                .collect(Collectors.toList());
+        asignarMesas(reservasFiltradas);
+        return reservasFiltradas;
+    }
+
+    private void asignarMesas(List<Reserva> reservasFiltradas) throws IOException {
+        List<Mesa> mesasReservadas = obtenerMesas();
+        for (Reserva reserva : reservasFiltradas) {
+            reserva.setMesas(
+                    mesasReservadas.stream()
+                            .filter(mesaReservada ->
+                                    mesaReservada.getIdReserva().equals(reserva.getId())
+                            )
+                            .collect(Collectors.toList())
+            );
+
+        }
+    }
+
+    private List<Mesa> obtenerMesas() throws IOException {
+        List<List<Object>> filas = obtenerFilasHojaMesasReservadas();
+        return mapearFilasMesasReservadas(filas);
+    }
+
+    private List<Mesa> mapearFilasMesasReservadas(List<List<Object>> filas) throws IOException {
+        List<Mesa> mesas = new ArrayList<>();
+        for (List<Object> row : filas) {
+            try {
+                Mesa detalle = mapearMesa(row);
+                mesas.add(detalle);
+            } catch (NumberFormatException e) {
+                throw new IOException("Error en el parseo de la mesa reservada en fila " + row);
+            }
+        }
+        return mesas;
+    }
+
+    private Mesa mapearMesa(List<Object> row) {
+        String nombre = row.get(0).toString();
+        String estado = row.get(1).toString();
+        int capacidad = Integer.parseInt(row.get(2).toString());
+        String localidad = row.get(3).toString();
+        float precioReserva = Float.parseFloat(row.get(4).toString());
+        String imagen = row.get(5).toString();
+        String idMesa = row.get(6).toString();
+        String idReserva = row.get(7).toString();
+        String idGestorReserva = row.get(8).toString();
+        return Mesa.builder()
+                .id(idMesa)
+                .nombre(nombre)
+                .estado(EstadoMesa.fromEstado(estado))
+                .localidad(localidad)
+                .precioReserva(precioReserva)
+                .capacidad(capacidad)
+                .imagen(imagen)
+                .idReserva(idReserva)
+                .idGestorReserva(idGestorReserva)
+                .build();
+    }
+
+    private List<List<Object>> obtenerFilasHojaMesasReservadas() throws IOException {
+        String rango = SHEET_NAME_MESA + "!A2:" + ReservaConstantes.COL_REGISTRO_MESA_FINAL; // Asumiendo que usas columnas: Fecha, IDUsuario, Productos
+        ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
+        return respuesta.getValues();
+    }
+
+    private List<Reserva> obtenerReservasSimples() throws IOException {
+        List<List<Object>> filas = obtenerFilasHojaSimples();
+        return mapearFilasReservas(filas);
+    }
+
+    private List<Reserva> mapearFilasReservas(List<List<Object>> filas) throws IOException {
+        List<Reserva> reservas = new ArrayList<>();
+        for (List<Object> row : filas) {
+            try {
+                Reserva reserva = mapearReserva(row);
+                reservas.add(reserva);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return reservas;
+    }
+
+    private Reserva mapearReserva(List<Object> row) throws IOException {
+        String id = row.get(0).toString();
+        String usuarioId = row.get(1).toString();
+        LocalDateTime fechaReserva = LocalDateTime.parse(row.get(2).toString());
+        String valorString = row.get(3).toString();
+        float valorReserva = valorString.matches("\\d+(\\.\\d+)?") ? Float.parseFloat(valorString) : 0.0f;
+        int cantidadPersonas = Integer.parseInt(row.get(4).toString());
+        EstadoReserva estadoReserva = EstadoReserva.fromEstadoReserva(row.get(5).toString());
+        String codigoPasarela = row.get(6).toString();
+
+        Pago pago = null;
+        if (row.size() > 7 && row.get(7) != null) {
+            pago = Pago.builder()
+                    .id(row.get(8) != null ? row.get(6).toString() : "-")
+                    .currency(row.size() > 8 && row.get(8) != null ? row.get(8).toString() : "-")
+                    .paymentType(row.size() > 9 && row.get(9) != null ? row.get(9).toString() : "-")
+                    .statusDetail(row.size() > 10 && row.get(10) != null ? row.get(10).toString() : "-")
+                    .authorizationCode(row.size() > 11 && row.get(11) != null ? row.get(11).toString() : "-")
+                    .date(row.size() > 12 && !row.get(12).toString().equals("-") ? LocalDateTime.parse(row.get(12).toString()) : null)
+                    .transactionValue(row.size() > 13 && !row.get(13).toString().equals("-") ? Float.parseFloat(row.get(13).toString()) : 0.0f)
+                    .status(row.size() > 14 && row.get(14) != null ? row.get(14).toString() : "-")
+                    .build();
+        }
+
+        return Reserva.builder()
+                .id(id)
+                .usuarioId(usuarioId)
+                .fechaReserva(fechaReserva)
+                .valorReserva(valorReserva)
+                .cantidadPersonas(cantidadPersonas)
+                .estadoReserva(estadoReserva)
+                .codigoPasarela(codigoPasarela)
+                .pago(pago)
+                .build();
+
+    }
+
+    private List<List<Object>> obtenerFilasHojaSimples() throws IOException {
+            String rango = SHEET_NAME + "!A2:"+ VentaProductoConstantes.COL_REGISTRO_VENTA_FINAL;
+            ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
+            List<List<Object>> valores=respuesta.getValues();
+            if (valores!=null) {
+                return valores;
+            } else {
+                return new ArrayList<>();
+            }
     }
 }
