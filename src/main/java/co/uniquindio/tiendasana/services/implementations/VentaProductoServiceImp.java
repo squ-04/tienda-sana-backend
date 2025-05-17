@@ -70,9 +70,6 @@ public class VentaProductoServiceImp implements VentaProductoService {
      */
     @Override
     public String crearVenta(CrearVentaProductoDTO crearVentaProductoDTO) throws Exception {
-
-
-
         VentaProducto ventaProducto = new VentaProducto();
 
         ventaProducto.setFecha(LocalDateTime.now());
@@ -109,10 +106,6 @@ public class VentaProductoServiceImp implements VentaProductoService {
         }
 
         VentaProducto createOrder = ventaProductoRepo.guardarVentaProducto(ventaProducto);
-
-
-
-        carritoComprasService.borrarCarritoCompras(crearVentaProductoDTO.emailUsuario());
 
         return createOrder.getId();
     }
@@ -420,6 +413,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
                         productoService.reducirCantidadProductosStock(detalleVentaProducto.getProductoId(), detalleVentaProducto.getCantidad());
                     }
                     enviarResumenVenta(cuenta.getEmail(), ventaProducto);
+                    carritoComprasService.borrarCarritoCompras(ventaProducto.getEmailUsario());
                 }
             }
         } catch (Exception e) {

@@ -16,7 +16,7 @@ public interface ReservaService {
      * @param crearReservaDTO Objeto que contiene la información de la reserva.
      * @return Un mensaje indicando el resultado de la reserva.
      */
-    String reservarMesa(CrearReservaDTO crearReservaDTO);
+    String reservarMesa(CrearReservaDTO crearReservaDTO) throws Exception;
 
     /**
      * Obtiene la información de una reserva por su ID.
