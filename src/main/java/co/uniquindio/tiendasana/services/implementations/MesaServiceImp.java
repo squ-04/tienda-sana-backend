@@ -49,9 +49,9 @@ public class MesaServiceImp implements MesaService {
     @Override
     public ListaMesasDTO obtenerMesasCliente(int pagina) throws Exception {
         MesasTotalDTO paginaMesas = mesaRepo.obtenerMesas(pagina, MesaConstantes.ELEMENTOSPAGINA);
-        List<Mesa> mesas=paginaMesas.mesas()    ;
+        System.out.println("Numero elem: "+MesaConstantes.ELEMENTOSPAGINA);
+        List<Mesa> mesas=paginaMesas.mesas();
         List<MesaItemDTO> mesasItems = mesas.stream()
-                .filter(mesa -> "Disponible".equalsIgnoreCase(mesa.getEstado()))
                 .map(mesa -> new MesaItemDTO(
                         mesa.getId(),
                         mesa.getNombre(),

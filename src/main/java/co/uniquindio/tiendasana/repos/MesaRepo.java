@@ -4,6 +4,7 @@ import co.uniquindio.tiendasana.dto.mesadtos.MesasTotalDTO;
 import co.uniquindio.tiendasana.model.documents.Mesa;
 import co.uniquindio.tiendasana.model.enums.EstadoMesa;
 import co.uniquindio.tiendasana.utils.MesaConstantes;
+import co.uniquindio.tiendasana.utils.ProductoConstantes;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import org.springframework.stereotype.Repository;
 import com.google.api.services.sheets.v4.Sheets;
@@ -55,24 +56,29 @@ public class MesaRepo {
     }
 
     public int contarMesasExistentes() throws IOException {
-        String rango = SHEET_NAME + MesaConstantes.CANT_MESAS; // Ajusta según columnas
+        String rango = SHEET_NAME + MesaConstantes.CANT_MESAS;
         List<List<Object>> respuesta =
                 sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute().getValues();
         return Integer.parseInt(respuesta.get(0).get(0).toString());
+
     }
 
     private List<List<Object>> obtenerFilasHoja(int pagina, int cantidad, int cantidadTotal) throws IOException {
+        int cantidadPaginas = (int) Math.ceil((double) cantidadTotal / cantidad);
 
-        int cantidadPaginas=cantidadTotal/cantidad;
-
-        if(pagina > cantidadPaginas){
-            throw new RuntimeException("La página no existe");//TODO cambiar excepcion por Exception
+        if (pagina < 0 || pagina >= cantidadPaginas) {
+            throw new IllegalArgumentException("La página no existe");
         }
-        int filaInicio = 2 + (pagina * cantidad); // A2 es la primera fila de datos
+        int filaInicio = 2 + (pagina * cantidad);
         int filaFin = filaInicio + cantidad - 1;
 
         String rango = SHEET_NAME + "!A" + filaInicio + ":G" + filaFin;
-        ValueRange respuesta= sheetsService.spreadsheets().values().get(spreadsheetId,rango).execute();
+
+        ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
+
+        if (respuesta.getValues() == null || respuesta.getValues().isEmpty()) {
+            return new ArrayList<>();
+        }
 
         return respuesta.getValues();
     }

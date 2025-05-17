@@ -52,8 +52,9 @@ public class PublicoController {
      * @return Respuesta a la solicitud
      * @throws Exception
      */
-    @GetMapping("/mesas/get-all")
+    @GetMapping("/mesas/get-all/{pagina}")
     public ResponseEntity<MessageDTO<ListaMesasDTO>> listarMesasCliente(@PathVariable int pagina) throws Exception {
+        System.out.println("pagina: "+pagina);
         ListaMesasDTO mesas= mesaService.obtenerMesasCliente(pagina);
         return ResponseEntity.ok( new MessageDTO<>(false, mesas));
     }
@@ -95,7 +96,6 @@ public class PublicoController {
 
     @PostMapping("/productos/filter-products")
     public ResponseEntity<MessageDTO<ListaProductosDTO>> filtrarProductos(@Valid @RequestBody FiltroProductoDTO filtroProductoDTO) throws Exception{
-        System.out.println("Llega a filtro");
         ListaProductosDTO productos = productService.filtrarProductos(filtroProductoDTO);
         return ResponseEntity.ok(new MessageDTO<>(false,productos));
     }
