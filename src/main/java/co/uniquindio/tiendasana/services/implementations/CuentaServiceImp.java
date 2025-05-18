@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import javax.xml.transform.sax.SAXSource;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -230,25 +231,17 @@ public class CuentaServiceImp implements CuentaService {
             throw new RuntimeException("Este email no esta registrado"); // O ResourceNotFoundException
         }
         Cuenta cuenta = cuentaOptional.get();
-
         CodigoValidacion codigoValidacionContrasenia = cuenta.getCodigoValidacionContrasenia();
-        if (codigoValidacionContrasenia != null) {
-            if (codigoValidacionContrasenia.getCodigo().equals(dto.codigoVerificacion())) {
-                if (codigoValidacionContrasenia.getFechaCreacion().plusMinutes(15).isAfter(LocalDateTime.now())) {
-                    cuenta.setContrasenia(encriptarContrasenia(dto.nuevaContrasenia()));
-                    cuenta.setCodigoValidacionContrasenia(null);
-                    cuenta.setCodigoValidacionContrasenia(null);
-                    cuentaRepo.actualizar(cuenta);
-                } else {
-                    cuenta.setCodigoValidacionContrasenia(null);
-                    cuentaRepo.actualizar(cuenta);
-                    throw new Exception("Este codigo de verificacion ha experido");
-                }
+        if (codigoValidacionContrasenia.getCodigo().equals(dto.codigoVerificacion())) {
+            if (codigoValidacionContrasenia.getFechaCreacion().plusMinutes(15).isAfter(LocalDateTime.now())) {
+                cuenta.setContrasenia(encriptarContrasenia(dto.nuevaContrasenia()));
+                cuentaRepo.actualizar(cuenta);
             } else {
-                throw new Exception("Este codigo de verififcacion es incorrecto");
+                cuentaRepo.actualizar(cuenta);
+                throw new Exception("Este codigo de verificacion ha experido");
             }
         } else {
-            throw new Exception("No se encontró un código de verificación de contraseña pendiente para esta cuenta.");
+            throw new Exception("Este codigo de verififcacion es incorrecto");
         }
         return cuenta.getEmail();
     }
@@ -268,10 +261,8 @@ public class CuentaServiceImp implements CuentaService {
             if (codigoValidacionRegistro.getCodigo().equals(activarCuentaDTO.codigoVerificacionRegistro())) {
                 if (codigoValidacionRegistro.getFechaCreacion().plusMinutes(15).isAfter(LocalDateTime.now())) {
                     cuenta.setEstado(EstadoCuenta.ACTIVA);
-                    cuenta.setCodigoValidacionRegistro(null); // Invalidar código después de usarlo
                     cuentaRepo.actualizar(cuenta);
                 } else {
-                    cuenta.setCodigoValidacionRegistro(null); // Invalidar también si ha expirado
                     cuentaRepo.actualizar(cuenta);
                     throw new Exception("El codigo de registro ha expirado");
                 }
