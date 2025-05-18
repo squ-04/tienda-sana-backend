@@ -7,6 +7,7 @@ import co.uniquindio.tiendasana.repos.CuentaRepo;
 import com.google.api.services.sheets.v4.Sheets;
 import lombok.AllArgsConstructor;
 import org.apache.velocity.exception.ResourceNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import co.uniquindio.tiendasana.model.documents.Cuenta;
 import co.uniquindio.tiendasana.model.enums.EstadoCuenta;
@@ -45,26 +46,30 @@ public class CuentaServiceImp implements CuentaService {
      */
     @Override
     public String crearCuenta(CrearCuentaDTO cuentaDTO) throws Exception {
-
         List<Cuenta> cuentasObtenidas =
                 cuentaRepo.obtenerPorDniOEmail(cuentaDTO.dni(), cuentaDTO.email());
 
         if (!cuentasObtenidas.isEmpty()) {
+            Cuenta cuentaExistente = cuentasObtenidas.get(0);
+            if (cuentaExistente.getEstado() == EstadoCuenta.ELIMINADA) {
+                cuentaExistente.setEstado(EstadoCuenta.INACTIVA);
+                String codigoValidacion = generarCodigoValidacion();
+                cuentaExistente.setCodigoValidacionRegistro(new CodigoValidacion(LocalDateTime.now(), codigoValidacion));
+                String subject = "Bienvenido nuevamente a Tienda Sana: activa tu cuenta";
+                String body = "Tu nuevo código de verificación es: " + codigoValidacion + ". Tienes 15 minutos para activarla.";
+                emailService.sendEmail(new EmailDTO(subject, body, cuentaExistente.getEmail()));
+                cuentaRepo.actualizar(cuentaExistente);
+                return cuentaExistente.getEmail();
+            }
             throw new Exception("Ya existe una cuenta con ese correo o dni");
         }
-
-        // Encripta la contraseña
         String contraseniaEncriptada = encriptarContrasenia(cuentaDTO.contrasenia());
-
-        // Genera un código de validación
         String codigoValidacion = generarCodigoValidacion();
         String codigoValidacionContrasenia = generarCodigoValidacion();
-
-        // Crea la cuenta
         Cuenta cuenta = Cuenta.builder()
                 .email(cuentaDTO.email())
                 .contrasenia(contraseniaEncriptada)
-                .rol(Rol.CLIENTE) // Asignación por defecto
+                .rol(Rol.CLIENTE)
                 .estado(EstadoCuenta.INACTIVA)
                 .fechaRegistro(LocalDateTime.now())
                 .usuario(Usuario.builder()
@@ -74,18 +79,12 @@ public class CuentaServiceImp implements CuentaService {
                         .direccion(cuentaDTO.direccion())
                         .build())
                 .build();
-        //Se cambio el codigo de contraseña por el del registro que es el que se tiene que colocar
         cuenta.setCodigoValidacionRegistro(new CodigoValidacion(LocalDateTime.now(), codigoValidacion));
         cuenta.setCodigoValidacionContrasenia(new CodigoValidacion(LocalDateTime.now(), codigoValidacionContrasenia));
-
-
-        // Envía el correo de validación
         String subject = "Bienvenido a Tienda Sana: activa tu cuenta";
         String body = "Tu código de verificación es: " + codigoValidacion + ". Tienes 15 minutos para activarla.";
-
         emailService.sendEmail(new EmailDTO(subject, body, cuenta.getEmail()));
         cuentaRepo.guardar(cuenta);
-        // Retorna un identificador temporal
         return cuenta.getEmail();
     }
 
@@ -96,17 +95,22 @@ public class CuentaServiceImp implements CuentaService {
      * @throws Exception Error al acceeder a la base de datos
      */
     @Override
-    public String actualizarCuenta(ActualizarCuentaDTO cuentaDTO) throws Exception {
-        Cuenta cuenta = obtenerCuentaPorEmail(cuentaDTO.email());
+    public String actualizarCuenta(ActualizarCuentaDTO cuentaDTO, String emailAutenticado) throws Exception {
+        if (!emailAutenticado.equals(cuentaDTO.email())) {
+            throw new AccessDeniedException("No tienes permiso para actualizar los datos de esta cuenta.");
+        }
+
+        Cuenta cuenta = obtenerCuentaPorEmail(cuentaDTO.email()); // El email del DTO es el target
         cuenta.getUsuario().setNombre(cuentaDTO.nombre());
         cuenta.getUsuario().setTelefono(cuentaDTO.telefono());
         cuenta.getUsuario().setDireccion(cuentaDTO.direccion());
-        if(!(cuentaDTO.contrasenia()==null ||cuentaDTO.contrasenia().isEmpty() || cuentaDTO.contrasenia().isBlank())){
+
+        if (cuentaDTO.contrasenia() != null && !cuentaDTO.contrasenia().isEmpty() && !cuentaDTO.contrasenia().isBlank()) {
             cuenta.setContrasenia(new BCryptPasswordEncoder().encode(cuentaDTO.contrasenia()));
         }
 
         cuentaRepo.actualizar(cuenta);
-        System.out.println("Actualizando cuenta");
+        System.out.println("Actualizando cuenta: " + cuentaDTO.email());
         return "Actualizacion realizada con exito";
     }
 
@@ -117,11 +121,15 @@ public class CuentaServiceImp implements CuentaService {
      * @throws Exception Error al acceder a la base de datos
      */
     @Override
-    public String eliminarCuenta(String email) throws Exception {
-        Cuenta cuenta = obtenerCuentaPorEmail(email);
+    public String eliminarCuenta(String emailAEliminar, String emailAutenticado) throws Exception {
+        if (!emailAutenticado.equals(emailAEliminar)) {
+            throw new AccessDeniedException("No tienes permiso para eliminar esta cuenta.");
+        }
+
+        Cuenta cuenta = obtenerCuentaPorEmail(emailAEliminar);
         cuenta.setEstado(EstadoCuenta.ELIMINADA);
         cuentaRepo.actualizar(cuenta);
-        return "La cuenta ha sido eliminada " + email;
+        return "La cuenta ha sido eliminada: " + emailAEliminar;
     }
 
     /**
@@ -132,8 +140,15 @@ public class CuentaServiceImp implements CuentaService {
      * o que mas de una cuenta tenga el email indicado
      */
     @Override
-    public InfoCuentaDTO obtenerInfoCuenta(String email) throws Exception {
-        Cuenta cuenta = obtenerCuentaPorEmail(email);
+    public InfoCuentaDTO obtenerInfoCuenta(String emailAConsultar, String emailAutenticado) throws Exception {
+        if (!emailAutenticado.equals(emailAConsultar)) {
+            Cuenta cuentaAdmin = obtenerCuentaPorEmail(emailAutenticado);
+            if (cuentaAdmin.getRol() != Rol.ADMIN) {
+            throw new AccessDeniedException("No tienes permiso para obtener la información de esta cuenta.");
+            }
+        }
+
+        Cuenta cuenta = obtenerCuentaPorEmail(emailAConsultar);
         return new InfoCuentaDTO(
                 cuenta.getEmail(),
                 cuenta.getUsuario().getDni(),
@@ -157,6 +172,28 @@ public class CuentaServiceImp implements CuentaService {
             throw new Exception("Cuenta no encontrada");
         }
         return cuentaObtenida.get();
+    }
+
+    /**
+     * Método para que un usuario logueado cambie su propia contraseña.
+     * @param dto Contiene la contraseña actual y la nueva contraseña.
+     * @param emailAutenticado Email del usuario autenticado que desea cambiar su contraseña.
+     * @return Mensaje de éxito.
+     * @throws Exception Si la contraseña actual es incorrecta, o el usuario no se encuentra.
+     */
+    @Override
+    public String cambiarMiContrasenia(CambiarMiContraseniaDTO dto, String emailAutenticado) throws Exception {
+        Cuenta cuenta = obtenerCuentaPorEmail(emailAutenticado);
+
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        if (!passwordEncoder.matches(dto.contraseniaActual(), cuenta.getContrasenia())) {
+            throw new Exception("La contraseña actual es incorrecta.");
+        }
+
+        cuenta.setContrasenia(encriptarContrasenia(dto.nuevaContrasenia()));
+        cuentaRepo.actualizar(cuenta);
+
+        return "Contraseña actualizada correctamente.";
     }
 
     /**
@@ -190,7 +227,7 @@ public class CuentaServiceImp implements CuentaService {
     public String cambiarContrasenia(CambiarContraseniaDTO dto) throws Exception {
         Optional<Cuenta> cuentaOptional = cuentaRepo.obtenerPorEmail(dto.email());
         if (cuentaOptional.isEmpty()) {
-            throw new ResourceNotFoundException("Este email no esta registrado");
+            throw new RuntimeException("Este email no esta registrado"); // O ResourceNotFoundException
         }
         Cuenta cuenta = cuentaOptional.get();
 
@@ -199,6 +236,8 @@ public class CuentaServiceImp implements CuentaService {
             if (codigoValidacionContrasenia.getCodigo().equals(dto.codigoVerificacion())) {
                 if (codigoValidacionContrasenia.getFechaCreacion().plusMinutes(15).isAfter(LocalDateTime.now())) {
                     cuenta.setContrasenia(encriptarContrasenia(dto.nuevaContrasenia()));
+                    cuenta.setCodigoValidacionContrasenia(null);
+                    cuenta.setCodigoValidacionContrasenia(null);
                     cuentaRepo.actualizar(cuenta);
                 } else {
                     cuenta.setCodigoValidacionContrasenia(null);
@@ -208,6 +247,8 @@ public class CuentaServiceImp implements CuentaService {
             } else {
                 throw new Exception("Este codigo de verififcacion es incorrecto");
             }
+        } else {
+            throw new Exception("No se encontró un código de verificación de contraseña pendiente para esta cuenta.");
         }
         return cuenta.getEmail();
     }
@@ -223,19 +264,22 @@ public class CuentaServiceImp implements CuentaService {
     public String validarCodigoRegistro(ActivarCuentaDTO activarCuentaDTO) throws Exception {
         Cuenta cuenta = obtenerCuentaPorEmail(activarCuentaDTO.email());
         CodigoValidacion codigoValidacionRegistro = cuenta.getCodigoValidacionRegistro();
-
         if (codigoValidacionRegistro != null) {
             if (codigoValidacionRegistro.getCodigo().equals(activarCuentaDTO.codigoVerificacionRegistro())) {
                 if (codigoValidacionRegistro.getFechaCreacion().plusMinutes(15).isAfter(LocalDateTime.now())) {
                     cuenta.setEstado(EstadoCuenta.ACTIVA);
+                    cuenta.setCodigoValidacionRegistro(null); // Invalidar código después de usarlo
                     cuentaRepo.actualizar(cuenta);
-                    //TODO tener en cuenta que antes aqui habia el codigo del cupon
                 } else {
+                    cuenta.setCodigoValidacionRegistro(null); // Invalidar también si ha expirado
+                    cuentaRepo.actualizar(cuenta);
                     throw new Exception("El codigo de registro ha expirado");
                 }
             } else {
                 throw new Exception("Este codigo de registro es incorrecto");
             }
+        } else {
+            throw new Exception("No se encontró un código de validación pendiente para esta cuenta.");
         }
         return "La cuenta ha sido verificada exitosamente";
     }
@@ -252,6 +296,9 @@ public class CuentaServiceImp implements CuentaService {
         Cuenta cuenta = obtenerCuentaPorEmail(email);
         if(cuenta.getEstado() == EstadoCuenta.ACTIVA) {
             throw new Exception("Esta cuenta ya ha sido activada");
+        }
+        if(cuenta.getEstado() == EstadoCuenta.ELIMINADA) {
+            throw new Exception("Esta cuenta ha sido eliminada y no puede ser reactivada de esta forma.");
         }
         CodigoValidacion codigoValidacionReenviado = new CodigoValidacion(LocalDateTime.now(), generarCodigoValidacion());
         cuenta.setCodigoValidacionRegistro(codigoValidacionReenviado);
@@ -278,7 +325,8 @@ public class CuentaServiceImp implements CuentaService {
             throw new Exception("No existe una cuenta con este correo");
         }
         if (cuenta.getEstado() == EstadoCuenta.INACTIVA) {
-            throw new Exception("La cuenta con este correo no ha sido activada ");
+            reenviarCodigoRegistro(loginDTO.email());
+            throw new Exception("Cuenta no activada");
         }
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -296,18 +344,26 @@ public class CuentaServiceImp implements CuentaService {
      * @return Datos de la cuenta
      */
     private Map<String, Object> buildClaims(Cuenta cuenta) {
-        return Map.of(
-                "rol", cuenta.getRol(),
-                "nombre", cuenta.getUsuario().getNombre(),
-                "estado", cuenta.getEstado(),
-                "email", cuenta.getEmail()
-        );
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("rol", cuenta.getRol().toString());
+        claims.put("nombre", cuenta.getUsuario().getNombre());
+        claims.put("estado", cuenta.getEstado().toString());
+        claims.put("email", cuenta.getEmail());
+        return claims;
     }
 
-    //Metodo proximo a implementar
+    //Metodo proximo a implementar correctamente
     @Override
-    public TokenDTO refresh(Map<String, Object> claims) {
-        return null;
+    public TokenDTO refresh(Map<String, Object> claims) throws Exception {
+        String email = (String) claims.get("sub");
+        if (email == null) {
+            throw new Exception("Token de refresco inválido: subject no encontrado.");
+        }
+        Cuenta cuenta = obtenerCuentaPorEmail(email);
+        if (cuenta.getEstado() != EstadoCuenta.ACTIVA) {
+            throw new Exception("La cuenta no está activa.");
+        }
+        return new TokenDTO(jwtUtils.generarToken(cuenta.getEmail(), buildClaims(cuenta)));
     }
 
     /**
@@ -318,8 +374,9 @@ public class CuentaServiceImp implements CuentaService {
     private String generarCodigoValidacion() {
         String alfabeto = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         StringBuilder codigo = new StringBuilder();
+        Random random = new Random();
         for (int i = 0; i < 6; i++) {
-            int idx = (int) (Math.random() * alfabeto.length());
+            int idx = random.nextInt(alfabeto.length());
             codigo.append(alfabeto.charAt(idx));
         }
         return codigo.toString();

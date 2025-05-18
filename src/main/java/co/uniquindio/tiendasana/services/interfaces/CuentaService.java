@@ -22,7 +22,7 @@ public interface CuentaService {
      * @return Mensaje de exito
      * @throws Exception Error al acceeder a la base de datos
      */
-    String actualizarCuenta(ActualizarCuentaDTO cuentaDTO) throws Exception;
+    String actualizarCuenta(ActualizarCuentaDTO cuentaDTO, String emailAutenticado) throws Exception;
 
     /**
      * Metodo para eliminar una cuenta (Eliminación logica mendiante el estado de Eliminada) dado el email
@@ -30,7 +30,7 @@ public interface CuentaService {
      * @return Mensaje de exito
      * @throws Exception Error al acceder a la base de datos
      */
-    String eliminarCuenta(String email) throws Exception;
+    String eliminarCuenta(String emailAEliminar, String emailAutenticado) throws Exception;
 
     /**
      * Metodo para obtener la inforamción relacionada a una cuenta de un usuario dado un usario
@@ -39,7 +39,7 @@ public interface CuentaService {
      * @throws Exception Error al acceder a la base de datos
      * o que mas de una cuenta tenga el email indicado
      */
-    InfoCuentaDTO obtenerInfoCuenta(String id) throws Exception;
+    InfoCuentaDTO obtenerInfoCuenta(String emailAConsultar, String emailAutenticado) throws Exception;
 
     /**
      * Metodo para obtener una cuenta dado el email
@@ -67,6 +67,8 @@ public interface CuentaService {
      * o el codigo de verificacion no sea correcto
      */
     String cambiarContrasenia(CambiarContraseniaDTO dto) throws Exception;
+
+    String cambiarMiContrasenia(CambiarMiContraseniaDTO dto, String emailAutenticado) throws Exception;
 
     /**
      * Metodo para validar (Activar) una cuenta dado un código de validación en el correo de los usuarios
@@ -97,5 +99,5 @@ public interface CuentaService {
     TokenDTO login(@Valid LoginDTO loginDTO) throws Exception;
 
     //Metodo proximo a implementar
-    TokenDTO refresh(Map<String, Object> claims);
+    TokenDTO refresh(Map<String, Object> claims) throws Exception;
 }

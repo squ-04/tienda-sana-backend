@@ -5,6 +5,7 @@ import co.uniquindio.tiendasana.dto.carritoComprasdtos.AgregarDetalleCarritoDTO;
 import co.uniquindio.tiendasana.dto.carritoComprasdtos.BorrarDetalleCarritoDTO;
 import co.uniquindio.tiendasana.dto.carritoComprasdtos.EditarDetalleCarritoDTO;
 import co.uniquindio.tiendasana.dto.carritoComprasdtos.VistaItemCarritoDTO;
+import co.uniquindio.tiendasana.dto.cuentadtos.InfoCuentaDTO;
 import co.uniquindio.tiendasana.dto.gestorReservasdtos.BorrarMesaGestorDTO;
 import co.uniquindio.tiendasana.dto.jwtdtos.MessageDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.CrearReservaDTO;
@@ -13,6 +14,7 @@ import co.uniquindio.tiendasana.dto.reservadtos.ReservaItemDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.CrearVentaProductoDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.PaymentResponseDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.VentaItemDTO;
+import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.Mesa;
 import co.uniquindio.tiendasana.services.interfaces.*;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -23,6 +25,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.*;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException; // Para capturar
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 
@@ -39,6 +46,18 @@ public class ClienteController {
     private final ReservaService reservaService;
     private final GestorReservasService gestorReservasService;
 
+
+    /**
+     * Método auxiliar para obtener el email del usuario autenticado.
+     */
+    private String getAuthenticatedUserEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
+            throw new AccessDeniedException("Usuario no autenticado. Se requiere iniciar sesión.");
+        }
+        return authentication.getName();
+    }
+
     /**
      * Controlador para agregar un producto al carrito de compras
      * @param addShoppingCarDetailDTO Detalle del producto a agregar al carrito
@@ -48,9 +67,17 @@ public class ClienteController {
     @PutMapping("/carrito/add-item")
     public ResponseEntity<MessageDTO<String>> agregarDetalleCarrito
             (@Valid @RequestBody AgregarDetalleCarritoDTO addShoppingCarDetailDTO) throws Exception{
-        String shoppingCarId;
-        shoppingCarId= carritoComprasService.agregarDetalleCarrito(addShoppingCarDetailDTO);
-        return ResponseEntity.ok(new MessageDTO<>(false, shoppingCarId));
+        try {
+            String emailAutenticado = getAuthenticatedUserEmail();
+            String shoppingCarId = carritoComprasService.agregarDetalleCarrito(addShoppingCarDetailDTO, emailAutenticado);
+            return ResponseEntity.ok(new MessageDTO<>(false, shoppingCarId));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new MessageDTO<>(true, e.getMessage()));
+        } catch (ProductoParseException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageDTO<>(true, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageDTO<>(true, "Error al agregar al carrito: " + e.getMessage()));
+        }
     }
 
     @PutMapping("/gestor-reservas/add-item")
@@ -69,21 +96,49 @@ public class ClienteController {
      * @throws Exception
      */
     @PutMapping("/carrito/edit-item")
-    public ResponseEntity<MessageDTO<String>> editarDetalleCarrito (@Valid @RequestBody EditarDetalleCarritoDTO editarDetalleCarritoDTO) throws Exception{
-        String shoppingCarId= carritoComprasService.editarDetalleCarrito(editarDetalleCarritoDTO);
-        return ResponseEntity.ok(new MessageDTO<>(false, shoppingCarId));
+    public ResponseEntity<MessageDTO<String>> editarDetalleCarrito (@Valid @RequestBody EditarDetalleCarritoDTO editarDetalleCarritoDTO) throws Exception {
+        try {
+            String emailAutenticado = getAuthenticatedUserEmail();
+            String shoppingCarId = carritoComprasService.editarDetalleCarrito(editarDetalleCarritoDTO, emailAutenticado);
+            return ResponseEntity.ok(new MessageDTO<>(false, shoppingCarId));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new MessageDTO<>(true, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageDTO<>(true, "Error al editar el carrito: " + e.getMessage()));
+        }
     }
 
     /**
      * Controlador para eliminar un producto del carrito de compras
-     * @param deleteCarDetailDTO Detalle del producto a eliminar del carrito
+     * @param borrarDetalleCarritoDTO Detalle del producto a eliminar del carrito
      * @return ResponseEntity con el id del carrito de compras
      * @throws Exception
      */
     @DeleteMapping("/carrito/delete-item")
-    public ResponseEntity<MessageDTO<String>> borrarDetalleCarrito(@Valid @RequestBody BorrarDetalleCarritoDTO deleteCarDetailDTO) throws Exception{
-        String shoppingCarId= carritoComprasService.borrarCarritoCompras(deleteCarDetailDTO);
-        return ResponseEntity.ok(new MessageDTO<>(false, shoppingCarId));
+    public ResponseEntity<MessageDTO<String>> borrarDetalleCarrito(@Valid @RequestBody BorrarDetalleCarritoDTO borrarDetalleCarritoDTO) throws Exception{
+        try {
+            String emailAutenticado = getAuthenticatedUserEmail();
+            // Asumiendo que el método de servicio se llama borrarItemDelCarrito
+            String shoppingCarId = carritoComprasService.borrarItemDelCarrito(borrarDetalleCarritoDTO, emailAutenticado);
+            return ResponseEntity.ok(new MessageDTO<>(false, shoppingCarId));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new MessageDTO<>(true, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageDTO<>(true, "Error al borrar item del carrito: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/carrito/clear-all-items")
+    public ResponseEntity<MessageDTO<String>> borrarTodosLosItemsDelCarrito() {
+        try {
+            String emailAutenticado = getAuthenticatedUserEmail();
+            carritoComprasService.borrarTodosLosItemsDelCarrito(emailAutenticado);
+            return ResponseEntity.ok(new MessageDTO<>(false, "Todos los items del carrito han sido eliminados."));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new MessageDTO<>(true, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageDTO<>(true, "Error al limpiar el carrito: " + e.getMessage()));
+        }
     }
 
     @DeleteMapping("/gestor-reservas/delete-item")
@@ -100,8 +155,17 @@ public class ClienteController {
      */
     @GetMapping("/carrito/get-items/{emailUsuario}")
     public ResponseEntity<MessageDTO<List<VistaItemCarritoDTO>>> listarDetallesCarrito(@PathVariable String emailUsuario) throws Exception{
-        List<VistaItemCarritoDTO> carItems = carritoComprasService.listarDetallesCarrito(emailUsuario);
-        return ResponseEntity.ok(new MessageDTO<>(false, carItems));
+        try {
+            String emailAutenticado = getAuthenticatedUserEmail();
+            List<VistaItemCarritoDTO> carItems = carritoComprasService.listarDetallesCarrito(emailUsuario, emailAutenticado);
+            return ResponseEntity.ok(new MessageDTO<>(false, carItems));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(new MessageDTO<>(true, null));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageDTO<List<VistaItemCarritoDTO>>(true, null));
+        }
     }
 
 
@@ -205,14 +269,9 @@ public class ClienteController {
      */
     @GetMapping("/reserva/history/{emailUsuario}")
     public ResponseEntity<MessageDTO<List<ReservaItemDTO>>> listarReservasCliente(@PathVariable String emailUsuario) throws Exception {
-        try {
-            List<ReservaItemDTO> reservas = reservaService.listarReservasCliente(emailUsuario);
-            return ResponseEntity.ok(new MessageDTO<>(false, reservas));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        List<ReservaItemDTO> reservas = reservaService.listarReservasCliente(emailUsuario);
+        return ResponseEntity.ok(new MessageDTO<>(false, reservas));
 
-        return null;
     }
 
     /**

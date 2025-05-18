@@ -79,7 +79,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
 
         ventaProducto.setId(UUID.randomUUID().toString());
 
-        CarritoCompras carritoCompras = carritoComprasService.getCarritoCompras(crearVentaProductoDTO.emailUsuario());
+        CarritoCompras carritoCompras = carritoComprasService.getCarritoCompras(crearVentaProductoDTO.emailUsuario(), cuenta.getEmail());
         List<DetalleVentaProducto> items = getOrderDetails(carritoCompras, ventaProducto.getId());
         ventaProducto.setProductos(items);
 
@@ -407,7 +407,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
                         productoService.reducirCantidadProductosStock(detalleVentaProducto.getProductoId(), detalleVentaProducto.getCantidad());
                     }
                     enviarResumenVenta(cuenta.getEmail(), ventaProducto);
-                    carritoComprasService.borrarCarritoCompras(ventaProducto.getEmailUsario());
+                    carritoComprasService.borrarTodosLosItemsDelCarrito(ventaProducto.getEmailUsario());
                 }
             }
         } catch (Exception e) {

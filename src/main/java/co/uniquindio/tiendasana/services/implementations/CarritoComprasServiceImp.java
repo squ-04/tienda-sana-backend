@@ -12,6 +12,7 @@ import co.uniquindio.tiendasana.repos.CarritoComprasRepo;
 import co.uniquindio.tiendasana.services.interfaces.CarritoComprasService;
 import co.uniquindio.tiendasana.services.interfaces.ProductoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -29,141 +30,208 @@ public class CarritoComprasServiceImp implements CarritoComprasService {
     private final CarritoComprasRepo carritoComprasRepo;
 
     /**
-     * Elimina todos los productos del carrito de compras asociado al usuario dado.
-     * @param idUsuario Email del usuario cuyo carrito se va a limpiar.
+     * Elimina todos los productos del carrito de compras asociado al usuario autenticado.
+     * @param emailAutenticado Email del usuario cuyo carrito se va a limpiar.
      * @throws IOException Si ocurre un error al acceder al repositorio.
      */
     @Override
-    public void borrarCarritoCompras(String idUsuario) throws IOException {
-        CarritoCompras carrito=carritoComprasRepo.obtenerPorIdUsuario(idUsuario).get();
-        carritoComprasRepo.eliminarDetalles(carrito.getProductos());
+    public void borrarTodosLosItemsDelCarrito(String emailAutenticado) throws IOException {
+        // No se necesita idUsuario como parámetro si siempre es el autenticado
+        Optional<CarritoCompras> carritoOpt = carritoComprasRepo.obtenerPorIdUsuario(emailAutenticado);
+        if (carritoOpt.isPresent()) {
+            CarritoCompras carrito = carritoOpt.get();
+            if (!carrito.getIdUsuario().equals(emailAutenticado)) {
+                throw new AccessDeniedException("Acceso denegado al carrito de compras.");
+            }
+            if (carrito.getProductos() != null && !carrito.getProductos().isEmpty()) {
+                carritoComprasRepo.eliminarDetalles(new ArrayList<>(carrito.getProductos()));
+                carrito.setProductos(new ArrayList<>());
+                carritoComprasRepo.actualizarCarrito(carrito);
+            }
+        }
     }
 
     /**
-     * Obtiene el carrito de compras del usuario si existe.
-     * @param idUsuario Email del usuario.
+     * Obtiene el carrito de compras del usuario si existe y pertenece al usuario autenticado.
+     * @param idUsuario Email del usuario objetivo (para la búsqueda).
+     * @param emailAutenticado Email del usuario autenticado (para la validación).
      * @return El carrito de compras correspondiente.
-     * @throws Exception Si el carrito no existe.
+     * @throws Exception Si el carrito no existe o no pertenece al usuario autenticado.
      */
     @Override
-    public CarritoCompras getCarritoCompras(String idUsuario) throws Exception {
-        Optional<CarritoCompras> shoppingCar = carritoComprasRepo.obtenerPorIdUsuario(idUsuario);
-        if (shoppingCar.isEmpty()) {
-            throw new Exception("No hay un carrito de compras para el usuario: " + idUsuario);
+    public CarritoCompras getCarritoCompras(String idUsuario, String emailAutenticado) throws Exception {
+        if (!idUsuario.equals(emailAutenticado)) {
+            throw new AccessDeniedException("No tiene permiso para acceder al carrito de este usuario.");
         }
-        return shoppingCar.get();
+        return obtenerCarritoCompra(emailAutenticado);
     }
 
     /**
-     * Agrega un producto al carrito de compras del usuario.
-     * Si el carrito no existe, se crea uno nuevo.
+     * Agrega un producto al carrito de compras del usuario autenticado.
+     * El idUsuario en addShoppingCarDetailDTO se usa para validar que la intención era para el usuario autenticado.
      * @param addShoppingCarDetailDTO DTO con la información del producto a agregar.
+     * @param emailAutenticado Email del usuario autenticado.
      * @return El ID del carrito actualizado.
      * @throws IOException            Si hay un error al guardar.
      * @throws ProductoParseException Si ocurre un error relacionado con el producto.
+     * @throws AccessDeniedException Si el idUsuario en el DTO no coincide con el emailAutenticado.
      */
     @Override
-    public String agregarDetalleCarrito(AgregarDetalleCarritoDTO addShoppingCarDetailDTO) throws IOException, ProductoParseException {
-        CarritoCompras carritoCompras = crearCarritoCompras(addShoppingCarDetailDTO.idUsuario());
+    public String agregarDetalleCarrito(AgregarDetalleCarritoDTO addShoppingCarDetailDTO, String emailAutenticado) throws IOException, ProductoParseException {
+        if (!addShoppingCarDetailDTO.idUsuario().equals(emailAutenticado)) {
+            throw new AccessDeniedException("No tiene permiso para agregar productos al carrito de este usuario.");
+        }
+
+        CarritoCompras carritoCompras = crearCarritoCompras(emailAutenticado);
         Producto producto = productoService.obtenerProducto(addShoppingCarDetailDTO.idProducto());
 
-        DetalleCarrito detalleCarrito = new DetalleCarrito();
-        detalleCarrito.setCantidad(addShoppingCarDetailDTO.cantidad());
-        detalleCarrito.setProductoId(addShoppingCarDetailDTO.idProducto());
-        detalleCarrito.setIdCarrito(carritoCompras.getId());
-        detalleCarrito.setSubtotal(producto.getPrecioUnitario()*addShoppingCarDetailDTO.cantidad());
+        Optional<DetalleCarrito> detalleExistenteOpt = carritoCompras.getProductos().stream()
+                .filter(dc -> dc.getProductoId().equals(addShoppingCarDetailDTO.idProducto()))
+                .findFirst();
 
-        carritoCompras.agregarDetalle(detalleCarrito);
+        if (detalleExistenteOpt.isPresent()) {
+            DetalleCarrito detalleExistente = detalleExistenteOpt.get();
+            int nuevaCantidad = detalleExistente.getCantidad() + addShoppingCarDetailDTO.cantidad();
+            if (!producto.estaStockDisponible(nuevaCantidad - detalleExistente.getCantidad())) { // Validar solo el incremento
+                throw new ProductoParseException("Cantidad de stock insuficiente para añadir más unidades de " + producto.getNombre());
+            }
+            detalleExistente.setCantidad(nuevaCantidad);
+            detalleExistente.setSubtotal(producto.getPrecioUnitario() * nuevaCantidad);
+        } else {
+            if (!producto.estaStockDisponible(addShoppingCarDetailDTO.cantidad())) {
+                throw new ProductoParseException("Cantidad de stock insuficiente para " + producto.getNombre());
+            }
+            DetalleCarrito detalleCarrito = new DetalleCarrito();
+            detalleCarrito.setCantidad(addShoppingCarDetailDTO.cantidad());
+            detalleCarrito.setProductoId(addShoppingCarDetailDTO.idProducto());
+            detalleCarrito.setIdCarrito(carritoCompras.getId());
+            detalleCarrito.setSubtotal(producto.getPrecioUnitario() * addShoppingCarDetailDTO.cantidad());
+            carritoCompras.agregarDetalle(detalleCarrito);
+        }
+
         carritoComprasRepo.actualizarCarrito(carritoCompras);
         return carritoCompras.getId();
     }
 
     /**
-     * Modifica la cantidad de un producto en el carrito de compras.
-     * Valida la disponibilidad del stock antes de aplicar los cambios.
+     * Modifica la cantidad de un producto en el carrito de compras del usuario autenticado.
      * @param editarCarritoDetalleDTO DTO con la nueva cantidad y producto.
+     * @param emailAutenticado Email del usuario autenticado.
      * @return El ID del carrito actualizado.
-     * @throws Exception Si el producto no tiene stock o el carrito no existe.
+     * @throws Exception Si el producto no tiene stock, el carrito no existe, o no tiene permisos.
      */
     @Override
-    public String editarDetalleCarrito(EditarDetalleCarritoDTO editarCarritoDetalleDTO) throws Exception {
-        CarritoCompras carritoCompras = obtenerCarritoCompra(editarCarritoDetalleDTO.idUsuario());
-        List<DetalleCarrito> detalles = carritoCompras.getProductos();
-        detalles.forEach(e -> {
-            try {
-                Producto producto=productoService.obtenerProducto(editarCarritoDetalleDTO.idProducto());
-                if (e.getProductoId().equals(editarCarritoDetalleDTO.idProducto())) {
-                    if (!producto.estaStockDisponible(editarCarritoDetalleDTO.cantidad())) {
-                        throw new Exception("Cantidad de stock insuficiente");
-                    } else {
-                        e.setCantidad(editarCarritoDetalleDTO.cantidad());
-                        e.setSubtotal(e.getCantidad()*producto.getPrecioUnitario());
-                    }
-
-                }
-
-            } catch (Exception ex) {
-                throw new RuntimeException(ex);
-            }
-
-        });
-        carritoCompras.setProductos(detalles);
-        System.out.println("Antes de actualizar carrito");
-        for (DetalleCarrito detalle:carritoCompras.getProductos()) {
-            System.out.println(detalle.toString());
+    public String editarDetalleCarrito(EditarDetalleCarritoDTO editarCarritoDetalleDTO, String emailAutenticado) throws Exception {
+        if (!editarCarritoDetalleDTO.idUsuario().equals(emailAutenticado)) {
+            throw new AccessDeniedException("No tiene permiso para editar el carrito de este usuario.");
         }
+
+        CarritoCompras carritoCompras = obtenerCarritoCompra(emailAutenticado); // Usa emailAutenticado
+        Optional<DetalleCarrito> detalleParaEditarOpt = carritoCompras.getProductos().stream()
+                .filter(e -> e.getProductoId().equals(editarCarritoDetalleDTO.idProducto()))
+                .findFirst();
+
+        if (detalleParaEditarOpt.isEmpty()) {
+            throw new Exception("El producto no se encuentra en el carrito.");
+        }
+
+        DetalleCarrito detalleParaEditar = detalleParaEditarOpt.get();
+        Producto producto = productoService.obtenerProducto(editarCarritoDetalleDTO.idProducto());
+
+        if (!producto.estaStockDisponible(editarCarritoDetalleDTO.cantidad())) {
+            int cantidadActual = detalleParaEditar.getCantidad();
+            int diferencia = editarCarritoDetalleDTO.cantidad() - cantidadActual;
+            if (diferencia > 0 && !producto.estaStockDisponible(diferencia)) {
+                throw new Exception("Cantidad de stock insuficiente para el incremento solicitado.");
+            }
+            throw new Exception("Cantidad de stock insuficiente para la cantidad total solicitada de " + producto.getNombre());
+        }
+
+        detalleParaEditar.setCantidad(editarCarritoDetalleDTO.cantidad());
+        detalleParaEditar.setSubtotal(detalleParaEditar.getCantidad() * producto.getPrecioUnitario());
+
+        if (detalleParaEditar.getCantidad() <= 0) {
+            carritoCompras.getProductos().remove(detalleParaEditar);
+            carritoComprasRepo.eliminarDetalle(detalleParaEditar);
+        }
+
         carritoComprasRepo.actualizarCarrito(carritoCompras);
         return carritoCompras.getId();
     }
 
     /**
      * Metodo auxiliar para obtener el carrito de compras del usuario.
-     * @param idUsuario Email del usuario.
+     * Este método es privado y asume que la validación de emailAutenticado ya se hizo.
+     * @param idUsuarioVerificado Email del usuario (ya validado).
      * @return Carrito de compras encontrado.
      * @throws Exception Si el carrito no existe.
      */
-    private CarritoCompras obtenerCarritoCompra(String idUsuario) throws Exception {
-        Optional<CarritoCompras> shoppingCar = carritoComprasRepo.obtenerPorIdUsuario(idUsuario);
+    private CarritoCompras obtenerCarritoCompra(String idUsuarioVerificado) throws Exception {
+        Optional<CarritoCompras> shoppingCar = carritoComprasRepo.obtenerPorIdUsuario(idUsuarioVerificado);
         if (shoppingCar.isEmpty()) {
-            throw new Exception("No hay un carrito de compras para el usuario: " + idUsuario);
+            throw new Exception("No hay un carrito de compras para el usuario: " + idUsuarioVerificado);
         }
         return shoppingCar.get();
     }
 
     /**
-     * Elimina un producto específico del carrito de compras del usuario.
+     * Elimina un producto específico del carrito de compras del usuario autenticado.
      * @param borrarDetalleCarritoDTO DTO con la información del producto y usuario.
+     * @param emailAutenticado Email del usuario autenticado.
      * @return ID del carrito actualizado.
-     * @throws Exception Si el carrito no existe.
+     * @throws Exception Si el carrito no existe o no tiene permisos.
      */
     @Override
-    public String borrarCarritoCompras(BorrarDetalleCarritoDTO borrarDetalleCarritoDTO) throws Exception {
-        CarritoCompras carritoCompras = obtenerCarritoCompra(borrarDetalleCarritoDTO.idUsuario());
-        List<DetalleCarrito> detalles = carritoCompras.getProductos();
-        List<DetalleCarrito> detallesEliminar=
-                detalles.stream().filter(e -> e.getProductoId().equals(borrarDetalleCarritoDTO.idProducto()) &&
-                carritoCompras.getIdUsuario().equals(borrarDetalleCarritoDTO.idUsuario())).collect(Collectors.toList());
-        detalles.removeAll(detallesEliminar);
-        carritoCompras.setProductos(detalles);
-        carritoComprasRepo.eliminarDetalles(detallesEliminar);
+    public String borrarItemDelCarrito(BorrarDetalleCarritoDTO borrarDetalleCarritoDTO, String emailAutenticado) throws Exception {
+        if (!borrarDetalleCarritoDTO.idUsuario().equals(emailAutenticado)) {
+            throw new AccessDeniedException("No tiene permiso para eliminar items del carrito de este usuario.");
+        }
+
+        CarritoCompras carritoCompras = obtenerCarritoCompra(emailAutenticado); // Usa emailAutenticado
+
+        List<DetalleCarrito> detallesOriginales = carritoCompras.getProductos();
+        List<DetalleCarrito> detallesAEliminar = detallesOriginales.stream()
+                .filter(e -> e.getProductoId().equals(borrarDetalleCarritoDTO.idProducto()))
+                .collect(Collectors.toList());
+
+        if (detallesAEliminar.isEmpty()) {
+            throw new Exception("El producto a eliminar no se encuentra en el carrito.");
+        }
+
+        detallesOriginales.removeAll(detallesAEliminar);
+        carritoCompras.setProductos(detallesOriginales);
+
+        carritoComprasRepo.eliminarDetalles(detallesAEliminar);
+
         carritoComprasRepo.actualizarCarrito(carritoCompras);
         return carritoCompras.getId();
     }
 
     /**
-     * Lista todos los productos dentro del carrito de compras del usuario.
-     * @param emailUsuario Correo electrónico o ID del usuario.
+     * Lista todos los productos dentro del carrito de compras del usuario autenticado.
+     * @param emailUsuario Correo electrónico del usuario (del path variable, para validación).
+     * @param emailAutenticado Email del usuario autenticado (del token).
      * @return Lista de DTOs representando los ítems del carrito.
      * @throws IOException Si hay un error al acceder a los datos.
+     * @throws AccessDeniedException Si el emailUsuario no coincide con el emailAutenticado.
      */
     @Override
-    public List<VistaItemCarritoDTO> listarDetallesCarrito(String emailUsuario) throws IOException {
-        CarritoCompras shoppingCar = crearCarritoCompras(emailUsuario);
+    public List<VistaItemCarritoDTO> listarDetallesCarrito(String emailUsuario, String emailAutenticado) throws IOException {
+        if (!emailUsuario.equals(emailAutenticado)) {
+            throw new AccessDeniedException("No tiene permiso para listar los items del carrito de este usuario.");
+        }
+
+        CarritoCompras shoppingCar = crearCarritoCompras(emailAutenticado);
         List<DetalleCarrito> shoppingCarDetails = shoppingCar.getProductos();
+
+        if (shoppingCarDetails == null) {
+            return new ArrayList<>();
+        }
 
         return shoppingCarDetails.stream()
                 .map(this::convertToCarItemViewDTO)
-                .flatMap(Optional::stream) // Descartar valores nulos si la conversión falló
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .collect(Collectors.toList());
     }
 
@@ -187,33 +255,35 @@ public class CarritoComprasServiceImp implements CarritoComprasService {
             ));
 
         } catch (Exception e) {
-            // Registro del error para informar o para debugging
-            System.err.println("Error: " + e.getMessage());
-            return Optional.empty(); // Retornar vacío si hay un error en la conversión
+            System.err.println("Error al convertir DetalleCarrito a VistaItemCarritoDTO para producto ID " + itemView.getProductoId() + ": " + e.getMessage());
+            return Optional.empty();
         }
     }
 
     /**
      * Crea un nuevo carrito de compras para el usuario si aún no tiene uno.
-     * @param idUsuario ID del usuario.
+     * @param idUsuarioVerificado ID del usuario (ya validado o es el emailAutenticado).
      * @return El carrito de compras existente o recién creado.
      * @throws IOException Si ocurre un error al guardar.
      */
     @Override
-    public CarritoCompras crearCarritoCompras(String idUsuario) throws IOException {
-        Optional<CarritoCompras> carritoCompraRecibido = carritoComprasRepo.obtenerPorIdUsuario(idUsuario);
+    public CarritoCompras crearCarritoCompras(String idUsuarioVerificado) throws IOException {
+        Optional<CarritoCompras> carritoCompraRecibido = carritoComprasRepo.obtenerPorIdUsuario(idUsuarioVerificado);
 
         if (carritoCompraRecibido.isEmpty()) {
-
             CarritoCompras carritoCompras = new CarritoCompras();
-            carritoCompras.setIdUsuario(idUsuario);
+            carritoCompras.setIdUsuario(idUsuarioVerificado); // Usa el id verificado
             carritoCompras.setFecha(LocalDateTime.now());
-            carritoCompras.setId(UUID.randomUUID().toString());//TODO crear metodo que
-            carritoCompras.setProductos(new ArrayList<>());
+            carritoCompras.setId(UUID.randomUUID().toString());
+            carritoCompras.setProductos(new ArrayList<>()); // Inicializa la lista de productos
             carritoComprasRepo.guardarCarritoCompra(carritoCompras);
             return carritoCompras;
         } else {
-            return carritoCompraRecibido.get();
+            CarritoCompras existente = carritoCompraRecibido.get();
+            if (existente.getProductos() == null) { // Asegurar que la lista de productos no sea nula
+                existente.setProductos(new ArrayList<>());
+            }
+            return existente;
         }
     }
 
