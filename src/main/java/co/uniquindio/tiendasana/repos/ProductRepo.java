@@ -1,6 +1,11 @@
 package co.uniquindio.tiendasana.repos;
 
 
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.ConsumptionProbe;
+import org.springframework.beans.factory.annotation.Qualifier; // Para seleccionar el bean correcto
+import org.springframework.stereotype.Service;
+
 import co.uniquindio.tiendasana.dto.productodtos.ProductosTotalDTO;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.Producto;
@@ -8,6 +13,7 @@ import co.uniquindio.tiendasana.utils.ProductoConstantes;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import io.github.bucket4j.Bucket;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 import java.io.IOException;
@@ -25,6 +31,7 @@ import java.util.stream.Collectors;
 @Repository
 public class ProductRepo  {
 
+    private final Bucket sheetsApiBucket;
     private final Sheets sheetsService;
     @Value("${google.sheets.spreadsheet-id}")
     private  String spreadsheetId;
@@ -36,7 +43,8 @@ public class ProductRepo  {
      * Metodo contructor de la clase
      * @param sheetsService
      */
-    public ProductRepo(Sheets sheetsService) {
+    public ProductRepo(@Qualifier("sheetsApiRateLimitBucket") Bucket sheetsApiBucket, Bucket sheetsApiBucket1, Sheets sheetsService) {
+        this.sheetsApiBucket = sheetsApiBucket1;
         this.sheetsService = sheetsService;
     }
 
