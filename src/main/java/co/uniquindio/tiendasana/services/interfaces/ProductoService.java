@@ -50,5 +50,5 @@ public interface ProductoService {
 
     ListaProductosDTO filtrarProductos(FiltroProductoDTO filtroProductoDTO) throws Exception;
 
-    List<CategoriaProducto> listarTipos() throws Exception;
+    List<String> listarTipos() throws Exception;
 }

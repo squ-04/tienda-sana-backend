@@ -13,9 +13,9 @@ public record ReservaItemDTO(
         String status,
         LocalDateTime paymentDate,
         float transactionValue,
-        String id,
+        String idReserva,
         float total,
-        String cantidadPersonas,
+        int cantidadPersonas,
         List<Mesa> mesas
 ) {
 }

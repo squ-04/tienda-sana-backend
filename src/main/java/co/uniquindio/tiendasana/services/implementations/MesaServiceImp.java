@@ -7,6 +7,7 @@ import co.uniquindio.tiendasana.model.enums.Localidad;
 import co.uniquindio.tiendasana.repos.MesaRepo;
 import co.uniquindio.tiendasana.services.interfaces.MesaService;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Service;
 import co.uniquindio.tiendasana.utils.MesaConstantes;
 
@@ -88,6 +89,55 @@ public class MesaServiceImp implements MesaService {
 
     @Override
     public ListaMesasDTO filtrarMesas(FiltroMesaDTO filtroMesaDTO) throws Exception {
+        Predicate<Mesa> filtro = getMesaPredicate(filtroMesaDTO);
+
+        List<Mesa> mesasFiltradas = mesaRepo.filtrar(filtro);
+
+        int pageSize = 9;
+        int totalItems = mesasFiltradas.size();
+        int totalPaginas = (totalItems == 0) ? 0 : (int) Math.ceil((double) totalItems / pageSize);
+
+       List <Mesa> paginatedList = obtenerListaPaginada(mesasFiltradas, filtroMesaDTO.pagina(), pageSize, totalItems);
+
+
+        List<MesaItemDTO> mesasItems = paginatedList.stream()
+                .map(mesa -> new MesaItemDTO(
+                        mesa.getId(),
+                        mesa.getNombre(),
+                        mesa.getEstado(),
+                        (mesa.getLocalidad() != null ? mesa.getLocalidad().getLocalidad() : null), // Manejo de nulidad también en el mapeo
+                        mesa.getPrecioReserva(),
+                        mesa.getCapacidad(),
+                        mesa.getImagen()
+                ))
+                .collect(Collectors.toList());
+
+        return new ListaMesasDTO(totalPaginas, mesasItems);
+    }
+    private List<Mesa> obtenerListaPaginada(List<Mesa> mesasFiltradas, int pagina, int pageSize, int totalItems) throws Exception {
+        List<Mesa> paginatedList;
+        int pageNumber = pagina; // Asumir 0-indexado.
+        if (pageNumber < 0) {
+            pageNumber = 0;
+        }
+
+        if (totalItems == 0 || pageNumber * pageSize >= totalItems) {
+            // Si no hay ítems o la página solicitada está fuera de rango (demasiado alta)
+            paginatedList = Collections.emptyList();
+        } else {
+            int startItem = pageNumber * pageSize;
+            int endItem = Math.min(startItem + pageSize, totalItems);
+            paginatedList = mesasFiltradas.subList(startItem, endItem);
+        }
+        return paginatedList;
+    }
+    /**
+     * Metodo para obtener un predicado para efectuar el filtro de mesas bajo un DTO de filtro dado
+     * @param filtroMesaDTO
+     * @return
+     * @throws Exception
+     */
+    private static @NotNull Predicate<Mesa> getMesaPredicate(FiltroMesaDTO filtroMesaDTO) throws Exception {
         boolean filtroVacio = (filtroMesaDTO.nombre() == null || filtroMesaDTO.nombre().isEmpty()) &&
                 (filtroMesaDTO.localidad() == null || filtroMesaDTO.localidad().isEmpty()) &&
                 filtroMesaDTO.capacidad() == 0;
@@ -110,51 +160,18 @@ public class MesaServiceImp implements MesaService {
 
             if (filtroMesaDTO.localidad() != null && !filtroMesaDTO.localidad().isEmpty()) {
                 matches &= (mesa.getLocalidad() != null &&
-                        mesa.getLocalidad().getLocalidad().toLowerCase().contains(filtroMesaDTO.localidad().toLowerCase()));
+                        mesa.getLocalidad().getLocalidad().equalsIgnoreCase(filtroMesaDTO.localidad()));
             }
             return matches;
         };
-
-        List<Mesa> mesasFiltradas = mesaRepo.filtrar(filtro);
-
-        int pageSize = 9;
-        int totalItems = mesasFiltradas.size();
-        int totalPaginas = (totalItems == 0) ? 0 : (int) Math.ceil((double) totalItems / pageSize);
-
-        int pageNumber = filtroMesaDTO.pagina(); // Asumir 0-indexado.
-        if (pageNumber < 0) {
-            pageNumber = 0;
-        }
-        
-        List<Mesa> paginatedList;
-        if (totalItems == 0 || pageNumber * pageSize >= totalItems) {
-            // Si no hay ítems o la página solicitada está fuera de rango (demasiado alta)
-            paginatedList = Collections.emptyList();
-        } else {
-            int startItem = pageNumber * pageSize;
-            int endItem = Math.min(startItem + pageSize, totalItems);
-            paginatedList = mesasFiltradas.subList(startItem, endItem);
-        }
-
-
-        List<MesaItemDTO> mesasItems = paginatedList.stream()
-                .map(mesa -> new MesaItemDTO(
-                        mesa.getId(),
-                        mesa.getNombre(),
-                        mesa.getEstado(),
-                        (mesa.getLocalidad() != null ? mesa.getLocalidad().getLocalidad() : null), // Manejo de nulidad también en el mapeo
-                        mesa.getPrecioReserva(),
-                        mesa.getCapacidad(),
-                        mesa.getImagen()
-                ))
-                .collect(Collectors.toList());
-
-        return new ListaMesasDTO(totalPaginas, mesasItems);
+        return filtro;
     }
 
     @Override
-    public List<Localidad> listarLocalidades() throws Exception {
-        List<Localidad> localidades= Arrays.asList(Localidad.values());
+    public List<String> listarLocalidades() throws Exception {
+        List<String> localidades= Arrays.stream(Localidad.values()).map(Localidad::getLocalidad).collect(Collectors.toList());
+
+
         if (localidades.isEmpty()){
             throw new Exception("No existen localidades para las mesas");
 

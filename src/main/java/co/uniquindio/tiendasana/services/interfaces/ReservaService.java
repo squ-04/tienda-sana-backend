@@ -6,6 +6,7 @@ import co.uniquindio.tiendasana.dto.reservadtos.PaymentResponseReservaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.ReservaItemDTO;
 import co.uniquindio.tiendasana.model.documents.Reserva;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -16,21 +17,21 @@ public interface ReservaService {
      * @param crearReservaDTO Objeto que contiene la información de la reserva.
      * @return Un mensaje indicando el resultado de la reserva.
      */
-    String reservarMesa(CrearReservaDTO crearReservaDTO);
+    String reservarMesa(CrearReservaDTO crearReservaDTO) throws Exception;
 
     /**
      * Obtiene la información de una reserva por su ID.
      * @param idReserva ID de la reserva a buscar.
      * @return Objeto Reserva con la información de la reserva.
      */
-    Reserva obtenerReserva(String idReserva);
+    Reserva obtenerReserva(String idReserva) throws Exception;
 
     /**
      * Metodo para borrar una reserva
      * @param idReserva ID de la reserva a borrar
      * @return Mensaje indicando el resultado de la operación.
      */
-    String cancelarReserva(String idReserva);
+    String cancelarReserva(String idReserva) throws Exception;
 
     /**
      * Actualiza la información de una reserva existente.
@@ -38,7 +39,7 @@ public interface ReservaService {
      * @param actualizarReservaDTO Objeto que contiene la información actualizada de la reserva.
      * @return Un mensaje indicando el resultado de la actualización.
      */
-    String actualizarReserva(ActualizarReservaDTO actualizarReservaDTO);
+    String actualizarReserva(ActualizarReservaDTO actualizarReservaDTO) throws Exception;
 
     /**
      * Obtiene la información de una reserva por su ID.
@@ -46,7 +47,7 @@ public interface ReservaService {
      * @param idReserva ID de la reserva a buscar.
      * @return Objeto ReservaItemDTO con la información de la reserva.
      */
-    ReservaItemDTO obtenerInformacionReserva(String idReserva);
+    ReservaItemDTO obtenerInformacionReserva(String idReserva) throws Exception;
 
     /**
      * Lista todas las reservas de un cliente.
@@ -54,7 +55,7 @@ public interface ReservaService {
      * @param emailUsuario email del cliente cuyas reservas se desean listar.
      * @return Lista de objetos ReservaItemDTO con la información de las reservas del cliente.
      */
-    List<ReservaItemDTO> listarReservasCliente(String emailUsuario);
+    List<ReservaItemDTO> listarReservasCliente(String emailUsuario) throws IOException;
 
     /**
      * Realiza el pago de una reserva.

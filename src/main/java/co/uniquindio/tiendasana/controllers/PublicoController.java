@@ -106,14 +106,14 @@ public class PublicoController {
     }
 
     @GetMapping("/productos/get-types")
-    public ResponseEntity<MessageDTO<List<CategoriaProducto>>>  listarTipos() throws Exception{
-        List<CategoriaProducto> tiposProduco = productService.listarTipos();
+    public ResponseEntity<MessageDTO<List<String>>>  listarTipos() throws Exception{
+        List<String> tiposProduco = productService.listarTipos();
         return ResponseEntity.ok(new MessageDTO<>(false,tiposProduco));
     }
 
     @GetMapping("/mesas/get-locality")
-    public ResponseEntity<MessageDTO<List<Localidad>>>  listarLocalidades() throws Exception{
-        List<Localidad> localidadesMesa = mesaService.listarLocalidades();
+    public ResponseEntity<MessageDTO<List<String>>>  listarLocalidades() throws Exception{
+        List<String> localidadesMesa = mesaService.listarLocalidades();
         return ResponseEntity.ok(new MessageDTO<>(false,localidadesMesa));
     }
 
