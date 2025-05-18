@@ -292,13 +292,9 @@ public class VentaProductoServiceImp implements VentaProductoService {
     public PaymentResponseDTO makePayment(String ventaProductoId) throws Exception {
         try {
             // Obtener la orden guardada en la base de datos y los ítems de la orden
-            System.out.println("ID DE LA VENTA: " + ventaProductoId);
             VentaProducto ventaGuardar = obtenerVentaProducto(ventaProductoId);
-            System.out.println("Venta guardar "+ventaGuardar);
-
 
             List<PreferenceItemRequest> itemsGateway = new ArrayList<>();
-            System.out.println("Productos "+ventaGuardar.getProductos());
             // Comprobar si hay un cupón de descuento en la orden
             Promocion promocion = null;
             if (ventaGuardar.getPromocionId() != null) {
@@ -308,7 +304,6 @@ public class VentaProductoServiceImp implements VentaProductoService {
             // Recorrer los items de la orden y crea los ítems de la pasarela
             for (DetalleVentaProducto item : ventaGuardar.getProductos()) {
                 // Obtener el evento y la localidad del ítem
-                System.out.println("ID Producto: " + item.getProductoId());
                 Producto producto = productoService.obtenerProducto(item.getProductoId());
 
                 float unitPrice = (promocion != null) ?
@@ -399,7 +394,6 @@ public class VentaProductoServiceImp implements VentaProductoService {
 
                 // Se obtiene la orden guardada en la base de datos y se le asigna el pago, ademas de aumentar la cantidad de entradas vendidas
                 VentaProducto ventaProducto = obtenerVentaProducto(idVenta);
-                System.out.println("ID Venta: " + ventaProducto.getId());
                 Pago orderPago = createPayment(payment);
 
                 ventaProducto.setPago(orderPago);
@@ -408,7 +402,6 @@ public class VentaProductoServiceImp implements VentaProductoService {
 
 
                 if (ventaProducto.getPago().getStatus().equalsIgnoreCase("APPROVED") && ventaProducto.getPago().getStatusDetail().equalsIgnoreCase("accredited")) {
-                    System.out.println("Tamaño producto:   "+ventaProducto.getProductos().size());
                     for (DetalleVentaProducto detalleVentaProducto : ventaProducto.getProductos()){
                         productoService.reducirCantidadProductosStock(detalleVentaProducto.getProductoId(), detalleVentaProducto.getCantidad());
                     }

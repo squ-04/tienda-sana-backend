@@ -204,9 +204,15 @@ public class ClienteController {
      * @throws Exception
      */
     @GetMapping("/reserva/history/{emailUsuario}")
-    public ResponseEntity<MessageDTO<List<ReservaItemDTO>>> listarReservasCliente(@PathVariable String emailUsuario) throws Exception{
-        List<ReservaItemDTO> reservas= reservaService.listarReservasCliente(emailUsuario);
-        return ResponseEntity.ok(new MessageDTO<>(false, reservas));
+    public ResponseEntity<MessageDTO<List<ReservaItemDTO>>> listarReservasCliente(@PathVariable String emailUsuario) throws Exception {
+        try {
+            List<ReservaItemDTO> reservas = reservaService.listarReservasCliente(emailUsuario);
+            return ResponseEntity.ok(new MessageDTO<>(false, reservas));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     /**

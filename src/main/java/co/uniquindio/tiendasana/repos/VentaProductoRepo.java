@@ -4,6 +4,7 @@ import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.VentaProducto;
 import co.uniquindio.tiendasana.model.vo.DetalleVentaProducto;
 import co.uniquindio.tiendasana.model.vo.Pago;
+import co.uniquindio.tiendasana.utils.ReservaConstantes;
 import co.uniquindio.tiendasana.utils.VentaProductoConstantes;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import org.springframework.stereotype.Repository;
@@ -58,7 +59,6 @@ public class VentaProductoRepo {
      */
     public void asignarDetalles(List<VentaProducto> ventas) throws IOException {
         List<DetalleVentaProducto> detalles= obtenerDetallesVenta();
-        System.out.println("Detalles: "+detalles);
         for (VentaProducto ventaProducto:ventas) {
             ventaProducto.setProductos(
                     detalles.stream()
@@ -70,7 +70,6 @@ public class VentaProductoRepo {
 
         }
         for (VentaProducto ventaProducto:ventas) {
-            System.out.println("Ciclo Venta: "+ventaProducto);
         }
 
     }
@@ -367,8 +366,16 @@ public class VentaProductoRepo {
      * @throws IOException
      */
     private List<List<Object>> obtenerFilasHojaDetalle() throws IOException {
-        String rango = SHEET_NAME_DETALLE + "!A2:"+VentaProductoConstantes.COL_REGISTRO_DETALLE_FINAL; // Asumiendo que usas columnas: Fecha, IDUsuario, Productos
+        String rango = SHEET_NAME_DETALLE + "!A2:" + ReservaConstantes.COL_REGISTRO_MESA_FINAL;
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
+
+        // Validar si la respuesta es nula o vacía
+        if (respuesta.getValues() == null || respuesta.getValues().isEmpty()) {
+            System.out.println("No se encontraron filas en el rango especificado.");
+            return new ArrayList<>();
+        }
+
+        System.out.println("Respuesta de filas " + respuesta.getValues());
         return respuesta.getValues();
     }
 
