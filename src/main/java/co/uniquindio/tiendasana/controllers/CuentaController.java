@@ -74,7 +74,6 @@ public class CuentaController {
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new MessageDTO<>(true, e.getMessage()));
         } catch (Exception e) {
-            // Considera loggear el error e.printStackTrace(); o usar un logger dedicado.
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageDTO<>(true, "Error al actualizar la cuenta: " + e.getMessage()));
         }
     }
