@@ -6,6 +6,7 @@ import co.uniquindio.tiendasana.dto.reservadtos.PaymentResponseReservaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.ReservaItemDTO;
 import co.uniquindio.tiendasana.model.documents.Reserva;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -46,7 +47,7 @@ public interface ReservaService {
      * @param idReserva ID de la reserva a buscar.
      * @return Objeto ReservaItemDTO con la información de la reserva.
      */
-    ReservaItemDTO obtenerInformacionReserva(String idReserva);
+    ReservaItemDTO obtenerInformacionReserva(String idReserva) throws Exception;
 
     /**
      * Lista todas las reservas de un cliente.
@@ -54,7 +55,7 @@ public interface ReservaService {
      * @param emailUsuario email del cliente cuyas reservas se desean listar.
      * @return Lista de objetos ReservaItemDTO con la información de las reservas del cliente.
      */
-    List<ReservaItemDTO> listarReservasCliente(String emailUsuario);
+    List<ReservaItemDTO> listarReservasCliente(String emailUsuario) throws IOException;
 
     /**
      * Realiza el pago de una reserva.
