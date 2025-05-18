@@ -50,6 +50,29 @@ public class CuentaServiceImp implements CuentaService {
                 cuentaRepo.obtenerPorDniOEmail(cuentaDTO.dni(), cuentaDTO.email());
 
         if (!cuentasObtenidas.isEmpty()) {
+            Cuenta cuentaExistente = cuentasObtenidas.get(0);
+
+            // Verificar si la cuenta está en estado ELIMINADA
+            if (cuentaExistente.getEstado() == EstadoCuenta.ELIMINADA) {
+                // Cambiar el estado a INACTIVA
+                cuentaExistente.setEstado(EstadoCuenta.INACTIVA);
+
+                // Generar un nuevo código de validación
+                String codigoValidacion = generarCodigoValidacion();
+                cuentaExistente.setCodigoValidacionRegistro(new CodigoValidacion(LocalDateTime.now(), codigoValidacion));
+
+                // Enviar correo de validación
+                String subject = "Bienvenido nuevamente a Tienda Sana: activa tu cuenta";
+                String body = "Tu nuevo código de verificación es: " + codigoValidacion + ". Tienes 15 minutos para activarla.";
+                emailService.sendEmail(new EmailDTO(subject, body, cuentaExistente.getEmail()));
+
+                // Actualizar la cuenta en la base de datos
+                cuentaRepo.actualizar(cuentaExistente);
+
+                return cuentaExistente.getEmail();
+            }
+
+            // Si la cuenta no está eliminada, lanzar excepción
             throw new Exception("Ya existe una cuenta con ese correo o dni");
         }
 
@@ -74,18 +97,17 @@ public class CuentaServiceImp implements CuentaService {
                         .direccion(cuentaDTO.direccion())
                         .build())
                 .build();
-        //Se cambio el codigo de contraseña por el del registro que es el que se tiene que colocar
         cuenta.setCodigoValidacionRegistro(new CodigoValidacion(LocalDateTime.now(), codigoValidacion));
         cuenta.setCodigoValidacionContrasenia(new CodigoValidacion(LocalDateTime.now(), codigoValidacionContrasenia));
-
 
         // Envía el correo de validación
         String subject = "Bienvenido a Tienda Sana: activa tu cuenta";
         String body = "Tu código de verificación es: " + codigoValidacion + ". Tienes 15 minutos para activarla.";
-
         emailService.sendEmail(new EmailDTO(subject, body, cuenta.getEmail()));
+
+        // Guardar la nueva cuenta
         cuentaRepo.guardar(cuenta);
-        // Retorna un identificador temporal
+
         return cuenta.getEmail();
     }
 
@@ -223,7 +245,6 @@ public class CuentaServiceImp implements CuentaService {
     public String validarCodigoRegistro(ActivarCuentaDTO activarCuentaDTO) throws Exception {
         Cuenta cuenta = obtenerCuentaPorEmail(activarCuentaDTO.email());
         CodigoValidacion codigoValidacionRegistro = cuenta.getCodigoValidacionRegistro();
-
         if (codigoValidacionRegistro != null) {
             if (codigoValidacionRegistro.getCodigo().equals(activarCuentaDTO.codigoVerificacionRegistro())) {
                 if (codigoValidacionRegistro.getFechaCreacion().plusMinutes(15).isAfter(LocalDateTime.now())) {
@@ -278,7 +299,8 @@ public class CuentaServiceImp implements CuentaService {
             throw new Exception("No existe una cuenta con este correo");
         }
         if (cuenta.getEstado() == EstadoCuenta.INACTIVA) {
-            throw new Exception("La cuenta con este correo no ha sido activada ");
+            reenviarCodigoRegistro(loginDTO.email());
+            throw new Exception("Cuenta no activada");
         }
         BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 

@@ -59,7 +59,6 @@ public class CuentaRepo {
     private List<List<Object>> obtenerFilasHoja() throws IOException {
         String rango = SHEET_NAME + "!A2:"+CuentaConstantes.COL_REGISTRO_FINAL; // Ajusta según columnas
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
-        System.out.println(respuesta.getValues());
         List<List<Object>> valores=respuesta.getValues();
         if (valores!=null) {
             return valores;
