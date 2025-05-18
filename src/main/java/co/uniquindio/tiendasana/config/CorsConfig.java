@@ -12,14 +12,17 @@ import java.util.List; // Importa esta
 @Configuration
 public class CorsConfig {
 
-    @Bean // Este método ahora devuelve CorsConfigurationSource
-    public CorsConfigurationSource corsConfigurationSource() { // Cambia el tipo de retorno
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowCredentials(true);
-        config.setAllowedOrigins(List.of("http://localhost:4200")); // Usa List.of para orígenes
-        // config.addAllowedOrigin("https://tienda-sana-frontend.vercel.app"); // Ejemplo producción
+
+        config.setAllowedOrigins(Arrays.asList(
+                "http://localhost:4200",                  // Para desarrollo local
+                "https://tienda-sana-frontend.vercel.app" // Para tu frontend desplegado en Vercel
+        ));
 
         config.setAllowedHeaders(Arrays.asList(
                 "Authorization", "Content-Type", "X-Requested-With", "accept", "Origin",
@@ -31,7 +34,8 @@ public class CorsConfig {
         config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setMaxAge(3600L);
 
+        // Aplica esta configuración a todas las rutas (o ajusta si es necesario, ej. "/api/**")
         source.registerCorsConfiguration("/**", config);
-        return source; // Devuelve el source
+        return source;
     }
 }
