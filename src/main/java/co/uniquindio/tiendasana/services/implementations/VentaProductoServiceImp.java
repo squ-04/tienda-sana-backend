@@ -207,6 +207,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
         VentaProducto ventaBorrar = obtenerVentaProducto(idVentaProducto);
         Pago pago = ventaBorrar.getPago();
         if(pago ==null || (!(pago.getStatus().equals(PaymentStatus.APPROVED) && pago.getStatusDetail().equalsIgnoreCase("accredited"))) ){
+            ventaBorrar.setEmailUsario("-");
             ventaProductoRepo.actualizarVentaSimple(ventaBorrar);
             return "La venta fue borrada";
         }else{
