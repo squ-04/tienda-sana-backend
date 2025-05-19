@@ -21,7 +21,7 @@ public class RateLimitConfig implements WebMvcConfigurer {
     @Bean
     public Bucket bucket() {
         // Permitir 100 peticiones por minuto
-        Bandwidth limit = Bandwidth.classic(25, Refill.greedy(25, Duration.ofMinutes(1)));
+        Bandwidth limit = Bandwidth.classic(60, Refill.greedy(60, Duration.ofMinutes(1)));
         return Bucket.builder().addLimit(limit).build();
     }
 
