@@ -219,4 +219,10 @@ public class MesaRepo {
         return Optional.of(mesasObtenidas.get(0));
     }
 
+    public List<Mesa> obtenerPorGestorReserva(String idGestorReserva) throws IOException {
+        List<Mesa> mesasObtenidas=
+                filtrar(mesa -> mesa.getIdGestorReserva().equals(idGestorReserva), SHEET_NAME);
+        return mesasObtenidas;
+    }
+
 }

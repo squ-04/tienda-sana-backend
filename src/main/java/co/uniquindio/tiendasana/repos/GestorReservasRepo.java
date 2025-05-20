@@ -1,7 +1,9 @@
 package co.uniquindio.tiendasana.repos;
 
+import co.uniquindio.tiendasana.model.documents.Cuenta;
 import co.uniquindio.tiendasana.model.documents.GestorReservas;
 import co.uniquindio.tiendasana.model.documents.Mesa;
+import co.uniquindio.tiendasana.utils.CuentaConstantes;
 import co.uniquindio.tiendasana.utils.GestorReservaConstantes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.sheets.v4.Sheets;
@@ -15,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -99,12 +102,12 @@ public class GestorReservasRepo {
      */
     public GestorReservas mapearGestorReservas(List<Object> row) {
         String id=row.get(0).toString();
-        LocalDateTime fecha=LocalDateTime.parse(row.get(2).toString());
+        String fecha=row.get(2).toString();
         String emailUsuario=row.get(2).toString();
 
         return GestorReservas.builder()
                 .id(id)
-                .fecha(fecha)
+                .fecha(fecha.equals("-")?null:LocalDateTime.parse(fecha))
                 .emailUsuario(emailUsuario)
                 .build();
     }
@@ -187,6 +190,54 @@ public class GestorReservasRepo {
         } else {
             throw new IOException("Registro no encontrado");
         }
+    }
+
+    /**
+     * Guarda los datos del gestor de reservas
+     * @param gestorReservas Gestor de reservas
+     * @throws IOException Error al acceder a la base de datos
+     */
+    public void guardar(GestorReservas gestorReservas) throws IOException {
+
+        int cuentas=contarGestoresReservaExistintes();
+        String range = SHEET_NAME+"!A"+(2+cuentas)+":"+ GestorReservaConstantes.COL_REGISTRO_GESTOR_FINAL+(2+cuentas);
+
+        List<List<Object>> values = Arrays.asList(
+                mapearGestorReservasInverso(gestorReservas)
+        );
+
+        ValueRange body = new ValueRange().setValues(values);
+
+        UpdateValuesResponse result = sheetsService.spreadsheets().values()
+                .update(spreadsheetId, range, body)
+                .setValueInputOption("RAW") // "RAW" para insertar como está
+                .execute();
+
+        System.out.println("Numero de celdas actualizadas: " + result.getUpdatedCells());
+    }
+
+    /**
+     * Convierte los datos de gestor de reserva eliminado de manera logica al formato de la base de datos
+     * @return Datos en formato de la base de datos
+     */
+    public List<Object> mapearBorrado() {
+        return Arrays.asList(
+                "-",
+                "-",
+                "-"
+        );
+    }
+
+    public Optional<GestorReservas> obtenerPorEmail(String email) throws IOException {
+        List<GestorReservas> mesasObtenidas=
+                filtrar(mesa -> mesa.getEmailUsuario().equals(email), SHEET_NAME);
+        if (mesasObtenidas.isEmpty()) {
+            return Optional.empty();
+        }
+        if (mesasObtenidas.size()>1) {
+            throw new IOException("Mas de una mesa tiene ese email");
+        }
+        return Optional.of(mesasObtenidas.get(0));
     }
 
 }
