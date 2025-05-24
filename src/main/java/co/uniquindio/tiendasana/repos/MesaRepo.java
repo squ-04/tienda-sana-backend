@@ -4,7 +4,6 @@ import co.uniquindio.tiendasana.dto.mesadtos.MesasTotalDTO;
 import co.uniquindio.tiendasana.model.documents.Mesa;
 import co.uniquindio.tiendasana.model.enums.EstadoMesa;
 import co.uniquindio.tiendasana.utils.MesaConstantes;
-import co.uniquindio.tiendasana.utils.ProductoConstantes;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import org.springframework.stereotype.Repository;
 import com.google.api.services.sheets.v4.Sheets;
@@ -26,7 +25,7 @@ public class MesaRepo {
     @Value("${google.sheets.spreadsheet-id}")
     private String spreadsheetId;
 
-    private final String SHEET_NAME = MesaConstantes.HOJA;
+    private final String SHEET_NAME = MesaConstantes.HOJA_CLIENTE;
 
     public MesaRepo(Sheets sheetsService) {
         this.sheetsService = sheetsService;
@@ -72,7 +71,7 @@ public class MesaRepo {
         int filaInicio = 2 + (pagina * cantidad);
         int filaFin = filaInicio + cantidad - 1;
 
-        String rango = SHEET_NAME + "!A" + filaInicio + ":G" + filaFin;
+        String rango = SHEET_NAME + "!A" + filaInicio + ":I" + filaFin;
 
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
 
@@ -92,6 +91,7 @@ public class MesaRepo {
                 Mesa mesa=mapearMesa(row);
                 mesas.add(mesa);
             } catch (Exception e) {
+                e.printStackTrace();
                 System.err.println("❌ Error al procesar fila de Mesa: " + row + "\n" + e.getMessage());
             }
         }
@@ -106,6 +106,9 @@ public class MesaRepo {
         String localidad = row.get(3).toString();
         float precioReserva = Float.parseFloat(row.get(4).toString());
         String imagen = row.get(5).toString();
+        String id=row.get(6).toString();
+        String idReserva = row.get(7).toString();
+        String idGestorReserva = row.get(8).toString();
 
         Mesa mesa = Mesa.builder()
                 .nombre(nombre)
@@ -114,6 +117,9 @@ public class MesaRepo {
                 .localidad(localidad)
                 .precioReserva(precioReserva)
                 .imagen(imagen)
+                .id(id)
+                .idReserva(idReserva)
+                .idGestorReserva(idGestorReserva)
                 .build();
         mesa.setId(row.get(6).toString());
 
@@ -126,9 +132,12 @@ public class MesaRepo {
                 mesa.getNombre(),
                 mesa.getEstado(),
                 mesa.getCapacidad(),
-                mesa.getLocalidad(),
-                ""+((int)mesa.getPrecioReserva()),
-                mesa.getImagen()
+                mesa.getLocalidad().getLocalidad(),
+                ((int)mesa.getPrecioReserva()),
+                mesa.getImagen(),
+                mesa.getId(),
+                mesa.getIdReserva(),
+                mesa.getIdGestorReserva()
         );
     }
 
@@ -141,6 +150,7 @@ public class MesaRepo {
 
     public List<Mesa> filtrar (Predicate<Mesa> expresion, String hoja) throws IOException {
         List<Mesa> mesas = obtenerMesas(hoja);
+        System.out.println("Mesas obtenidas en filtro antes: "+mesas);
         return mesas.stream()
                 .filter(expresion)
                 .collect(Collectors.toList());
@@ -166,7 +176,7 @@ public class MesaRepo {
         List<Mesa> mesas = null;
         int filaCuenta=-1;
         try {
-            mesas = obtenerMesas();
+            mesas = obtenerMesas(MesaConstantes.HOJA_PRINCIPAL);
         } catch (IOException e) {
             throw new RuntimeException();
         }
@@ -183,7 +193,7 @@ public class MesaRepo {
     public void actualizar(Mesa mesa) throws IOException {
         int indice=obtenerIndiceMesa(mesa.getId());
         if (indice!=-1) {
-            String range = SHEET_NAME+"!A"+(2+indice)+":"+ MesaConstantes.COL_REGISTRO_FINAL+(2+indice);
+            String range = MesaConstantes.HOJA_PRINCIPAL+"!A"+(2+indice)+":"+ MesaConstantes.COL_REGISTRO_FINAL+(2+indice);
             List<List<Object>> values = Arrays.asList(
                     mapearMesaInverso(mesa)
             );
@@ -211,6 +221,13 @@ public class MesaRepo {
             throw new IOException("Mas de una mesa tiene ese id");
         }
         return Optional.of(mesasObtenidas.get(0));
+    }
+
+    public List<Mesa> obtenerPorGestorReserva(String idGestorReserva) throws IOException {
+        System.out.println("obtenerPorGestorReserva1: "+idGestorReserva);
+        List<Mesa> mesasObtenidas=
+                filtrar(mesa -> mesa.getIdGestorReserva().equals(idGestorReserva), MesaConstantes.HOJA_PRINCIPAL);
+        return mesasObtenidas;
     }
 
 }

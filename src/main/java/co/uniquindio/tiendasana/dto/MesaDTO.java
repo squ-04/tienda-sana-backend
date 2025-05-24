@@ -5,11 +5,12 @@ import co.uniquindio.tiendasana.model.enums.EstadoMesa;
 public record MesaDTO(
         String id,
         String nombre,
-        EstadoMesa estado,
+        String estado,
         String localidad,
         float precioReserva,
         int capacidad,
-        String imagen
-
+        String imagen,
+        String idReserva,
+        String idGestorReserva
 ) {
 }

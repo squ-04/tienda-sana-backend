@@ -15,6 +15,7 @@ import co.uniquindio.tiendasana.dto.ventadtos.CrearVentaProductoDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.PaymentResponseDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.VentaItemDTO;
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
+import co.uniquindio.tiendasana.model.documents.GestorReservas;
 import co.uniquindio.tiendasana.model.documents.Mesa;
 import co.uniquindio.tiendasana.services.interfaces.*;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -83,7 +84,13 @@ public class ClienteController {
     @PutMapping("/gestor-reservas/add-item")
     public ResponseEntity<MessageDTO<String>> agregarMesaGestorReservas
             (@Valid @RequestBody MesaDTO mesaDTO) throws Exception{
-        String gestorReservaId = gestorReservasService.agregarMesaGestorReservas(mesaDTO);
+        System.out.println(mesaDTO);
+        String gestorReservaId="";
+        try {
+            gestorReservaId = gestorReservasService.agregarMesaGestorReservas(mesaDTO);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
         return ResponseEntity.ok(new MessageDTO<>(false, gestorReservaId));
     }
 
@@ -297,8 +304,17 @@ public class ClienteController {
         ReservaItemDTO reservaInfo = reservaService.obtenerInformacionReserva(reservaId);
         return ResponseEntity.ok(new MessageDTO<>(false, reservaInfo));
     }
-    
 
+    @GetMapping("/reserva/get-reservation-manager/{email}")
+    public ResponseEntity<MessageDTO<String>> obtenerReservaEmail(@PathVariable String email) throws Exception{
+        GestorReservas gestor=null;
+        try {
+            gestor=gestorReservasService.crearGestorReservas(email);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ResponseEntity.ok(new MessageDTO<>(false, gestor.getId()));
+    }
 
 
 }
