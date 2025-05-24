@@ -4,7 +4,6 @@ import co.uniquindio.tiendasana.dto.mesadtos.MesasTotalDTO;
 import co.uniquindio.tiendasana.model.documents.Mesa;
 import co.uniquindio.tiendasana.model.enums.EstadoMesa;
 import co.uniquindio.tiendasana.utils.MesaConstantes;
-import co.uniquindio.tiendasana.utils.ProductoConstantes;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import org.springframework.stereotype.Repository;
 import com.google.api.services.sheets.v4.Sheets;
@@ -26,7 +25,7 @@ public class MesaRepo {
     @Value("${google.sheets.spreadsheet-id}")
     private String spreadsheetId;
 
-    private final String SHEET_NAME = MesaConstantes.HOJA;
+    private final String SHEET_NAME = MesaConstantes.HOJA_CLIENTE;
 
     public MesaRepo(Sheets sheetsService) {
         this.sheetsService = sheetsService;
@@ -72,7 +71,7 @@ public class MesaRepo {
         int filaInicio = 2 + (pagina * cantidad);
         int filaFin = filaInicio + cantidad - 1;
 
-        String rango = SHEET_NAME + "!A" + filaInicio + ":G" + filaFin;
+        String rango = SHEET_NAME + "!A" + filaInicio + ":I" + filaFin;
 
         ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
 
@@ -92,6 +91,7 @@ public class MesaRepo {
                 Mesa mesa=mapearMesa(row);
                 mesas.add(mesa);
             } catch (Exception e) {
+                e.printStackTrace();
                 System.err.println("❌ Error al procesar fila de Mesa: " + row + "\n" + e.getMessage());
             }
         }
@@ -132,8 +132,8 @@ public class MesaRepo {
                 mesa.getNombre(),
                 mesa.getEstado(),
                 mesa.getCapacidad(),
-                mesa.getLocalidad(),
-                ""+((int)mesa.getPrecioReserva()),
+                mesa.getLocalidad().getLocalidad(),
+                ((int)mesa.getPrecioReserva()),
                 mesa.getImagen(),
                 mesa.getId(),
                 mesa.getIdReserva(),
@@ -192,7 +192,7 @@ public class MesaRepo {
     public void actualizar(Mesa mesa) throws IOException {
         int indice=obtenerIndiceMesa(mesa.getId());
         if (indice!=-1) {
-            String range = SHEET_NAME+"!A"+(2+indice)+":"+ MesaConstantes.COL_REGISTRO_FINAL+(2+indice);
+            String range = MesaConstantes.HOJA_PRINCIPAL+"!A"+(2+indice)+":"+ MesaConstantes.COL_REGISTRO_FINAL+(2+indice);
             List<List<Object>> values = Arrays.asList(
                     mapearMesaInverso(mesa)
             );

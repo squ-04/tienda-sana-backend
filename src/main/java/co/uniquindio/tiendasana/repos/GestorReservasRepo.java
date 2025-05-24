@@ -74,7 +74,7 @@ public class GestorReservasRepo {
      * @throws IOException Error al acceder a la base de datos
      */
     public int contarGestoresReservaExistintes() throws IOException {
-        String rango = SHEET_NAME + GestorReservaConstantes.CANT_GESTORES; // Ajusta según columnas
+        String rango = GestorReservaConstantes.CANT_GESTORES; // Ajusta según columnas
         List<List<Object>> respuesta =
                 sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute().getValues();
         return Integer.parseInt(respuesta.get(0).get(0).toString());
@@ -102,7 +102,7 @@ public class GestorReservasRepo {
      */
     public GestorReservas mapearGestorReservas(List<Object> row) {
         String id=row.get(0).toString();
-        String fecha=row.get(2).toString();
+        String fecha=row.get(1).toString();
         String emailUsuario=row.get(2).toString();
 
         return GestorReservas.builder()
@@ -121,7 +121,7 @@ public class GestorReservasRepo {
     public List<Object> mapearGestorReservasInverso(GestorReservas gestorReservas) {
         return Arrays.asList(
                 gestorReservas.getId(),
-                gestorReservas.getFecha(),
+                gestorReservas.getFecha().toString(),
                 gestorReservas.getEmailUsuario()
         );
     }

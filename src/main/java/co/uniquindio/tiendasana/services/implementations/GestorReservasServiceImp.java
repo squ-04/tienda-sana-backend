@@ -45,6 +45,7 @@ public class GestorReservasServiceImp implements GestorReservasService {
                     .fecha(LocalDateTime.now())
                     .build();
             gestorReservasRepo.guardar(gestorReservas);
+            System.out.println(gestorReservas);
             return gestorReservas;
         }
     }
@@ -93,11 +94,13 @@ public class GestorReservasServiceImp implements GestorReservasService {
         Mesa mesa=Mesa.builder()
                 .id(mesaDTO.id())
                 .nombre(mesaDTO.nombre())
-                .estado(mesaDTO.estado())
+                .estado(EstadoMesa.fromEstado(mesaDTO.estado()))
                 .localidad(mesaDTO.localidad())
                 .precioReserva(mesaDTO.precioReserva())
                 .capacidad(mesaDTO.capacidad())
                 .imagen(mesaDTO.imagen())
+                .idReserva(mesaDTO.idReserva())
+                .idGestorReserva(mesaDTO.idGestorReserva())
                 .build();
         mesaRepo.actualizar(mesa);
         return mesa.getId();
@@ -142,11 +145,13 @@ public class GestorReservasServiceImp implements GestorReservasService {
             datosMesas.add(new MesaDTO(
                     mesa.getId(),
                     mesa.getNombre(),
-                    EstadoMesa.fromEstado(mesa.getEstado()),
+                    mesa.getEstado(),
                     mesa.getLocalidad().toString(),
                     mesa.getPrecioReserva(),
                     mesa.getCapacidad(),
-                    mesa.getImagen()
+                    mesa.getImagen(),
+                    mesa.getIdReserva(),
+                    mesa.getIdGestorReserva()
                     )
             );
         }

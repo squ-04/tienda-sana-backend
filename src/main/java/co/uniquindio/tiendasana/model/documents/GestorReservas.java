@@ -21,6 +21,7 @@ public class GestorReservas {
 
     @Builder
     public GestorReservas(String id, LocalDateTime fecha, String emailUsuario, List<Mesa> mesas) {
+        this.id = id;
         this.fecha = fecha;
         this.emailUsuario = emailUsuario;
         this.mesas = mesas;
