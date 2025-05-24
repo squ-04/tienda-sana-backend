@@ -106,8 +106,9 @@ public class MesaRepo {
         String localidad = row.get(3).toString();
         float precioReserva = Float.parseFloat(row.get(4).toString());
         String imagen = row.get(5).toString();
-        String idReserva = row.get(6).toString();
-        String idGestorReserva = row.get(7).toString();
+        String id=row.get(6).toString();
+        String idReserva = row.get(7).toString();
+        String idGestorReserva = row.get(8).toString();
 
         Mesa mesa = Mesa.builder()
                 .nombre(nombre)
@@ -116,6 +117,7 @@ public class MesaRepo {
                 .localidad(localidad)
                 .precioReserva(precioReserva)
                 .imagen(imagen)
+                .id(id)
                 .idReserva(idReserva)
                 .idGestorReserva(idGestorReserva)
                 .build();
@@ -133,6 +135,7 @@ public class MesaRepo {
                 mesa.getLocalidad(),
                 ""+((int)mesa.getPrecioReserva()),
                 mesa.getImagen(),
+                mesa.getId(),
                 mesa.getIdReserva(),
                 mesa.getIdGestorReserva()
         );
