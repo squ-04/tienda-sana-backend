@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
+import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 @Repository
 public class GestorReservasRepo {
     private final Sheets sheetsService;
+    private final MesaRepo mesaRepo;
 
     @Value("${google.sheets.spreadsheet-id}")
     private String spreadsheetId;
@@ -33,8 +35,9 @@ public class GestorReservasRepo {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public GestorReservasRepo(Sheets sheetsService) {
+    public GestorReservasRepo(Sheets sheetsService,MesaRepo mesaRepo) {
         this.sheetsService = sheetsService;
+        this.mesaRepo = mesaRepo;
     }
 
 
@@ -135,9 +138,18 @@ public class GestorReservasRepo {
      */
     public List<GestorReservas> filtrar (Predicate<GestorReservas> expresion, String hoja) throws IOException {
         List<GestorReservas> gestorReservas = obtenerGetoresReserva(hoja);
-        return gestorReservas.stream()
+        List<GestorReservas> gestorReservasObtenidos=gestorReservas.stream()
                 .filter(expresion)
                 .collect(Collectors.toList());
+        for (GestorReservas gestor :gestorReservasObtenidos) {
+            asignarMesas(gestor);
+        }
+        return gestorReservasObtenidos;
+    }
+
+    private void asignarMesas(GestorReservas gestor) throws IOException {
+        List<Mesa> mesas = mesaRepo.obtenerPorGestorReserva(gestor.getId());
+        gestor.setMesas(mesas);
     }
 
     /**

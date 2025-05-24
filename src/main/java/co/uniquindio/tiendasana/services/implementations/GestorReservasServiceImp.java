@@ -60,7 +60,7 @@ public class GestorReservasServiceImp implements GestorReservasService {
     public String borrarGestorReservas(String emailUsuario) throws IOException {
         GestorReservas gestorReservas=obtenerGestorReservas(emailUsuario);
         List<Mesa> mesas=
-            mesaRepo.obtenerPorGestorReserva(gestorReservas.getEmailUsuario());
+            mesaRepo.obtenerPorGestorReserva(gestorReservas.getId());
         for (Mesa mesa : mesas) {
             mesa.setIdGestorReserva("-");
             mesaRepo.actualizar(mesa);
@@ -78,6 +78,7 @@ public class GestorReservasServiceImp implements GestorReservasService {
     public GestorReservas obtenerGestorReservas(String emailUsuario) throws IOException {
         Optional<GestorReservas> gestorReservas=gestorReservasRepo.obtenerPorEmail(emailUsuario);
         if(gestorReservas.isPresent()){
+            System.out.println("obtenerGestorReservas: "+gestorReservas.get());
             return gestorReservas.get();
         }
         return null;
@@ -116,11 +117,12 @@ public class GestorReservasServiceImp implements GestorReservasService {
     public String borrarMesaGestorReservas(BorrarMesaGestorDTO mesaBorrarDTO) throws IOException {
         GestorReservas gestorReservas=obtenerGestorReservas(mesaBorrarDTO.emailUsuario());
         List<Mesa> mesas=
-                mesaRepo.obtenerPorGestorReserva(gestorReservas.getEmailUsuario());
+                mesaRepo.obtenerPorGestorReserva(gestorReservas.getId());
         Mesa mesaActualizada=null;
         for (Mesa mesa : mesas) {
             if (mesa.getId().equals(mesaBorrarDTO.mesaId())) {
                 mesa.setIdGestorReserva("-");
+                mesa.setEstado(EstadoMesa.DISPONIBLE);
                 mesaRepo.actualizar(mesa);
                 mesaActualizada=mesa;
                 break;
@@ -138,9 +140,9 @@ public class GestorReservasServiceImp implements GestorReservasService {
     @Override
     public List<MesaDTO> obtenerMesasGestorReservas(String emailUsuario) throws IOException {
         GestorReservas gestorReservas=obtenerGestorReservas(emailUsuario);
+        System.out.println("obtenerMesasGestorReservas: "+gestorReservas);
         List<MesaDTO> datosMesas=new ArrayList<>();
-        List<Mesa> mesas=
-                mesaRepo.obtenerPorGestorReserva(gestorReservas.getEmailUsuario());
+        List<Mesa> mesas=gestorReservas.getMesas();
         for (Mesa mesa : mesas) {
             datosMesas.add(new MesaDTO(
                     mesa.getId(),

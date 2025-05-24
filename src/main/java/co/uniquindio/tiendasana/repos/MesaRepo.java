@@ -150,6 +150,7 @@ public class MesaRepo {
 
     public List<Mesa> filtrar (Predicate<Mesa> expresion, String hoja) throws IOException {
         List<Mesa> mesas = obtenerMesas(hoja);
+        System.out.println("Mesas obtenidas en filtro antes: "+mesas);
         return mesas.stream()
                 .filter(expresion)
                 .collect(Collectors.toList());
@@ -175,7 +176,7 @@ public class MesaRepo {
         List<Mesa> mesas = null;
         int filaCuenta=-1;
         try {
-            mesas = obtenerMesas();
+            mesas = obtenerMesas(MesaConstantes.HOJA_PRINCIPAL);
         } catch (IOException e) {
             throw new RuntimeException();
         }
@@ -223,8 +224,9 @@ public class MesaRepo {
     }
 
     public List<Mesa> obtenerPorGestorReserva(String idGestorReserva) throws IOException {
+        System.out.println("obtenerPorGestorReserva1: "+idGestorReserva);
         List<Mesa> mesasObtenidas=
-                filtrar(mesa -> mesa.getIdGestorReserva().equals(idGestorReserva), SHEET_NAME);
+                filtrar(mesa -> mesa.getIdGestorReserva().equals(idGestorReserva), MesaConstantes.HOJA_PRINCIPAL);
         return mesasObtenidas;
     }
 
