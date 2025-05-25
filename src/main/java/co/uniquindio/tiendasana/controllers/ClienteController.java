@@ -84,7 +84,6 @@ public class ClienteController {
     @PutMapping("/gestor-reservas/add-item")
     public ResponseEntity<MessageDTO<String>> agregarMesaGestorReservas
             (@Valid @RequestBody MesaDTO mesaDTO) throws Exception{
-        System.out.println(mesaDTO);
         String gestorReservaId="";
         try {
             gestorReservaId = gestorReservasService.agregarMesaGestorReservas(mesaDTO);

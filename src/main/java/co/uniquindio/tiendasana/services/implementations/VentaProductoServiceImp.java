@@ -318,7 +318,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
                                 .id(producto.getId())
                                 .title(producto.getNombre())
                                 .pictureUrl(producto.getImagen())
-                                .categoryId(producto.getCategoria()) // Cambiar a categoryId
+                                .categoryId(producto.getCategoria())
                                 .quantity(item.getCantidad())
                                 .currencyId("COP")
                                 .unitPrice(BigDecimal.valueOf(unitPrice))

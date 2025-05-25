@@ -18,6 +18,7 @@ import com.mercadopago.client.preference.PreferenceBackUrlsRequest;
 import com.mercadopago.client.preference.PreferenceClient;
 import com.mercadopago.client.preference.PreferenceItemRequest;
 import com.mercadopago.client.preference.PreferenceRequest;
+import com.mercadopago.exceptions.MPApiException;
 import com.mercadopago.resources.payment.PaymentStatus;
 import com.mercadopago.resources.preference.Preference;
 import org.apache.velocity.exception.ResourceNotFoundException;
@@ -26,10 +27,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -58,9 +56,11 @@ public class ReservaServiceImp implements ReservaService {
         Cuenta cuenta = cuentaService.obtenerCuentaPorEmail(crearReservaDTO.emailUsuario());
 
         reserva.setId(UUID.randomUUID().toString());
+        reserva.setEstadoReserva(EstadoReserva.PENDIENTE);
 
         GestorReservas gestorReservas = gestorReservasService.obtenerGestorReservas(crearReservaDTO.emailUsuario());
         List<Mesa> items = obtenerMesas(gestorReservas, reserva.getId());
+        System.out.println("ESTOS SON LOS ITEMS: " + items);
         reserva.setMesas(items);
 
 
@@ -90,6 +90,7 @@ public class ReservaServiceImp implements ReservaService {
                 Mesa mesa = mesaService.obtenerMesa(String.valueOf(mesaAReservar.getId()));
 
                 Mesa mesaReservada = new Mesa();
+                mesaReservada.setId(mesa.getId());
                 mesaReservada.setNombre(mesaAReservar.getNombre());
                 mesaReservada.setEstado(EstadoMesa.fromEstado(mesaAReservar.getEstado()));
                 mesaReservada.setLocalidad(mesaAReservar.getLocalidad());
@@ -189,8 +190,8 @@ public class ReservaServiceImp implements ReservaService {
                                 .id(mesa.getId())
                                 .title(mesa.getNombre())
                                 .pictureUrl(mesa.getImagen())
-                                .categoryId(mesa.getLocalidad().toString()) // Cambiar a categoryId
-                                .quantity(item.getCapacidad())
+                                .categoryId(mesa.getLocalidad().toString())
+                                .quantity(mesa.getCapacidad())
                                 .currencyId("COP")
                                 .unitPrice(BigDecimal.valueOf(unitPrice))
                                 .build();
@@ -232,9 +233,20 @@ public class ReservaServiceImp implements ReservaService {
                     preference.getInitPoint(),
                     idReserva
             );
-        }catch (Exception e) {
+        } catch (MPApiException e) {
+            System.err.println("----------- ERROR MERCADOPAGO API -----------");
+            System.err.println("Status Code: " + e.getStatusCode());
+            System.err.println("Error: " + Arrays.toString(e.getStackTrace()));
+            System.err.println("Message: " + e.getMessage());
+            if (e.getApiResponse() != null && e.getApiResponse().getContent() != null) {
+                System.err.println("API Response Content: " + e.getApiResponse().getContent());
+            }
+            System.err.println("---------------------------------------------");
+            e.printStackTrace(); // También imprime el stack trace completo
+            throw new Exception("Error al crear la preferencia de pago con Mercado Pago: " + e.getMessage() + ". Detalles: " + (e.getApiResponse() != null ? e.getApiResponse().getContent() : "No additional details"), e);
+        } catch (Exception e) { // Captura otras excepciones generales
             e.printStackTrace();
-            throw new Exception("Error al crear la preferencia de pago");
+            throw new Exception("Error general al procesar el pago de la reserva: " + e.getMessage(), e);
         }
     }
 
@@ -261,7 +273,7 @@ public class ReservaServiceImp implements ReservaService {
 
                 // Se obtiene la orden guardada en la base de datos y se le asigna el pago, ademas de aumentar la cantidad de entradas vendidas
                 Reserva reserva = obtenerReserva(idReserva);
-                System.out.println("ID Reserva: " + reserva.getId());
+
                 Pago orderPago = createPayment(payment);
 
                 reserva.setPago(orderPago);
@@ -270,7 +282,7 @@ public class ReservaServiceImp implements ReservaService {
 
 
                 if (reserva.getPago().getStatus().equalsIgnoreCase("APPROVED") && reserva.getPago().getStatusDetail().equalsIgnoreCase("accredited")) {
-                    System.out.println("Tamaño mesas:   "+reserva.getMesas().size());
+
                     for (Mesa mesa : reserva.getMesas()){
                         mesaService.cambiarEstadoMesa(mesa.getIdReserva(), "Reservada");
                     }
