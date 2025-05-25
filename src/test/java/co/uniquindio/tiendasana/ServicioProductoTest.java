@@ -1,18 +1,10 @@
 package co.uniquindio.tiendasana;
 
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
-import co.uniquindio.tiendasana.model.documents.CarritoCompras;
-import co.uniquindio.tiendasana.model.documents.Cuenta;
-import co.uniquindio.tiendasana.model.documents.Producto;
-import co.uniquindio.tiendasana.model.documents.VentaProducto;
-import co.uniquindio.tiendasana.model.enums.CategoriaProducto;
-import co.uniquindio.tiendasana.model.enums.EstadoCuenta;
-import co.uniquindio.tiendasana.model.enums.Rol;
+import co.uniquindio.tiendasana.model.documents.*;
+import co.uniquindio.tiendasana.model.enums.*;
 import co.uniquindio.tiendasana.model.vo.*;
-import co.uniquindio.tiendasana.repos.CarritoComprasRepo;
-import co.uniquindio.tiendasana.repos.CuentaRepo;
-import co.uniquindio.tiendasana.repos.ProductRepo;
-import co.uniquindio.tiendasana.repos.VentaProductoRepo;
+import co.uniquindio.tiendasana.repos.*;
 import co.uniquindio.tiendasana.services.implementations.ProductoServiceImp;
 import co.uniquindio.tiendasana.utils.ProductoConstantes;
 import org.junit.jupiter.api.Test;
@@ -38,6 +30,10 @@ public class ServicioProductoTest {
     private CarritoComprasRepo carritoComprasRepo;
     @Autowired
     private VentaProductoRepo ventaProductoRepo;
+    @Autowired
+    private MesaRepo mesaRepo;
+    @Autowired
+    private GestorReservasRepo gestorReservasRepo;
     /**
     @Autowired
     private AssertTrueValidator assertTrueValidator;
@@ -347,6 +343,7 @@ public class ServicioProductoTest {
         );
     }
 
+
     /**
      * Metodo para probar el mapeo de los detalles de carritos de compras desde la base de datos
      */
@@ -457,6 +454,77 @@ public class ServicioProductoTest {
                         ventaProductoMapeada.getPago().getTransactionValue()),
                 () -> assertEquals(ventaProducto.getPago().getStatus(),
                         ventaProductoMapeada.getPago().getStatus())
+        );
+    }
+
+    public Mesa quemarMesa() {
+        return Mesa.builder()
+                .id("K5FztEBeQGUmQQiEz4JJiR")
+                .nombre("Mesita")
+                .estado(EstadoMesa.DISPONIBLE)
+                .localidad(Localidad.CENTRO.getLocalidad())
+                .precioReserva(40000)
+                .capacidad(4)
+                .imagen("https://i.ytimg.com/vi/0KmWjJ8Ip_4/maxresdefault.jpg")
+                .idReserva("-")
+                .idGestorReserva("-")
+                .build();
+    }
+
+
+    public GestorReservas quemarGestorReservas() {
+        return GestorReservas.builder()
+                .id("1f05f8fd-28e8-447b-aa0a-eade8fe3db38")
+                .fecha(LocalDateTime.of(2025, 5, 11, 3, 45))
+                .emailUsuario("juanmanuel200413@gmail.com")
+                .build();
+    }
+
+    /**
+     * Metodo para probar el mapeo de mesas desde la base de datos
+     */
+    @Test
+    public void mapearMesa() {
+        Mesa mesa=quemarMesa();
+        List<Object> datosMapeados=mesaRepo.mapearMesaInverso(mesa);
+        if (datosMapeados==null || datosMapeados.size()!=9) {
+            fail();
+        }
+        Mesa mesaMapeada=mesaRepo.mapearMesa(datosMapeados);
+        if (mesaMapeada==null) {
+            fail();
+        }
+        assertAll("Verificar que los datos se mantengan igual despues de los mapeos",
+                () -> assertEquals(mesa.getId(),mesaMapeada.getId()),
+                () -> assertEquals(mesa.getNombre(),mesaMapeada.getNombre()),
+                () -> assertEquals(mesa.getEstado(),mesaMapeada.getEstado()),
+                () -> assertEquals(mesa.getLocalidad(),mesaMapeada.getLocalidad()),
+                () -> assertEquals(mesa.getPrecioReserva(),mesaMapeada.getPrecioReserva()),
+                () -> assertEquals(mesa.getCapacidad(),mesaMapeada.getCapacidad()),
+                () -> assertEquals(mesa.getImagen(),mesaMapeada.getImagen()),
+                () -> assertEquals(mesa.getIdReserva(),mesaMapeada.getIdReserva()),
+                () -> assertEquals(mesa.getIdGestorReserva(),mesaMapeada.getIdGestorReserva())
+        );
+    }
+
+    /**
+     * Metodo para probar el mapeo de gestores de mesas desde la base de datos
+     */
+    @Test
+    public void mapearGestorReservas() {
+        GestorReservas gestorReservas=quemarGestorReservas();
+        List<Object> datosMapeados=gestorReservasRepo.mapearGestorReservasInverso(gestorReservas);
+        if (datosMapeados==null || datosMapeados.size()!=3) {
+            fail();
+        }
+        GestorReservas gestorReservasMapeado=gestorReservasRepo.mapearGestorReservas(datosMapeados);
+        if (gestorReservasMapeado==null) {
+            fail();
+        }
+        assertAll("Verificar que los datos se mantengan igual despues de los mapeos",
+                () -> assertEquals(gestorReservas.getId(),gestorReservasMapeado.getId()),
+                () -> assertEquals(gestorReservas.getFecha(),gestorReservasMapeado.getFecha()),
+                () -> assertEquals(gestorReservas.getEmailUsuario(),gestorReservasMapeado.getEmailUsuario())
         );
     }
 
