@@ -1,6 +1,7 @@
 package co.uniquindio.tiendasana.services.implementations;
 
 import co.uniquindio.tiendasana.dto.EmailDTO;
+import co.uniquindio.tiendasana.dto.gestorReservasdtos.BorrarMesaGestorDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.ActualizarReservaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.CrearReservaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.PaymentResponseReservaDTO;
@@ -57,10 +58,10 @@ public class ReservaServiceImp implements ReservaService {
 
         reserva.setId(UUID.randomUUID().toString());
         reserva.setEstadoReserva(EstadoReserva.PENDIENTE);
+        reserva.setCantidadPersonas(crearReservaDTO.cantidadPersonas());
 
         GestorReservas gestorReservas = gestorReservasService.obtenerGestorReservas(crearReservaDTO.emailUsuario());
         List<Mesa> items = obtenerMesas(gestorReservas, reserva.getId());
-        System.out.println("ESTOS SON LOS ITEMS: " + items);
         reserva.setMesas(items);
 
 
@@ -92,12 +93,13 @@ public class ReservaServiceImp implements ReservaService {
                 Mesa mesaReservada = new Mesa();
                 mesaReservada.setId(mesa.getId());
                 mesaReservada.setNombre(mesaAReservar.getNombre());
-                mesaReservada.setEstado(EstadoMesa.fromEstado(mesaAReservar.getEstado()));
+                mesaReservada.setEstado(EstadoMesa.RESERVADA);
                 mesaReservada.setLocalidad(mesaAReservar.getLocalidad());
                 mesaReservada.setPrecioReserva(mesaAReservar.getPrecioReserva());
                 mesaReservada.setImagen(mesaAReservar.getImagen());
                 mesaReservada.setIdReserva(id);
                 mesaReservada.setIdGestorReserva("-");
+                mesaReservada.setCapacidad(mesaAReservar.getCapacidad());
                 items.add(mesaReservada);
 
             } catch (Exception ex) {
@@ -159,7 +161,8 @@ public class ReservaServiceImp implements ReservaService {
 
     @Override
     public List<ReservaItemDTO> listarReservasCliente(String clienteId) throws IOException {
-        List<Reserva> reservas = reservasRepo.filtrarReservasSimple(reserva -> reserva.getId().equals(clienteId));
+        List<Reserva> reservas = reservasRepo.filtrarReservasSimple(reserva -> reserva.getUsuarioId().equals(clienteId));
+        System.out.println("Reservas: " + reservas);
         return obtenerReservaItemDTO(reservas);
     }
 
@@ -218,14 +221,9 @@ public class ReservaServiceImp implements ReservaService {
                     idReserva
             );
         } catch (MPApiException e) {
-            System.err.println("----------- ERROR MERCADOPAGO API -----------");
-            System.err.println("Status Code: " + e.getStatusCode());
-            System.err.println("Error: " + Arrays.toString(e.getStackTrace()));
-            System.err.println("Message: " + e.getMessage());
             if (e.getApiResponse() != null && e.getApiResponse().getContent() != null) {
                 System.err.println("API Response Content: " + e.getApiResponse().getContent());
             }
-            System.err.println("---------------------------------------------");
             e.printStackTrace();
             throw new Exception("Error al crear la preferencia de pago con Mercado Pago: " + e.getMessage() + ". Detalles: " + (e.getApiResponse() != null ? e.getApiResponse().getContent() : "No additional details"), e);
         } catch (Exception e) {
@@ -269,9 +267,11 @@ public class ReservaServiceImp implements ReservaService {
 
                     for (Mesa mesa : reserva.getMesas()){
                         mesaService.cambiarEstadoMesa(mesa.getIdReserva(), "Reservada");
+                        gestorReservasService.borrarMesaGestorReservas(new BorrarMesaGestorDTO(mesa.getIdReserva(), mesa.getId()));
                     }
+
+                    System.out.println("SE ESTÄ INTENTANDO ENVIAR EL CORREO A " + cuenta.getEmail());
                     enviarResumenReserva(cuenta.getEmail(), reserva);
-                    gestorReservasService.borrarGestorReservas(reserva.getUsuarioId());
                 }
             }
         } catch (Exception e) {
