@@ -195,16 +195,16 @@ public class ReservaServiceImp implements ReservaService {
             MercadoPagoConfig.setAccessToken("APP_USR-8178646482281064-100513-248819fc76ea7f7577f902e927eaefb7-2014458486");
 
             PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                    .success("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=success")
-                    .failure("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=failure")
-                    .pending("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=pending")
+                    .success("https://tienda-sana-frontend.vercel.app/gestor-reservas?status=success")
+                    .failure("https://tienda-sana-frontend.vercel.app/gestor-reservas?status=failure")
+                    .pending("https://tienda-sana-frontend.vercel.app/gestor-reservas?status=pending")
                     .build();
 
             PreferenceRequest preferenceRequest = PreferenceRequest.builder()
                     .backUrls(backUrls)
                     .items(itemsGateway)
                     .metadata(Map.of("id_reserva", reservaGuardar.getId()))
-                    .notificationUrl("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/api/public/reserva/receive-notification")
+                    .notificationUrl("https://tienda-sana-backend.onrender.com/api/public/reserva/receive-notification")
                     .build();
 
             PreferenceClient client = new PreferenceClient();
