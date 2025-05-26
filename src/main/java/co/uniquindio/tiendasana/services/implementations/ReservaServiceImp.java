@@ -207,7 +207,7 @@ public class ReservaServiceImp implements ReservaService {
                     .backUrls(backUrls)
                     .items(itemsGateway)
                     .metadata(Map.of("id_reserva", reservaGuardar.getId()))
-                    .notificationUrl("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/api/public/reserva/receive-notification")
+                    .notificationUrl("https://30cc-152-202-214-200.ngrok-free.app/api/public/reserva/receive-notification")
                     .build();
 
             PreferenceClient client = new PreferenceClient();
@@ -260,14 +260,14 @@ public class ReservaServiceImp implements ReservaService {
 
                 reserva.setPago(orderPago);
                 reservasRepo.actualizarReservaSimple(reserva);
-                Cuenta cuenta = cuentaService.obtenerCuentaPorEmail(reserva.getId());
+                Cuenta cuenta = cuentaService.obtenerCuentaPorEmail(reserva.getUsuarioId());
 
 
                 if (reserva.getPago().getStatus().equalsIgnoreCase("APPROVED") && reserva.getPago().getStatusDetail().equalsIgnoreCase("accredited")) {
 
                     for (Mesa mesa : reserva.getMesas()){
                         mesaService.cambiarEstadoMesa(mesa.getId(), "Reservada");
-                        gestorReservasService.borrarMesaGestorReservas(new BorrarMesaGestorDTO(mesa.getIdReserva(), mesa.getId()));
+                        gestorReservasService.borrarMesaGestorReservas(new BorrarMesaGestorDTO(reserva.getUsuarioId(), mesa.getId()));
                     }
 
                     System.out.println("SE ESTÄ INTENTANDO ENVIAR EL CORREO A " + cuenta.getEmail());
