@@ -259,6 +259,7 @@ public class ReservaServiceImp implements ReservaService {
                 Pago orderPago = createPayment(payment);
 
                 reserva.setPago(orderPago);
+                reserva.setEstadoReserva(EstadoReserva.CONFIRMADA);
                 reservasRepo.actualizarReservaSimple(reserva);
                 Cuenta cuenta = cuentaService.obtenerCuentaPorEmail(reserva.getUsuarioId());
 
