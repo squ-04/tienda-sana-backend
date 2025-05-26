@@ -205,6 +205,8 @@ public class GestorReservasServiceImp implements GestorReservasService {
         // filtrar la que no se quiere, y reescribir la lista filtrada.
         // O, si GestorReservasRepo.eliminarMesaDeHojaGestor se implementa para marcar la fila:
         gestorReservasRepo.eliminarMesaDeHojaGestor(mesaBorrarDTO.mesaId(), gestorReservas.getId());
+        Mesa mesa=mesaRepo.obtenerMesaPorIdOriginal(mesaBorrarDTO.mesaId()).get();
+        mesaRepo.actualizar(mesa);
         System.out.println("Intentando eliminar (lógicamente) mesa " + mesaBorrarDTO.mesaId() + " de la hoja del gestor " + gestorReservas.getId());
 
 
