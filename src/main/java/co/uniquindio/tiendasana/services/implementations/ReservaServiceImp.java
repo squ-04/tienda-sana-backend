@@ -266,7 +266,7 @@ public class ReservaServiceImp implements ReservaService {
                 if (reserva.getPago().getStatus().equalsIgnoreCase("APPROVED") && reserva.getPago().getStatusDetail().equalsIgnoreCase("accredited")) {
 
                     for (Mesa mesa : reserva.getMesas()){
-                        mesaService.cambiarEstadoMesa(mesa.getIdReserva(), "Reservada");
+                        mesaService.cambiarEstadoMesa(mesa.getId(), "Reservada");
                         gestorReservasService.borrarMesaGestorReservas(new BorrarMesaGestorDTO(mesa.getIdReserva(), mesa.getId()));
                     }
 
