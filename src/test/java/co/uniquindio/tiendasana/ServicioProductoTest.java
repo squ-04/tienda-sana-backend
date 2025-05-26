@@ -6,6 +6,7 @@ import co.uniquindio.tiendasana.model.enums.*;
 import co.uniquindio.tiendasana.model.vo.*;
 import co.uniquindio.tiendasana.repos.*;
 import co.uniquindio.tiendasana.services.implementations.ProductoServiceImp;
+import co.uniquindio.tiendasana.utils.MesaConstantes;
 import co.uniquindio.tiendasana.utils.ProductoConstantes;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -490,7 +491,7 @@ public class ServicioProductoTest {
         if (datosMapeados==null || datosMapeados.size()!=9) {
             fail();
         }
-        Mesa mesaMapeada=mesaRepo.mapearMesa(datosMapeados);
+        Mesa mesaMapeada=mesaRepo.mapearMesa(datosMapeados, MesaConstantes.HOJA_CLIENTE);
         if (mesaMapeada==null) {
             fail();
         }

@@ -90,7 +90,34 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'javax.cache:cache-api'
     implementation 'org.ehcache:ehcache:3.10.8'
+
+
+    //Playwright
+    testImplementation 'com.microsoft.playwright:playwright:1.40.0' // O la versión más reciente
+
+
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.seleniumhq.selenium:selenium-java:4.21.0' // O la versión más reciente de Selenium
+    implementation 'org.slf4j:slf4j-simple:2.0.13' // Para logging simple, puedes cambiarlo por Logback o Log4j2
+
+    // Dependencia para WebDriverManager (opcional pero muy útil para manejar los drivers de los navegadores)
+    implementation 'io.github.bonigarcia:webdrivermanager:5.8.0'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+
+    // Asegúrate de que JUnit Platform Launcher esté presente para ejecutar tests desde Gradle
+    testImplementation 'org.junit.platform:junit-platform-launcher'
+
+
+    // Lombok (opcional, para reducir código boilerplate)
+    compileOnly 'org.projectlombok:lombok:1.18.32'
+    annotationProcessor 'org.projectlombok:lombok:1.18.32'
+    testCompileOnly 'org.projectlombok:lombok:1.18.32'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.32'
 }
+
 
 test {
     useJUnitPlatform()
