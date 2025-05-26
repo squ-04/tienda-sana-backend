@@ -98,8 +98,6 @@ dependencies {
 
     implementation 'org.springframework.boot:spring-boot-starter'
     implementation 'org.seleniumhq.selenium:selenium-java:4.21.0' // O la versión más reciente de Selenium
-    implementation 'org.slf4j:slf4j-simple:2.0.13' // Para logging simple, puedes cambiarlo por Logback o Log4j2
-
     // Dependencia para WebDriverManager (opcional pero muy útil para manejar los drivers de los navegadores)
     implementation 'io.github.bonigarcia:webdrivermanager:5.8.0'
 

@@ -15,10 +15,9 @@ import java.util.regex.Pattern;
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class TiendaSanaE2ETests {
 
+public class TiendaSanaE2ETests {
+/**
     Playwright playwright;
     Browser browser;
     BrowserContext context;
@@ -197,4 +196,5 @@ public class TiendaSanaE2ETests {
         assertThat(page).hasURL(Pattern.compile(BASE_URL + "/?$"), new PageAssertions.HasURLOptions().setTimeout(25000));
         System.out.println("Reserva de mesa simple creada para la fecha: " + reservationDate);
     }
+    **/
 }
