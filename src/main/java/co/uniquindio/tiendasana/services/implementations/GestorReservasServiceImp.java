@@ -145,12 +145,12 @@ public class GestorReservasServiceImp implements GestorReservasService {
         if (mesaDTO.id() == null || mesaDTO.id().trim().isEmpty()) {
             throw new IllegalArgumentException("El ID de la Mesa (Softr Record ID) es necesario.");
         }
-
+        System.out.println();
         // 1. Construir el objeto Mesa a partir del DTO.
         Mesa mesaParaGuardarEnHojaGestor = Mesa.builder()
                 .id(mesaDTO.id()) // Este es el ID original de la mesa (Softr Record ID)
                 .nombre(mesaDTO.nombre())
-                .estado(EstadoMesa.fromEstado(mesaDTO.estado())) // Usar el estado que viene del DTO, podría ser "DISPONIBLE"
+                .estado(EstadoMesa.DISPONIBLE) // Usar el estado que viene del DTO, podría ser "DISPONIBLE"
                 .localidad(mesaDTO.localidad()) // El builder de Mesa debería manejar la conversión de String a Enum
                 .precioReserva(mesaDTO.precioReserva())
                 .capacidad(mesaDTO.capacidad())
@@ -168,7 +168,7 @@ public class GestorReservasServiceImp implements GestorReservasService {
             Optional<Mesa> mesaOptional = mesaRepo.obtenerMesaPorIdOriginal(mesaDTO.id());
             Mesa mesaPrincipal = mesaOptional.orElse(null);
             if (mesaPrincipal != null) {
-                mesaPrincipal.setEstado(EstadoMesa.OCUPADA); // O el estado que indique que está en un "carrito de gestor"
+                mesaPrincipal.setEstado(EstadoMesa.DISPONIBLE); // O el estado que indique que está en un "carrito de gestor"
                 mesaPrincipal.setIdGestorReserva(mesaDTO.idGestorReserva());
                 // mesaPrincipal.setIdReserva("-"); // Limpiar idReserva si solo está en el gestor y no en una reserva finalizada
                 mesaRepo.actualizar(mesaPrincipal);

@@ -259,15 +259,16 @@ public class ReservaServiceImp implements ReservaService {
                 Pago orderPago = createPayment(payment);
 
                 reserva.setPago(orderPago);
+                reserva.setEstadoReserva(EstadoReserva.CONFIRMADA);
                 reservasRepo.actualizarReservaSimple(reserva);
-                Cuenta cuenta = cuentaService.obtenerCuentaPorEmail(reserva.getId());
+                Cuenta cuenta = cuentaService.obtenerCuentaPorEmail(reserva.getUsuarioId());
 
 
                 if (reserva.getPago().getStatus().equalsIgnoreCase("APPROVED") && reserva.getPago().getStatusDetail().equalsIgnoreCase("accredited")) {
 
                     for (Mesa mesa : reserva.getMesas()){
-                        mesaService.cambiarEstadoMesa(mesa.getIdReserva(), "Reservada");
-                        gestorReservasService.borrarMesaGestorReservas(new BorrarMesaGestorDTO(mesa.getIdReserva(), mesa.getId()));
+                        mesaService.cambiarEstadoMesa(mesa.getId(), "Reservada");
+                        gestorReservasService.borrarMesaGestorReservas(new BorrarMesaGestorDTO(reserva.getUsuarioId(), mesa.getId()));
                     }
 
                     System.out.println("SE ESTÄ INTENTANDO ENVIAR EL CORREO A " + cuenta.getEmail());
