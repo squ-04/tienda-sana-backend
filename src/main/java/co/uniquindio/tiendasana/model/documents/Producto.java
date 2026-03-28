@@ -2,7 +2,6 @@ package co.uniquindio.tiendasana.model.documents;
 
 import co.uniquindio.tiendasana.model.enums.EstadoProducto;
 import co.uniquindio.tiendasana.model.enums.CategoriaProducto;
-import jakarta.validation.constraints.Min;
 import lombok.*;
 
 @Setter
@@ -29,6 +28,17 @@ public class Producto {
     private float precioUnitario;
 
     /**
+     * Texto de categoría tal como se almacena en Mongo (catálogo admin con categorías libres).
+     * Si está presente, {@link #getCategoria()} lo devuelve en lugar del enum.
+     */
+    private String categoriaLibre;
+
+    /**
+     * Texto de estado para vistas; si está presente tiene prioridad sobre el enum.
+     */
+    private String estadoLibre;
+
+    /**
      * Metodo constructor para la clase Producto
      * @param nombre
      * @param descripcion
@@ -50,12 +60,18 @@ public class Producto {
         this.id = id;
     }
 
-    public String getCategoria(){
-        return categoria.getCategoria();
+    public String getCategoria() {
+        if (categoriaLibre != null && !categoriaLibre.isBlank()) {
+            return categoriaLibre;
+        }
+        return categoria != null ? categoria.getCategoria() : "";
     }
 
-    public String getEstado(){
-        return estado.getEstado();
+    public String getEstado() {
+        if (estadoLibre != null && !estadoLibre.isBlank()) {
+            return estadoLibre;
+        }
+        return estado != null ? estado.getEstado() : "";
     }
 
     public boolean estaStockDisponible(int cantidadComprar) {

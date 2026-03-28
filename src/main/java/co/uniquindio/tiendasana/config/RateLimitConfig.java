@@ -31,13 +31,4 @@ public class RateLimitConfig implements WebMvcConfigurer {
                 .addPathPatterns("/**"); // Aplicar a todas las URLs
     }
 
-    @Bean("sheetsApiRateLimitBucket") // Dale un nombre específico al bean
-    public Bucket sheetsApiRateLimitBucket() {
-        int limiteLlamadasSheetsPorMinuto = 55;
-        Bandwidth limit = Bandwidth.classic(limiteLlamadasSheetsPorMinuto,
-                Refill.greedy(limiteLlamadasSheetsPorMinuto, Duration.ofMinutes(1)));
-        return Bucket.builder()
-                .addLimit(limit)
-                .build();
-    }
 }

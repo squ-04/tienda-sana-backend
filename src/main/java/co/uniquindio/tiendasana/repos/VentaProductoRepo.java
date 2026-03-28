@@ -2,146 +2,56 @@ package co.uniquindio.tiendasana.repos;
 
 import co.uniquindio.tiendasana.exceptions.ProductoParseException;
 import co.uniquindio.tiendasana.model.documents.VentaProducto;
+import co.uniquindio.tiendasana.model.mongo.VentaProductoDocument;
 import co.uniquindio.tiendasana.model.vo.DetalleVentaProducto;
 import co.uniquindio.tiendasana.model.vo.Pago;
-import co.uniquindio.tiendasana.utils.ReservaConstantes;
-import co.uniquindio.tiendasana.utils.VentaProductoConstantes;
-import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
+import co.uniquindio.tiendasana.repos.mongo.VentaProductoDocumentRepository;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.api.services.sheets.v4.Sheets;
-import com.google.api.services.sheets.v4.model.ValueRange;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Repository
 public class VentaProductoRepo {
-    private final Sheets sheetsService;
 
-    @Value("${google.sheets.spreadsheet-id}")
-    private String spreadsheetId;
+    private final VentaProductoDocumentRepository mongo;
 
-    private final String SHEET_NAME = VentaProductoConstantes.HOJA_VENTA;
-    private final String SHEET_NAME_DETALLE = VentaProductoConstantes.HOJA_DETALLE;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
-    /**
-     * Constructor de la clase
-     * @param sheetsService Servicio de Google Sheets
-     */
-    public VentaProductoRepo(Sheets sheetsService) {
-        this.sheetsService = sheetsService;
+    public VentaProductoRepo(VentaProductoDocumentRepository mongo) {
+        this.mongo = mongo;
     }
 
-    /**
-     * Optiene todos las ventas de los productos con sus respectivos detalles
-     * @return Ventas de los productos
-     * @throws IOException
-     */
     public List<VentaProducto> obtenerVentas() throws IOException {
-        List<VentaProducto> ventas= obtenerVentasSimples();
+        List<VentaProducto> ventas = obtenerVentasSimples();
         asignarDetalles(ventas);
         return ventas;
     }
 
-    /**
-     * Asigna los detalles a las ventas de productos
-     * @param ventas Ventas de productos
-     * @throws IOException
-     */
-    public void asignarDetalles(List<VentaProducto> ventas) throws IOException {
-        List<DetalleVentaProducto> detalles= obtenerDetallesVenta();
-        for (VentaProducto ventaProducto:ventas) {
-            ventaProducto.setProductos(
-                    detalles.stream()
-                            .filter(detalleVenta ->
-                                    detalleVenta.getVentaId().equals(ventaProducto.getId())
-                            )
-                    .collect(Collectors.toList())
-            );
-
+    public void asignarDetalles(List<VentaProducto> ventas) {
+        for (VentaProducto v : ventas) {
+            mongo.findById(v.getId()).ifPresent(doc -> {
+                List<DetalleVentaProducto> p = doc.getProductos();
+                v.setProductos(p != null ? new ArrayList<>(p) : new ArrayList<>());
+            });
         }
-        for (VentaProducto ventaProducto:ventas) {
-        }
-
     }
 
-    /**
-     * Filtra las ventas teniendo en cuenta sus detalles, puede llegar a darse en
-     * O(<span style="color:red;">n</span>*<span style="color:blue;">m</span>)<br>
-     * <span style="color:red;">n</span> siendo la cantidad total de ventas de productos<br>
-     * <span style="color:blue;">m</span> siendo la cantidad total de detalles de todos las ventas juntas
-     * @param expresion
-     * @return
-     * @throws IOException
-     * @throws ProductoParseException
-     */
-    public List<VentaProducto> filtrar (Predicate<VentaProducto> expresion) throws IOException, ProductoParseException {
-        List<VentaProducto> carritos = obtenerVentas();
-        return carritos.stream()
-                .filter(expresion)
+    public List<VentaProducto> filtrar(Predicate<VentaProducto> expresion) throws IOException, ProductoParseException {
+        return obtenerVentas().stream().filter(expresion).collect(Collectors.toList());
+    }
+
+    public List<VentaProducto> obtenerVentasSimples() {
+        return mongo.findAll(Sort.by("fecha").ascending()).stream()
+                .map(this::toVentaSimple)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Optiene todos las ventas de productos sin sus respectivos detalles
-     * @return Ventas de productos sin detalles
-     * @throws IOException
-     */
-    public List<VentaProducto> obtenerVentasSimples() throws IOException {
-        List<List<Object>> filas = obtenerFilasHojaSimples();
-        return mapearFilasVentas(filas);
-    }
-
-    /**
-     * Optiene todos las ventas de productos sin sus respectivos detalles
-     * @return Ventas de productos sin detalles
-     * @throws IOException
-     */
-    private List<List<Object>> obtenerFilasHojaSimples() throws IOException {
-        String rango = SHEET_NAME + "!A2:"+ VentaProductoConstantes.COL_REGISTRO_VENTA_FINAL;
-        ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
-        List<List<Object>> valores=respuesta.getValues();
-        if (valores!=null) {
-            return valores;
-        } else {
-            return new ArrayList<>();
-        }
-    }
-
-    /**
-     * Mapea las ventas de productos a partir de los datos de la base de datos,
-     * sin tener en cuenta sus detalles
-     * @param filas Datos en el formato de la base de datos
-     * @return Datos en el formato de las clases de java
-     */
-    private List<VentaProducto> mapearFilasVentas(List<List<Object>> filas) {
-        List<VentaProducto> ventas = new ArrayList<>();
-        for (List<Object> row : filas) {
-            try {
-                VentaProducto venta= mapearVenta(row);
-                ventas.add(venta);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return ventas;
-    }
-
-    /**
-     * Mapea la venta de productos a partir de los datos de la base de datos,
-     * sin tener en cuenta sus detalles
-     * @param row Datos en el formato de la base de datos
-     * @return Datos en el formato de las clases de java
-     */
     public VentaProducto mapearVenta(List<Object> row) {
         String id = row.get(0).toString();
         String emailUsuario = row.get(1).toString();
@@ -176,11 +86,6 @@ public class VentaProductoRepo {
                 .build();
     }
 
-    /**
-     * Convierte los datos de venta al formato de la base de datos sin tener en cuenta los detalles
-     * @param venta Datos de las ventas
-     * @return datos en formato de la base de datos
-     */
     public List<Object> mapearVentaInverso(VentaProducto venta) {
         Pago pago = venta.getPago();
         return Arrays.asList(
@@ -201,213 +106,81 @@ public class VentaProductoRepo {
         );
     }
 
-    /**
-     * Filtra las ventas sin tener en cuenta sus detalles, puede llegar a darse en
-     * O(<span style="color:red;">n</span>+<span style="color:blue;">m</span>)<br>
-     * <span style="color:red;">n</span> siendo la cantidad total de ventas de productos<br>
-     * <span style="color:blue;">m</span> siendo la cantidad total de detalles de todos las ventas juntas
-     * @param expresion expresion lambda que filtra las ventas
-     * @return Ventas de productos
-     * @throws IOException
-     * @throws ProductoParseException
-     */
-    public List<VentaProducto> filtrarVentasSimple (Predicate<VentaProducto> expresion) throws IOException, ProductoParseException {
+    public List<VentaProducto> filtrarVentasSimple(Predicate<VentaProducto> expresion) throws IOException, ProductoParseException {
         List<VentaProducto> ventas = obtenerVentasSimples();
-
-        List<VentaProducto> ventasFiltradas =  ventas.stream()
-                .filter(expresion)
-                .collect(Collectors.toList());
-        asignarDetalles(ventasFiltradas);
-        return ventasFiltradas;
+        List<VentaProducto> filtradas = ventas.stream().filter(expresion).collect(Collectors.toList());
+        asignarDetalles(filtradas);
+        return filtradas;
     }
 
-    /**
-     * Filtra las ventas teniendo en cuenta sus detalles, puede llegar a darse en
-     * O(<span style="color:red;">n</span>+<span style="color:blue;">m</span>)<br>
-     * <span style="color:red;">n</span> siendo la cantidad total de ventas de productos<br>
-     * <span style="color:blue;">m</span> siendo la cantidad total de detalles de todos las ventas juntas
-     * @param expresion expresion lambda que filtra las ventas
-     * @return Ventas de productos
-     * @throws IOException
-     * @throws ProductoParseException
-     */
-    public int contarVentasExistentes() throws IOException {
-        String rango = VentaProductoConstantes.CANT_VENTAS; // Ajusta según columnas
-        List<List<Object>> respuesta =
-                sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute().getValues();
-        return Integer.parseInt(respuesta.get(0).get(0).toString());
+    public int contarVentasExistentes() {
+        return (int) mongo.count();
     }
 
-    /**
-     * Guarda los datos de la venta de productos sin tener en cuenta los detalles
-     *
-     * @param venta Vneta de productos junto con sus detalles
-     * @return
-     * @throws IOException
-     */
     public VentaProducto guardarVentaProductoSimple(VentaProducto venta) throws IOException {
-
-        int detalles= contarVentasExistentes();
-        String range = SHEET_NAME+"!A"+(2+detalles)+":"+ VentaProductoConstantes.COL_REGISTRO_VENTA_FINAL+(2+detalles);
-
-        List<List<Object>> values = Arrays.asList(
-                mapearVentaInverso(venta)
-        );
-
-        ValueRange body = new ValueRange().setValues(values);
-
-        UpdateValuesResponse result = sheetsService.spreadsheets().values()
-                .update(spreadsheetId, range, body)
-                .setValueInputOption("RAW") // "RAW" para insertar como está
-                .execute();
-
-        System.out.println("Numero de celdas actualizadas: " + result.getUpdatedCells());
+        Optional<VentaProductoDocument> opt = mongo.findById(venta.getId());
+        if (opt.isPresent()) {
+            VentaProductoDocument existing = opt.get();
+            existing.setEmailUsuario(venta.getEmailUsario());
+            existing.setFecha(venta.getFecha());
+            existing.setTotal(venta.getTotal());
+            existing.setPromocionId(venta.getPromocionId());
+            existing.setCodigoPasarela(venta.getCodigoPasarela());
+            existing.setPago(venta.getPago());
+            mongo.save(existing);
+        } else {
+            mongo.save(toDocument(venta, false));
+        }
         return venta;
     }
 
-    /**
-     * Guarda los datos de la venta de productos junto con sus detalles
-     *
-     * @param venta Venta de productos junto con sus detalles
-     * @return
-     * @throws IOException
-     */
     public VentaProducto guardarVentaProducto(VentaProducto venta) throws IOException {
-        guardarVentaProductoSimple(venta);
-        for (DetalleVentaProducto detalle:venta.getProductos()) {
-            guardarDetalle(detalle);
-        }
+        mongo.save(toDocument(venta, true));
         return venta;
     }
 
-    /**
-     * Busca el indice de la venta de productos en la base de datos
-     * @param id Id de la venta de productos
-     * @return Indice de la venta de productos
-     */
     public int obtenerIndiceVenta(String id) {
-        List<VentaProducto> ventas = null;
-        int filaCuenta=-1;
-        try {
-            ventas = obtenerVentasSimples();
-        } catch (IOException e) {
-            throw new RuntimeException();
-        }
-        int tam=ventas.size();
-        for (int i=0;i<tam;i++) {
+        List<VentaProducto> ventas = obtenerVentasSimples();
+        for (int i = 0; i < ventas.size(); i++) {
             if (ventas.get(i).getId().equals(id)) {
-                filaCuenta=i;
-                break;
+                return i;
             }
         }
-        return filaCuenta;
+        return -1;
     }
 
-    /**
-     * Actualiza los datos de la base de datos de la venta de compras teniendo en cuenta sus detalles
-     * @param venta Datos de la venta de productos sin detalles
-     * @throws IOException
-     */
     public void actualizarVentaSimple(VentaProducto venta) throws IOException {
-        int indice= obtenerIndiceVenta(venta.getId());
-        if (indice!=-1) {
-            String range = SHEET_NAME+"!A"+(2+indice)+":"+ VentaProductoConstantes.COL_REGISTRO_VENTA_FINAL+(2+indice);
-            List<List<Object>> values = Arrays.asList(
-                    mapearVentaInverso(venta)
-            );
-
-            ValueRange body = new ValueRange().setValues(values);
-
-            UpdateValuesResponse result = sheetsService.spreadsheets().values()
-                    .update(spreadsheetId, range, body)
-                    .setValueInputOption("RAW") // "RAW" para insertar como está
-                    .execute();
-
-            System.out.println("Numero de celdas actualizadas: " + result.getUpdatedCells());
-        } else {
+        if (!mongo.existsById(venta.getId())) {
             throw new IOException("Registro no encontrado");
         }
+        VentaProductoDocument existing = mongo.findById(venta.getId()).orElseThrow(() -> new IOException("Registro no encontrado"));
+        existing.setEmailUsuario(venta.getEmailUsario());
+        existing.setFecha(venta.getFecha());
+        existing.setTotal(venta.getTotal());
+        existing.setPromocionId(venta.getPromocionId());
+        existing.setCodigoPasarela(venta.getCodigoPasarela());
+        existing.setPago(venta.getPago());
+        mongo.save(existing);
     }
 
-    /**
-     * Actualiza los datos de la base de datos de la venta de productos teniendo en cuenta sus detalles
-     * @param venta Datos de la venta de productos
-     * @throws IOException
-     */
     public void actualizarVenta(VentaProducto venta) throws IOException {
-        actualizarVentaSimple(venta);
-        List<DetalleVentaProducto> detallesActualizarVenta=new ArrayList<>(venta.getProductos());
-        detallesActualizarVenta.retainAll(obtenerDetallesVenta());
-        List<DetalleVentaProducto> detallesNuevosVenta=new ArrayList<>(venta.getProductos());
-        detallesNuevosVenta.removeAll(detallesActualizarVenta);
-        for (DetalleVentaProducto detalle:detallesNuevosVenta) {
-            guardarDetalle(detalle);
+        if (!mongo.existsById(venta.getId())) {
+            throw new IOException("Registro no encontrado");
         }
-        for (DetalleVentaProducto detalle:detallesActualizarVenta) {
-            actualizarDetalle(detalle);
-        }
+        mongo.save(toDocument(venta, true));
     }
 
-    //-----------DetallesVenta-----------------------------------------------------------------------
-
-    /**
-     * Optiene todos los los detalles de todos las ventas de productos
-     * @return Detalles de ventas de productos
-     * @throws IOException
-     */
     public List<DetalleVentaProducto> obtenerDetallesVenta() throws IOException {
-        List<List<Object>> filas = obtenerFilasHojaDetalle();
-        return mapearFilasDetallesVenta(filas);
+        return mongo.findAll().stream()
+                .flatMap(d -> d.getProductos() != null ? d.getProductos().stream() : java.util.stream.Stream.empty())
+                .collect(Collectors.toList());
     }
 
-    /**
-     * Optiene todos los detalles de todos las ventas de productos
-     * @return Detalles de ventas de productos
-     * @throws IOException
-     */
-    private List<List<Object>> obtenerFilasHojaDetalle() throws IOException {
-        String rango = SHEET_NAME_DETALLE + "!A2:" + ReservaConstantes.COL_REGISTRO_MESA_FINAL;
-        ValueRange respuesta = sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute();
-
-        // Validar si la respuesta es nula o vacía
-        if (respuesta.getValues() == null || respuesta.getValues().isEmpty()) {
-            System.out.println("No se encontraron filas en el rango especificado.");
-            return new ArrayList<>();
-        }
-
-        System.out.println("Respuesta de filas " + respuesta.getValues());
-        return respuesta.getValues();
-    }
-
-    /**
-     * Mapea los detalles de las ventas de productos a partir de los datos de la base de datos
-     * @param filas Datos en el formato de la base de datos
-     * @return Datos en el formato de las clases de java
-     * @throws IOException
-     */
-    private List<DetalleVentaProducto> mapearFilasDetallesVenta(List<List<Object>> filas) throws IOException {
-        List<DetalleVentaProducto> detalles = new ArrayList<>();
-        for (List<Object> row : filas) {
-            try {
-                DetalleVentaProducto detalle= mapearDetalleVenta(row);
-                detalles.add(detalle);
-            }catch (NumberFormatException e){
-                throw new IOException("Error en el parseo del detaalleCarrito en fila "+ row);
-            }
-        }
-        return detalles;
-    }
-
-    /**
-     * Mapea el detalle de una venta de productos a partir de los datos de la base de datos
-     * @param row Datos en el formato de la base de datos
-     * @return Datos en el formato de las clases de java
-     */
     public DetalleVentaProducto mapearDetalleVenta(List<Object> row) {
-        String productoId=row.get(0).toString();
-        int cantidad=Integer.parseInt(row.get(1).toString());
-        float valor=Float.parseFloat(row.get(2).toString());
-        String idVenta=row.get(3).toString();
+        String productoId = row.get(0).toString();
+        int cantidad = Integer.parseInt(row.get(1).toString());
+        float valor = Float.parseFloat(row.get(2).toString());
+        String idVenta = row.get(3).toString();
         return DetalleVentaProducto.builder()
                 .productoId(productoId)
                 .cantidad(cantidad)
@@ -416,165 +189,103 @@ public class VentaProductoRepo {
                 .build();
     }
 
-    /**
-     * Convierte los datos de detalle al formato de la base de datos
-     * @param detalle Datos de los detalles
-     * @return datos en formato de la base de datos
-     */
     public List<Object> mapearDetalleVentaInverso(DetalleVentaProducto detalle) {
         return Arrays.asList(
                 detalle.getProductoId(),
-                ""+detalle.getCantidad(),
-                ""+(int)detalle.getValor(),
+                "" + detalle.getCantidad(),
+                "" + (int) detalle.getValor(),
                 detalle.getVentaId()
         );
     }
 
-    /**
-     * Filtra los detalles de las ventas teniendo en cuenta sus detalles, puede llegar a darse en
-     * O(<span style="color:red;">n</span>+<span style="color:blue;">m</span>)<br>
-     * <span style="color:red;">n</span> siendo la cantidad total de detalles de productos<br>
-     * <span style="color:blue;">m</span> siendo la cantidad total de detalles de todos las ventas juntas
-     * @param expresion expresion lambda que filtra los detalles
-     * @return Detalles de ventas de productos
-     * @throws IOException
-     */
-    public List<DetalleVentaProducto> filtrarDetalles (Predicate<DetalleVentaProducto> expresion) throws IOException {
-        List<DetalleVentaProducto> detalles = obtenerDetallesVenta();
-        return detalles.stream()
-                .filter(expresion)
-                .collect(Collectors.toList());
+    public List<DetalleVentaProducto> filtrarDetalles(Predicate<DetalleVentaProducto> expresion) throws IOException {
+        return obtenerDetallesVenta().stream().filter(expresion).collect(Collectors.toList());
     }
 
-    /**
-     * Filtra los detalles de las ventas teniendo en cuenta sus detalles, puede llegar a darse en
-     * O(<span style="color:red;">n</span>+<span style="color:blue;">m</span>)<br>
-     * <span style="color:red;">n</span> siendo la cantidad total de detalles de productos<br>
-     * <span style="color:blue;">m</span> siendo la cantidad total de detalles de todos las ventas juntas
-     * @param expresion expresion lambda que filtra los detalles
-     * @return Detalles de ventas de productos
-     * @throws IOException
-     */
-    public int contarDetallesExistintes() throws IOException {
-        String rango = VentaProductoConstantes.CANT_DETALLES;// Ajusta según columnas
-        List<List<Object>> respuesta =
-                sheetsService.spreadsheets().values().get(spreadsheetId, rango).execute().getValues();
-        return Integer.parseInt(respuesta.get(0).get(0).toString());
-    }
-
-    /**
-     * Guarda los datos de la venta de productos junto con sus detalles
-     *
-     * @param detalle Detalle de la venta de productos
-     * @throws IOException
-     */
-    public void guardarDetalle(DetalleVentaProducto detalle) throws IOException {
-
-        int detalles=contarDetallesExistintes();
-        String range = SHEET_NAME_DETALLE+"!A"+(2+detalles)+":"+ VentaProductoConstantes.COL_REGISTRO_DETALLE_FINAL+(2+detalles);
-
-        List<List<Object>> values = Arrays.asList(
-                mapearDetalleVentaInverso(detalle)
-        );
-
-        ValueRange body = new ValueRange().setValues(values);
-
-        UpdateValuesResponse result = sheetsService.spreadsheets().values()
-                .update(spreadsheetId, range, body)
-                .setValueInputOption("RAW") // "RAW" para insertar como está
-                .execute();
-
-        System.out.println("Numero de celdas actualizadas: " + result.getUpdatedCells());
-    }
-
-    /**
-     * Busca el indice del detalle de la venta de productos en la base de datos
-     * @param idCarrito Id de la venta de productos
-     * @param productoId Id del producto
-     * @return Indice del detalle de la venta de productos
-     */
-    public int obtenerIndiceDetalle(String idCarrito,String productoId) {
-        List<DetalleVentaProducto> detalles = null;
-        int filaCuenta=-1;
+    public int contarDetallesExistintes() {
         try {
-            detalles = obtenerDetallesVenta();
+            return obtenerDetallesVenta().size();
         } catch (IOException e) {
-            throw new RuntimeException();
+            return 0;
         }
-        int tam=detalles.size();
-        for (int i=0;i<tam;i++) {
-            if (detalles.get(i).getProductoId().equals(productoId) &&
-                    detalles.get(i).getProductoId().equals(idCarrito)) {
-                filaCuenta=i;
-                break;
+    }
+
+    public void guardarDetalle(DetalleVentaProducto detalle) throws IOException {
+        VentaProductoDocument doc = mongo.findById(detalle.getVentaId())
+                .orElseThrow(() -> new IOException("Venta no encontrada"));
+        List<DetalleVentaProducto> list = doc.getProductos() != null ? new ArrayList<>(doc.getProductos()) : new ArrayList<>();
+        list.removeIf(d -> d.getProductoId().equals(detalle.getProductoId()) && d.getVentaId().equals(detalle.getVentaId()));
+        list.add(detalle);
+        doc.setProductos(list);
+        mongo.save(doc);
+    }
+
+    public int obtenerIndiceDetalle(String idVenta, String productoId) {
+        VentaProductoDocument doc = mongo.findById(idVenta).orElse(null);
+        if (doc == null || doc.getProductos() == null) {
+            return -1;
+        }
+        List<DetalleVentaProducto> detalles = doc.getProductos();
+        for (int i = 0; i < detalles.size(); i++) {
+            if (detalles.get(i).getProductoId().equals(productoId)
+                    && detalles.get(i).getVentaId().equals(idVenta)) {
+                return i;
             }
         }
-        return filaCuenta;
+        return -1;
     }
 
-    /**
-     * Actualiza los datos de la base de datos del detalle de la venta de productos
-     * @param detalle Datos del detalle de la venta de productos
-     * @throws IOException
-     */
     public void actualizarDetalle(DetalleVentaProducto detalle) throws IOException {
-        int indice=obtenerIndiceDetalle(detalle.getVentaId(),detalle.getProductoId());
-        if (indice!=-1) {
-            String range = SHEET_NAME_DETALLE+"!A"+(2+indice)+":"+ VentaProductoConstantes.COL_REGISTRO_DETALLE_FINAL+(2+indice);
-            List<List<Object>> values = Arrays.asList(
-                    mapearDetalleVentaInverso(detalle)
-            );
-
-            ValueRange body = new ValueRange().setValues(values);
-
-            UpdateValuesResponse result = sheetsService.spreadsheets().values()
-                    .update(spreadsheetId, range, body)
-                    .setValueInputOption("RAW") // "RAW" para insertar como está
-                    .execute();
-
-            System.out.println("Numero de celdas actualizadas: " + result.getUpdatedCells());
-        } else {
+        if (obtenerIndiceDetalle(detalle.getVentaId(), detalle.getProductoId()) < 0) {
             throw new IOException("Registro no encontrado");
         }
+        guardarDetalle(detalle);
     }
 
-    /**
-     * Convierte los datos de detalle al formato de la base de datos sin tener en cuenta los detalles
-     * @return datos en formato de la base de datos
-     */
     public List<Object> mapearBorrado() {
-        return Arrays.asList(
-                "-",
-                "0",
-                "0",
-                "-"
-        );
+        return Arrays.asList("-", "0", "0", "-");
     }
 
-    /**
-     * Elimina los datos de la base de datos del detalle de la venta de productos
-     * @param detalle Datos del detalle de la venta de productos
-     * @throws IOException
-     */
     public void eliminarDetalle(DetalleVentaProducto detalle) throws IOException {
-        int indice=obtenerIndiceDetalle(detalle.getVentaId(),detalle.getProductoId());
-        if (indice!=-1) {
-            String range = SHEET_NAME_DETALLE+"!A"+(2+indice)+":"+ VentaProductoConstantes.COL_REGISTRO_DETALLE_FINAL+(2+indice);
-            List<List<Object>> values = Arrays.asList(
-                    mapearBorrado()
-            );
-
-            ValueRange body = new ValueRange().setValues(values);
-
-            UpdateValuesResponse result = sheetsService.spreadsheets().values()
-                    .update(spreadsheetId, range, body)
-                    .setValueInputOption("RAW") // "RAW" para insertar como está
-                    .execute();
-
-            System.out.println("Numero de celdas eliminadas: " + result.getUpdatedCells());
-        } else {
+        VentaProductoDocument doc = mongo.findById(detalle.getVentaId())
+                .orElseThrow(() -> new IOException("Registro no encontrado"));
+        if (doc.getProductos() == null) {
             throw new IOException("Registro no encontrado");
         }
+        boolean removed = doc.getProductos().removeIf(d ->
+                d.getProductoId().equals(detalle.getProductoId()) && d.getVentaId().equals(detalle.getVentaId()));
+        if (!removed) {
+            throw new IOException("Registro no encontrado");
+        }
+        mongo.save(doc);
     }
 
+    private VentaProducto toVentaSimple(VentaProductoDocument d) {
+        return VentaProducto.builder()
+                .id(d.getId())
+                .emailUsario(d.getEmailUsuario())
+                .fecha(d.getFecha())
+                .total((float) d.getTotal())
+                .promocionId(d.getPromocionId())
+                .codigoPasarela(d.getCodigoPasarela())
+                .pago(d.getPago())
+                .productos(null)
+                .build();
+    }
+
+    private VentaProductoDocument toDocument(VentaProducto v, boolean includeLineItems) {
+        List<DetalleVentaProducto> productos = includeLineItems && v.getProductos() != null
+                ? new ArrayList<>(v.getProductos())
+                : new ArrayList<>();
+        return VentaProductoDocument.builder()
+                .id(v.getId())
+                .emailUsuario(v.getEmailUsario())
+                .fecha(v.getFecha())
+                .total(v.getTotal())
+                .promocionId(v.getPromocionId())
+                .codigoPasarela(v.getCodigoPasarela())
+                .pago(v.getPago())
+                .productos(productos)
+                .build();
+    }
 }

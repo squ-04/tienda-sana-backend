@@ -14,7 +14,9 @@ public enum CategoriaProducto {
     FRUTOSSECOS("Frutos secos"),
     LACTEOS ("Lacteos"),
     PANADERIA ("Panadería"),
-    TE("Té");
+    TE("Té"),
+    /** Categoría genérica para valores que no encajan en el catálogo legacy (p. ej. productos creados desde admin). */
+    OTROS("Otros");
 
     private final String categoria;
 

@@ -57,7 +57,7 @@ public class SecurityConfig {
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/api/account/**").authenticated()
                         .requestMatchers("/api/cliente/**").authenticated()
-                        .requestMatchers("/api/admin/**").authenticated() // Si tienes rutas de admin
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(formLogin -> formLogin.disable()) // Deshabilita form login
