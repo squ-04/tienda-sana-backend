@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "skills": {
+    "api-designer": {
+      "source": "jeffallan/claude-skills",
+      "sourceType": "github",
+      "computedHash": "626b896a54e811bf95c1b0dac26021fddc6004f08fd3a747a0d3269c38f96ac0"
+    },
+    "backend-developer": {
+      "source": "404kidwiz/claude-supercode-skills",
+      "sourceType": "github",
+      "computedHash": "9e56aa5c929beedbfb917fc1e0bddbc7569cd1f2caee5a0ea0e70b4c3eb4d2d1"
+    },
+    "java-springboot": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "f1b9c6b1277178fc33e5a612761c1cd1cf6ab5f946d05d69d52026d142c0a0c1"
+    }
+  }
+}
