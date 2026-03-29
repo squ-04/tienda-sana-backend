@@ -10,6 +10,7 @@ public record RestaurantTableResponse(
         String localidad,
         double precioReserva,
         int capacidad,
+        int duracionReservaMinutos,
         String imagen,
         boolean visibleToClient
 ) {

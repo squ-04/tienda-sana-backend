@@ -10,6 +10,7 @@ public record MesaDTO(
         float precioReserva,
         int capacidad,
         String imagen,
+        Integer duracionReservaMinutos,
         String idReserva,
         String idGestorReserva
 ) {

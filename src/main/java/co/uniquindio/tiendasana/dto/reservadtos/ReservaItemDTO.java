@@ -8,6 +8,7 @@ import java.util.List;
 public record ReservaItemDTO(
         String emailUsuario,
         LocalDateTime fechaReserva,
+        LocalDateTime fechaFinReserva,
         String estadoReserva,
         String paymentType,
         String status,

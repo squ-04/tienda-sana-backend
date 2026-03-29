@@ -28,7 +28,9 @@ public class ReservaDocument {
     @Builder.Default
     private List<Mesa> mesas = new ArrayList<>();
 
+    private LocalDateTime fechaCreacion;
     private LocalDateTime fechaReserva;
+    private LocalDateTime fechaFinReserva;
     private double valorReserva;
     private int cantidadPersonas;
     private String estadoReserva;

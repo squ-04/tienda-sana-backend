@@ -1,6 +1,7 @@
 package co.uniquindio.tiendasana.services.interfaces;
 
 import co.uniquindio.tiendasana.dto.reservadtos.ActualizarReservaDTO;
+import co.uniquindio.tiendasana.dto.mesadtos.MesaHorarioReservadoDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.CrearReservaDirectaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.CrearReservaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.PaymentResponseReservaDTO;
@@ -62,6 +63,11 @@ public interface ReservaService {
      * @return Lista de objetos ReservaItemDTO con la información de las reservas del cliente.
      */
     List<ReservaItemDTO> listarReservasCliente(String emailUsuario) throws IOException;
+
+    /**
+     * Retorna franjas de tiempo reservadas para una mesa sin exponer datos personales.
+     */
+    List<MesaHorarioReservadoDTO> listarHorariosReservadosMesa(String mesaId) throws Exception;
 
     /**
      * Realiza el pago de una reserva.

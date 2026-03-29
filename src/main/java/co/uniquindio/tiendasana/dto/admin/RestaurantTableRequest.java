@@ -15,6 +15,7 @@ public record RestaurantTableRequest(
         @NotBlank @Size(max = 120) String localidad,
         @NotNull @Min(0) Double precioReserva,
         @NotNull @Min(1) Integer capacidad,
+        @NotNull @Min(30) Integer duracionReservaMinutos,
         @NotBlank @Size(max = 2000) @Pattern(regexp = "^https?://.+", message = "imagen debe ser una URL valida") String imagen,
         @NotNull Boolean visibleToClient
 ) {

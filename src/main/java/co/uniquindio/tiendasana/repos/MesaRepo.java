@@ -183,6 +183,7 @@ public class MesaRepo {
                 .precioReserva((float) d.getPrecioReserva())
                 .capacidad(d.getCapacidad())
                 .imagen(d.getImagen())
+            .duracionReservaMinutos(normalizeDuracionReservaMinutos(d.getDuracionReservaMinutos()))
                 .idReserva("-")
                 .idGestorReserva("-")
                 .build();
@@ -197,7 +198,22 @@ public class MesaRepo {
                 .precioReserva(mesa.getPrecioReserva())
                 .capacidad(mesa.getCapacidad())
                 .imagen(mesa.getImagen())
+                .duracionReservaMinutos(normalizeDuracionReservaMinutos(mesa.getDuracionReservaMinutos()))
                 .visibleToClient(visibleToClient)
                 .build();
+    }
+
+    private int normalizeDuracionReservaMinutos(Integer duracionReservaMinutos) {
+        if (duracionReservaMinutos == null || duracionReservaMinutos <= 0) {
+            return TableDocument.DEFAULT_DURACION_RESERVA_MINUTOS;
+        }
+        return duracionReservaMinutos;
+    }
+
+    private int normalizeDuracionReservaMinutos(int duracionReservaMinutos) {
+        if (duracionReservaMinutos <= 0) {
+            return TableDocument.DEFAULT_DURACION_RESERVA_MINUTOS;
+        }
+        return duracionReservaMinutos;
     }
 }

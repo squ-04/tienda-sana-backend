@@ -44,7 +44,8 @@ public class MesaServiceImp implements MesaService {
                 mesa.getLocalidad() != null ? mesa.getLocalidad().getLocalidad() : "-", // Esto es String
                 mesa.getPrecioReserva(),
                 mesa.getCapacidad(),
-                mesa.getImagen()
+            mesa.getImagen(),
+            mesa.getDuracionReservaMinutos()
         );
     }
 
@@ -61,7 +62,8 @@ public class MesaServiceImp implements MesaService {
                         mesa.getLocalidad() != null ? mesa.getLocalidad().getLocalidad() : "-",
                         mesa.getPrecioReserva(),
                         mesa.getCapacidad(),
-                        mesa.getImagen()
+                    mesa.getImagen(),
+                    mesa.getDuracionReservaMinutos()
                 ))
                 .collect(Collectors.toList());
 
@@ -125,7 +127,8 @@ public class MesaServiceImp implements MesaService {
                         (mesa.getLocalidad() != null ? mesa.getLocalidad().getLocalidad() : "-"),
                         mesa.getPrecioReserva(),
                         mesa.getCapacidad(),
-                        mesa.getImagen()
+                    mesa.getImagen(),
+                    mesa.getDuracionReservaMinutos()
                 ))
                 .collect(Collectors.toList());
 

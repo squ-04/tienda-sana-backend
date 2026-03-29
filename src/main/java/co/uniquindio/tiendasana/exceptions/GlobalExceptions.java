@@ -20,6 +20,11 @@ public class GlobalExceptions {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageDTO<>(true, e.getMessage()));
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<MessageDTO<String>> illegalState(IllegalStateException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new MessageDTO<>(true, e.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<MessageDTO<String>> validation(MethodArgumentNotValidException e) {
         String msg = e.getBindingResult().getFieldErrors().stream()

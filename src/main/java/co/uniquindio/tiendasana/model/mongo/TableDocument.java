@@ -17,6 +17,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "tables")
 public class TableDocument {
 
+    public static final int DEFAULT_DURACION_RESERVA_MINUTOS = 120;
+
     @Id
     private String id;
 
@@ -26,6 +28,7 @@ public class TableDocument {
     private double precioReserva;
     private int capacidad;
     private String imagen;
+    private Integer duracionReservaMinutos;
 
     @Builder.Default
     private boolean visibleToClient = true;

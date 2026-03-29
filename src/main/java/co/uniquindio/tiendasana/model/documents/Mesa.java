@@ -23,12 +23,14 @@ public class Mesa {
     private float precioReserva;
     private int capacidad;
     private String imagen;
+    private int duracionReservaMinutos;
     private String idReserva;
     private String idGestorReserva;
 
 
     @Builder
-    public Mesa(String id, String nombre, EstadoMesa estado, String localidad, float precioReserva, int capacidad, String imagen, String idReserva, String idGestorReserva) {
+    public Mesa(String id, String nombre, EstadoMesa estado, String localidad, float precioReserva, int capacidad, String imagen,
+                int duracionReservaMinutos, String idReserva, String idGestorReserva) {
         this.id = id;
         this.nombre = nombre;
         this.estado = estado;
@@ -36,6 +38,7 @@ public class Mesa {
         this.precioReserva = precioReserva;
         this.capacidad = capacidad;
         this.imagen = imagen;
+        this.duracionReservaMinutos = duracionReservaMinutos;
         this.idReserva = idReserva;
         this.idGestorReserva = idGestorReserva;
     }

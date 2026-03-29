@@ -264,6 +264,7 @@ public class GestorReservasServiceImp implements GestorReservasService {
                                 mesa.getPrecioReserva(),
                                 mesa.getCapacidad(),
                                 mesa.getImagen(),
+                        mesa.getDuracionReservaMinutos(),
                                 mesa.getIdReserva(),
                                 mesa.getIdGestorReserva()
                         )

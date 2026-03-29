@@ -2,6 +2,7 @@ package co.uniquindio.tiendasana.services.implementations;
 
 import co.uniquindio.tiendasana.dto.EmailDTO;
 import co.uniquindio.tiendasana.dto.gestorReservasdtos.BorrarMesaGestorDTO;
+import co.uniquindio.tiendasana.dto.mesadtos.MesaHorarioReservadoDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.ActualizarReservaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.CrearReservaDirectaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.CrearReservaDTO;
@@ -23,6 +24,7 @@ import com.mercadopago.client.preference.PreferenceRequest;
 import com.mercadopago.exceptions.MPApiException;
 import com.mercadopago.resources.payment.PaymentStatus;
 import com.mercadopago.resources.preference.Preference;
+import org.springframework.beans.factory.annotation.Value;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -34,29 +36,35 @@ import java.util.stream.Collectors;
 
 @Service
 public class ReservaServiceImp implements ReservaService {
+    private static final int DURACION_RESERVA_MINUTOS_DEFAULT = 120;
+
     private final MesaService mesaService;
     private final GestorReservasService gestorReservasService;
     private final EmailService emailService;
     private final CuentaService cuentaService;
     private final ReservasRepo reservasRepo;
+    private final long pendingReservationHoldMinutes;
 
-    public ReservaServiceImp(MesaService mesaService, GestorReservasService gestorReservasService, EmailService emailService, CuentaService cuentaService, ReservasRepo reservasRepo) {
+    public ReservaServiceImp(MesaService mesaService, GestorReservasService gestorReservasService, EmailService emailService, CuentaService cuentaService, ReservasRepo reservasRepo,
+                             @Value("${reservas.pending-hold-minutes:15}") long pendingReservationHoldMinutes) {
         this.mesaService = mesaService;
         this.gestorReservasService = gestorReservasService;
         this.emailService = emailService;
         this.cuentaService = cuentaService;
         this.reservasRepo = reservasRepo;
+        this.pendingReservationHoldMinutes = Math.max(pendingReservationHoldMinutes, 1);
     }
 
     @Override
     public String reservarMesa(CrearReservaDTO crearReservaDTO) throws Exception {
         Reserva reserva = new Reserva();
 
-        reserva.setFechaReserva(
-            crearReservaDTO.fechaReserva() != null ? crearReservaDTO.fechaReserva() : LocalDateTime.now()
-        );
-        reserva.setUsuarioId(crearReservaDTO.emailUsuario());
+        LocalDateTime inicioReserva =
+            crearReservaDTO.fechaReserva() != null ? crearReservaDTO.fechaReserva() : LocalDateTime.now();
 
+        reserva.setFechaCreacion(LocalDateTime.now());
+        reserva.setFechaReserva(inicioReserva);
+        reserva.setUsuarioId(crearReservaDTO.emailUsuario());
         cuentaService.obtenerCuentaPorEmail(crearReservaDTO.emailUsuario());
 
         reserva.setId(UUID.randomUUID().toString());
@@ -65,14 +73,15 @@ public class ReservaServiceImp implements ReservaService {
 
         GestorReservas gestorReservas = gestorReservasService.obtenerGestorReservas(crearReservaDTO.emailUsuario());
         List<Mesa> items = obtenerMesas(gestorReservas, reserva.getId());
+        int duracionReservaMinutos = resolveDuracionReservaMinutos(items);
+        LocalDateTime finReserva = inicioReserva.plusMinutes(duracionReservaMinutos);
+        reserva.setFechaFinReserva(finReserva);
+        validarCruceHorarios(items, inicioReserva, finReserva, null);
         reserva.setMesas(items);
-
 
         reserva.setValorReserva(calcularTotal(items, crearReservaDTO.emailUsuario()));
 
-
         Reserva createOrder = reservasRepo.guardarReserva(reserva);
-
         return createOrder.getId();
     }
 
@@ -80,7 +89,10 @@ public class ReservaServiceImp implements ReservaService {
     public String reservarMesaDirecta(CrearReservaDirectaDTO crearReservaDirectaDTO) throws Exception {
         Reserva reserva = new Reserva();
 
-        reserva.setFechaReserva(crearReservaDirectaDTO.fechaReserva());
+        LocalDateTime inicioReserva = crearReservaDirectaDTO.fechaReserva();
+
+        reserva.setFechaCreacion(LocalDateTime.now());
+        reserva.setFechaReserva(inicioReserva);
         reserva.setUsuarioId(crearReservaDirectaDTO.emailUsuario());
         cuentaService.obtenerCuentaPorEmail(crearReservaDirectaDTO.emailUsuario());
 
@@ -89,9 +101,9 @@ public class ReservaServiceImp implements ReservaService {
         reserva.setCantidadPersonas(crearReservaDirectaDTO.cantidadPersonas());
 
         Mesa mesa = mesaService.obtenerMesa(crearReservaDirectaDTO.mesaId());
-        if (!EstadoMesa.DISPONIBLE.getEstado().equalsIgnoreCase(mesa.getEstado())) {
-            throw new IllegalStateException("La mesa seleccionada no se encuentra disponible para reservar");
-        }
+        int duracionReservaMinutos = resolveDuracionReservaMinutos(List.of(mesa));
+        LocalDateTime finReserva = inicioReserva.plusMinutes(duracionReservaMinutos);
+        reserva.setFechaFinReserva(finReserva);
 
         Mesa mesaReservada = new Mesa();
         mesaReservada.setId(mesa.getId());
@@ -100,11 +112,13 @@ public class ReservaServiceImp implements ReservaService {
         mesaReservada.setLocalidad(mesa.getLocalidad());
         mesaReservada.setPrecioReserva(mesa.getPrecioReserva());
         mesaReservada.setImagen(mesa.getImagen());
+        mesaReservada.setDuracionReservaMinutos(mesa.getDuracionReservaMinutos());
         mesaReservada.setIdReserva(reserva.getId());
         mesaReservada.setIdGestorReserva("-");
         mesaReservada.setCapacidad(mesa.getCapacidad());
 
         List<Mesa> items = List.of(mesaReservada);
+        validarCruceHorarios(items, inicioReserva, finReserva, null);
         reserva.setMesas(items);
         reserva.setValorReserva(calcularTotal(items, crearReservaDirectaDTO.emailUsuario()));
 
@@ -118,7 +132,6 @@ public class ReservaServiceImp implements ReservaService {
             total += mesa.getPrecioReserva();
         }
         return total;
-
     }
 
     private List<Mesa> obtenerMesas(GestorReservas gestorReservas, String id) {
@@ -126,7 +139,6 @@ public class ReservaServiceImp implements ReservaService {
         List<Mesa> details = gestorReservas.getMesas();
         details.forEach(mesaAReservar -> {
             try {
-
                 Mesa mesa = mesaService.obtenerMesa(String.valueOf(mesaAReservar.getId()));
 
                 Mesa mesaReservada = new Mesa();
@@ -136,23 +148,21 @@ public class ReservaServiceImp implements ReservaService {
                 mesaReservada.setLocalidad(mesaAReservar.getLocalidad());
                 mesaReservada.setPrecioReserva(mesaAReservar.getPrecioReserva());
                 mesaReservada.setImagen(mesaAReservar.getImagen());
+                mesaReservada.setDuracionReservaMinutos(mesa.getDuracionReservaMinutos());
                 mesaReservada.setIdReserva(id);
                 mesaReservada.setIdGestorReserva("-");
                 mesaReservada.setCapacidad(mesaAReservar.getCapacidad());
                 items.add(mesaReservada);
-
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
-
         });
         return items;
     }
 
     @Override
     public Reserva obtenerReserva(String idReserva) throws Exception {
-        List<Reserva> reservas = reservasRepo.filtrarReservasSimple(reservaFiltrada -> {
-            return reservaFiltrada.getId().equals(idReserva); });
+        List<Reserva> reservas = reservasRepo.filtrarReservasSimple(reservaFiltrada -> reservaFiltrada.getId().equals(idReserva));
         if (reservas.isEmpty()) {
             throw new Exception("La reserva con el id: " + idReserva + " no existe");
         }
@@ -170,16 +180,26 @@ public class ReservaServiceImp implements ReservaService {
     @Override
     public String actualizarReserva(ActualizarReservaDTO actualizarReservaDTO) throws Exception {
         Reserva reservaActualizar = obtenerReserva(actualizarReservaDTO.reservaId());
+        LocalDateTime inicioNuevo = actualizarReservaDTO.fechaReserva();
+        LocalDateTime finNuevo;
+        if (reservaActualizar.getFechaFinReserva() != null && reservaActualizar.getFechaReserva() != null) {
+            long minutos = java.time.Duration.between(reservaActualizar.getFechaReserva(), reservaActualizar.getFechaFinReserva()).toMinutes();
+            finNuevo = inicioNuevo.plusMinutes(Math.max(minutos, 30));
+        } else {
+            int duracionReservaMinutos = resolveDuracionReservaMinutos(reservaActualizar.getMesas());
+            finNuevo = inicioNuevo.plusMinutes(duracionReservaMinutos);
+        }
+        validarCruceHorarios(reservaActualizar.getMesas(), inicioNuevo, finNuevo, reservaActualizar.getId());
         reservaActualizar.setCantidadPersonas(actualizarReservaDTO.cantidadPersonas());
-        reservaActualizar.setFechaReserva(actualizarReservaDTO.fechaReserva());
+        reservaActualizar.setFechaReserva(inicioNuevo);
+        reservaActualizar.setFechaFinReserva(finNuevo);
         reservasRepo.actualizarReservaSimple(reservaActualizar);
         return "La reserva fue actualizada";
     }
 
     @Override
     public ReservaItemDTO obtenerInformacionReserva(String idReserva) throws Exception {
-        Reserva reserva = obtenerReserva(idReserva); // Método que obtiene la orden
-
+        Reserva reserva = obtenerReserva(idReserva);
         return mapearAReservaItemDTO(reserva);
     }
 
@@ -187,6 +207,7 @@ public class ReservaServiceImp implements ReservaService {
         return new ReservaItemDTO(
                 reserva.getUsuarioId() != null ? reserva.getUsuarioId().toString() : null,
                 reserva.getFechaReserva(),
+                getFechaFinReservaEfectiva(reserva),
                 reserva.getEstadoReserva().toString(),
                 reserva.getPago() != null ? reserva.getPago().getPaymentType() : null,
                 reserva.getPago() != null ? reserva.getPago().getStatus() : null,
@@ -201,13 +222,106 @@ public class ReservaServiceImp implements ReservaService {
     @Override
     public List<ReservaItemDTO> listarReservasCliente(String clienteId) throws IOException {
         List<Reserva> reservas = reservasRepo.filtrarReservasSimple(reserva -> reserva.getUsuarioId().equals(clienteId));
-        System.out.println("Reservas: " + reservas);
         return obtenerReservaItemDTO(reservas);
     }
 
+    @Override
+    public List<MesaHorarioReservadoDTO> listarHorariosReservadosMesa(String mesaId) throws Exception {
+        LocalDateTime ahora = LocalDateTime.now();
+        List<Reserva> reservas = reservasRepo.filtrarReservasSimple(reserva -> {
+            if (!isReservaBloqueante(reserva, ahora)) {
+                return false;
+            }
+            LocalDateTime fin = getFechaFinReservaEfectiva(reserva);
+            if (fin.isBefore(ahora)) {
+                return false;
+            }
+            return reserva.getMesas() != null && reserva.getMesas().stream().anyMatch(mesa -> mesaId.equals(mesa.getId()));
+        });
+
+        return reservas.stream()
+                .map(reserva -> new MesaHorarioReservadoDTO(reserva.getFechaReserva(), getFechaFinReservaEfectiva(reserva)))
+                .sorted(Comparator.comparing(MesaHorarioReservadoDTO::inicio))
+                .toList();
+    }
+
+    private void validarCruceHorarios(List<Mesa> mesas, LocalDateTime inicio, LocalDateTime fin, String reservaActualId) throws Exception {
+        if (mesas == null || mesas.isEmpty()) {
+            return;
+        }
+        for (Mesa mesa : mesas) {
+            boolean existeCruce = hayCruceReservaMesa(mesa.getId(), inicio, fin, reservaActualId);
+            if (existeCruce) {
+                throw new IllegalStateException("La mesa " + mesa.getNombre() + " ya tiene una reserva en el horario seleccionado");
+            }
+        }
+    }
+
+    private boolean hayCruceReservaMesa(String mesaId, LocalDateTime inicio, LocalDateTime fin, String reservaActualId) throws Exception {
+        LocalDateTime ahora = LocalDateTime.now();
+        List<Reserva> reservasMesa = reservasRepo.filtrarReservasSimple(reserva -> {
+            if (reservaActualId != null && reservaActualId.equals(reserva.getId())) {
+                return false;
+            }
+            if (!isReservaBloqueante(reserva, ahora)) {
+                return false;
+            }
+            return reserva.getMesas() != null && reserva.getMesas().stream().anyMatch(mesa -> mesaId.equals(mesa.getId()));
+        });
+
+        for (Reserva reserva : reservasMesa) {
+            LocalDateTime inicioExistente = reserva.getFechaReserva();
+            LocalDateTime finExistente = getFechaFinReservaEfectiva(reserva);
+            boolean solapa = inicio.isBefore(finExistente) && fin.isAfter(inicioExistente);
+            if (solapa) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isReservaBloqueante(Reserva reserva, LocalDateTime referencia) {
+        if (reserva.getEstadoReserva() == null) {
+            return false;
+        }
+        if (EstadoReserva.CONFIRMADA.equals(reserva.getEstadoReserva())) {
+            return true;
+        }
+        if (EstadoReserva.PENDIENTE.equals(reserva.getEstadoReserva())) {
+            return isReservaPendienteActiva(reserva, referencia);
+        }
+        return false;
+    }
+
+    private boolean isReservaPendienteActiva(Reserva reserva, LocalDateTime referencia) {
+        if (reserva.getFechaCreacion() == null) {
+            return false;
+        }
+        LocalDateTime expiracion = reserva.getFechaCreacion().plusMinutes(pendingReservationHoldMinutes);
+        return !referencia.isAfter(expiracion);
+    }
+
+    private LocalDateTime getFechaFinReservaEfectiva(Reserva reserva) {
+        if (reserva.getFechaFinReserva() != null) {
+            return reserva.getFechaFinReserva();
+        }
+        int duracionReservaMinutos = resolveDuracionReservaMinutos(reserva.getMesas());
+        return reserva.getFechaReserva().plusMinutes(duracionReservaMinutos);
+    }
+
+    private int resolveDuracionReservaMinutos(List<Mesa> mesas) {
+        if (mesas == null || mesas.isEmpty()) {
+            return DURACION_RESERVA_MINUTOS_DEFAULT;
+        }
+        return mesas.stream()
+                .mapToInt(mesa -> mesa != null ? mesa.getDuracionReservaMinutos() : 0)
+                .filter(valor -> valor > 0)
+                .max()
+                .orElse(DURACION_RESERVA_MINUTOS_DEFAULT);
+    }
+
     private List<ReservaItemDTO> obtenerReservaItemDTO(List<Reserva> reservas) {
-        return reservas.stream().map(this::mapearAReservaItemDTO
-        ).collect(Collectors.toList());
+        return reservas.stream().map(this::mapearAReservaItemDTO).collect(Collectors.toList());
     }
 
     @Override
@@ -306,7 +420,6 @@ public class ReservaServiceImp implements ReservaService {
                 if (reserva.getPago().getStatus().equalsIgnoreCase("APPROVED") && reserva.getPago().getStatusDetail().equalsIgnoreCase("accredited")) {
 
                     for (Mesa mesa : reserva.getMesas()){
-                        mesaService.cambiarEstadoMesa(mesa.getId(), "Reservada");
                         try {
                             gestorReservasService.borrarMesaGestorReservas(new BorrarMesaGestorDTO(reserva.getUsuarioId(), mesa.getId()));
                         } catch (Exception ignored) {

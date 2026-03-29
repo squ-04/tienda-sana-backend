@@ -3,6 +3,7 @@ package co.uniquindio.tiendasana.controllers;
 import co.uniquindio.tiendasana.dto.jwtdtos.MessageDTO;
 import co.uniquindio.tiendasana.dto.mesadtos.FiltroMesaDTO;
 import co.uniquindio.tiendasana.dto.mesadtos.ListaMesasDTO;
+import co.uniquindio.tiendasana.dto.mesadtos.MesaHorarioReservadoDTO;
 import co.uniquindio.tiendasana.dto.mesadtos.MesaInfoDTO;
 import co.uniquindio.tiendasana.dto.productodtos.FiltroProductoDTO;
 import co.uniquindio.tiendasana.dto.productodtos.ListaProductosDTO;
@@ -63,6 +64,12 @@ public class PublicoController {
     public ResponseEntity<MessageDTO<MesaInfoDTO>> obtenerInfoMesa(@PathVariable String id) throws Exception {
         MesaInfoDTO mesaInfo = mesaService.obtenerInfoMesa(id);
         return ResponseEntity.ok(new MessageDTO<>(false, mesaInfo));
+    }
+
+    @GetMapping("/mesas/get-reserved-slots/{id}")
+    public ResponseEntity<MessageDTO<List<MesaHorarioReservadoDTO>>> obtenerHorariosReservadosMesa(@PathVariable String id) throws Exception {
+        List<MesaHorarioReservadoDTO> horarios = reservaService.listarHorariosReservadosMesa(id);
+        return ResponseEntity.ok(new MessageDTO<>(false, horarios));
     }
 
     /**

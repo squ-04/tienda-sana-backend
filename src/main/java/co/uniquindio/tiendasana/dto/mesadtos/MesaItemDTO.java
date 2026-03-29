@@ -9,6 +9,7 @@ public record MesaItemDTO(
         String localidad,
         float precioReserva,
         int capacidad,
-        String imagen
+        String imagen,
+        int duracionReservaMinutos
 ) {
 }
