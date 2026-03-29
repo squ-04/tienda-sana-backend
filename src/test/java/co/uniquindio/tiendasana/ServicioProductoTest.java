@@ -168,13 +168,8 @@ public class ServicioProductoTest {
      */
     @Test
     public void obtenerCuentas() {
-        try {
-            List<Cuenta> cuentas=cuentaRepo.obtenerCuentas();
-            assertNotNull(cuentas);
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail();
-        }
+        List<Cuenta> cuentas = assertDoesNotThrow(() -> cuentaRepo.obtenerCuentas());
+        assertNotNull(cuentas);
     }
 
     /**
@@ -210,13 +205,8 @@ public class ServicioProductoTest {
      */
     @Test
     public void obtenerDetallesCarritoCompras() {
-        try {
-            List<DetalleCarrito> detalleCarritos=carritoComprasRepo.obtenerDetallesCarrito();
-            assertNotNull(detalleCarritos);
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail();
-        }
+        List<DetalleCarrito> detalleCarritos = assertDoesNotThrow(() -> carritoComprasRepo.obtenerDetallesCarrito());
+        assertNotNull(detalleCarritos);
     }
 
     /**
@@ -224,21 +214,13 @@ public class ServicioProductoTest {
      */
     @Test
     public void obtenerCarritosComprasSimples() {
-        try {
-            List<CarritoCompras> carritoCompras=carritoComprasRepo.obtenerCarritosSimples();
-            if (carritoCompras==null) {
-                fail();
+        assertDoesNotThrow(() -> {
+            List<CarritoCompras> carritoCompras = carritoComprasRepo.obtenerCarritosSimples();
+            assertNotNull(carritoCompras);
+            for (CarritoCompras carrito : carritoCompras) {
+                assertNull(carrito.getProductos());
             }
-            for (CarritoCompras carrito: carritoCompras) {
-                if (carrito.getProductos() != null) {
-                    fail();
-                }
-            }
-            assertTrue(true);
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail();
-        }
+        });
     }
 
     /**
@@ -246,13 +228,8 @@ public class ServicioProductoTest {
      */
     @Test
     public void obtenerDetallesVentaProducto() {
-        try {
-            List<DetalleVentaProducto> detallesVenta=ventaProductoRepo.obtenerDetallesVenta();
-            assertNotNull(detallesVenta);
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail();
-        }
+        List<DetalleVentaProducto> detallesVenta = assertDoesNotThrow(() -> ventaProductoRepo.obtenerDetallesVenta());
+        assertNotNull(detallesVenta);
     }
 
     /**
@@ -260,21 +237,13 @@ public class ServicioProductoTest {
      */
     @Test
     public void obtenerVentaProducto() {
-        try {
-            List<VentaProducto> ventasProductos=ventaProductoRepo.obtenerVentasSimples();
-            if (ventasProductos==null) {
-                fail();
+        assertDoesNotThrow(() -> {
+            List<VentaProducto> ventasProductos = ventaProductoRepo.obtenerVentasSimples();
+            assertNotNull(ventasProductos);
+            for (VentaProducto venta : ventasProductos) {
+                assertNull(venta.getProductos());
             }
-            for (VentaProducto venta: ventasProductos) {
-                if (venta.getProductos() != null) {
-                    fail();
-                }
-            }
-            assertTrue(true);
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail();
-        }
+        });
     }
 
     /**

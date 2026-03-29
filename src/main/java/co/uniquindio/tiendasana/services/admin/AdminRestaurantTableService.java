@@ -4,6 +4,7 @@ import co.uniquindio.tiendasana.dto.admin.RestaurantTableRequest;
 import co.uniquindio.tiendasana.dto.admin.RestaurantTableResponse;
 import co.uniquindio.tiendasana.dto.admin.TableStatusPatchRequest;
 import co.uniquindio.tiendasana.model.enums.EstadoMesa;
+import co.uniquindio.tiendasana.model.enums.Localidad;
 import co.uniquindio.tiendasana.model.enums.TableStatus;
 import co.uniquindio.tiendasana.model.mongo.TableDocument;
 import co.uniquindio.tiendasana.repos.mongo.TableDocumentRepository;
@@ -32,12 +33,13 @@ public class AdminRestaurantTableService {
 
     public RestaurantTableResponse create(RestaurantTableRequest req) {
         validateEstado(req.estado());
+        validateLocalidad(req.localidad());
         String id = "mesa-" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
         TableDocument d = TableDocument.builder()
                 .id(id)
                 .nombre(req.nombre().trim())
                 .estado(normalizeEstado(req.estado()))
-                .localidad(req.localidad().trim())
+            .localidad(normalizeLocalidad(req.localidad()))
                 .precioReserva(req.precioReserva())
                 .capacidad(req.capacidad())
                 .imagen(req.imagen().trim())
@@ -48,11 +50,12 @@ public class AdminRestaurantTableService {
 
     public RestaurantTableResponse update(String id, RestaurantTableRequest req) {
         validateEstado(req.estado());
+        validateLocalidad(req.localidad());
         TableDocument d = tableRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Mesa no encontrada: " + id));
         d.setNombre(req.nombre().trim());
         d.setEstado(normalizeEstado(req.estado()));
-        d.setLocalidad(req.localidad().trim());
+        d.setLocalidad(normalizeLocalidad(req.localidad()));
         d.setPrecioReserva(req.precioReserva());
         d.setCapacidad(req.capacidad());
         d.setImagen(req.imagen().trim());
@@ -71,8 +74,16 @@ public class AdminRestaurantTableService {
         EstadoMesa.fromEstado(estado.trim());
     }
 
+    private void validateLocalidad(String localidad) {
+        Localidad.fromLocalidad(localidad.trim());
+    }
+
     private String normalizeEstado(String estado) {
         return EstadoMesa.fromEstado(estado.trim()).getEstado();
+    }
+
+    private String normalizeLocalidad(String localidad) {
+        return Localidad.fromLocalidad(localidad.trim()).getLocalidad();
     }
 
     private String toEstadoCliente(TableStatus s) {
