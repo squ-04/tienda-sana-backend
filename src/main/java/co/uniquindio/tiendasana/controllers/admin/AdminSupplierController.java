@@ -42,4 +42,9 @@ public class AdminSupplierController {
         supplierService.deactivate(id);
         return ResponseEntity.ok(new MessageDTO<>(false, "Proveedor desactivado"));
     }
+
+    @PatchMapping("/{id}/activate")
+    public ResponseEntity<MessageDTO<SupplierResponse>> activate(@PathVariable String id) {
+        return ResponseEntity.ok(new MessageDTO<>(false, supplierService.activate(id)));
+    }
 }

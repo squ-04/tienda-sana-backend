@@ -39,6 +39,12 @@ public class AdminProductLotController {
         return ResponseEntity.ok(new MessageDTO<>(false, lotService.update(id, request)));
     }
 
+    @DeleteMapping("/lots/{id}")
+    public ResponseEntity<MessageDTO<String>> deleteLot(@PathVariable String id) {
+        lotService.delete(id);
+        return ResponseEntity.ok(new MessageDTO<>(false, "Lote eliminado"));
+    }
+
     @GetMapping("/inventory")
     public ResponseEntity<MessageDTO<List<InventoryResponse>>> inventory() {
         return ResponseEntity.ok(new MessageDTO<>(false, lotService.inventory()));

@@ -97,8 +97,8 @@ const products = [
   },
 ];
 
-// --- Mesas reservas cliente (reservation_tables) ---
-const reservationTables = [
+// --- Mesas (tables) ---
+const tables = [
   {
     _id: 'seed-mesa-centro-01',
     nombre: 'Mesa terraza Centro',
@@ -131,13 +131,6 @@ const reservationTables = [
   },
 ];
 
-// --- Mesas admin operativas (restaurant_tables) ---
-const restaurantTables = [
-  { _id: 'seed-rt-ventana-1', capacity: 2, location: 'Ventana', active: true, status: 'AVAILABLE' },
-  { _id: 'seed-rt-salon-1', capacity: 4, location: 'Salón principal', active: true, status: 'AVAILABLE' },
-  { _id: 'seed-rt-salon-2', capacity: 4, location: 'Salón principal', active: true, status: 'RESERVED' },
-];
-
 function upsertById(collection, docs) {
   docs.forEach((doc) => {
     collection.replaceOne({ _id: doc._id }, doc, { upsert: true });
@@ -153,17 +146,13 @@ print('Cuentas (upsert por _id): ' + accounts.length);
 upsertById(db.products, products);
 print('Productos: ' + products.length);
 
-upsertById(db.reservation_tables, reservationTables);
-print('Mesas reservas (cliente): ' + reservationTables.length);
-
-upsertById(db.restaurant_tables, restaurantTables);
-print('Mesas restaurante (admin): ' + restaurantTables.length);
+upsertById(db.tables, tables);
+print('Mesas (tables): ' + tables.length);
 
 print('\n--- Conteos ---');
 print('accounts:           ' + db.accounts.countDocuments());
 print('products:            ' + db.products.countDocuments());
-print('reservation_tables: ' + db.reservation_tables.countDocuments());
-print('restaurant_tables:  ' + db.restaurant_tables.countDocuments());
+print('tables:              ' + db.tables.countDocuments());
 
 print('\n✅ Seed completado.');
 print('Login cliente: cliente.demo@tiendasana.local / Cliente123!');

@@ -8,14 +8,14 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Mesas del catálogo para reservas (cliente). Distinto de {@code restaurant_tables} (panel admin).
+ * Mesas del catálogo para reservas (cliente).
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "reservation_tables")
-public class ClientMesaDocument {
+@Document(collection = "tables")
+public class TableDocument {
 
     @Id
     private String id;

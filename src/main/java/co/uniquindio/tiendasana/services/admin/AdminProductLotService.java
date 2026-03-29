@@ -94,6 +94,24 @@ public class AdminProductLotService {
         return toResponse(lotRepo.save(lot));
     }
 
+    /**
+     * Elimina el lote y descuenta su cantidad del stock agregado del producto.
+     */
+    public void delete(String id) {
+        ProductLotDocument lot = lotRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Lote no encontrado: " + id));
+        ProductoDocument product = productRepo.findById(lot.getProductId())
+                .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + lot.getProductId()));
+        int qty = lot.getQuantity();
+        if (product.getStockQuantity() < qty) {
+            throw new IllegalArgumentException(
+                    "Stock del producto (" + product.getStockQuantity() + ") es menor que la cantidad del lote (" + qty + ")");
+        }
+        product.setStockQuantity(product.getStockQuantity() - qty);
+        productRepo.save(product);
+        lotRepo.deleteById(lot.getId());
+    }
+
     public List<InventoryResponse> inventory() {
         return productRepo.findAllByOrderByNombreAsc().stream()
                 .map(p -> new InventoryResponse(p.getId(), p.getNombre(), p.getStockQuantity()))

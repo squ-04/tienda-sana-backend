@@ -1,12 +1,16 @@
 package co.uniquindio.tiendasana.dto.admin;
 
-import co.uniquindio.tiendasana.model.enums.TableStatus;
-
+/**
+ * Respuesta alineada con el catálogo de mesas del cliente (mismos campos que {@code TableDocument}).
+ */
 public record RestaurantTableResponse(
         String id,
-        int capacity,
-        String location,
-        boolean active,
-        TableStatus status
+        String nombre,
+        String estado,
+        String localidad,
+        double precioReserva,
+        int capacidad,
+        String imagen,
+        boolean visibleToClient
 ) {
 }

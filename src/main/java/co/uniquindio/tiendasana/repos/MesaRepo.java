@@ -4,8 +4,8 @@ import co.uniquindio.tiendasana.dto.mesadtos.MesasTotalDTO;
 import co.uniquindio.tiendasana.model.documents.Mesa;
 import co.uniquindio.tiendasana.model.enums.EstadoMesa;
 import co.uniquindio.tiendasana.model.enums.Localidad;
-import co.uniquindio.tiendasana.model.mongo.ClientMesaDocument;
-import co.uniquindio.tiendasana.repos.mongo.ClientMesaDocumentRepository;
+import co.uniquindio.tiendasana.model.mongo.TableDocument;
+import co.uniquindio.tiendasana.repos.mongo.TableDocumentRepository;
 import co.uniquindio.tiendasana.repos.mongo.GestorReservaDocumentRepository;
 import co.uniquindio.tiendasana.utils.MesaConstantes;
 import org.springframework.stereotype.Repository;
@@ -20,22 +20,22 @@ import java.util.stream.Collectors;
 @Repository
 public class MesaRepo {
 
-    private final ClientMesaDocumentRepository clientMesaMongo;
+    private final TableDocumentRepository tableMongo;
     private final GestorReservaDocumentRepository gestorMongo;
 
-    public MesaRepo(ClientMesaDocumentRepository clientMesaMongo, GestorReservaDocumentRepository gestorMongo) {
-        this.clientMesaMongo = clientMesaMongo;
+    public MesaRepo(TableDocumentRepository tableMongo, GestorReservaDocumentRepository gestorMongo) {
+        this.tableMongo = tableMongo;
         this.gestorMongo = gestorMongo;
     }
 
     private List<Mesa> obtenerTodasMesasDeHoja(String nombreHoja) throws IOException {
         if (MesaConstantes.HOJA_CLIENTE.equals(nombreHoja)) {
-            return clientMesaMongo.findByVisibleToClientTrueOrderByNombreAsc().stream()
+            return tableMongo.findByVisibleToClientTrueOrderByNombreAsc().stream()
                     .map(this::toMesa)
                     .collect(Collectors.toList());
         }
         if (MesaConstantes.HOJA_PRINCIPAL.equals(nombreHoja)) {
-            return clientMesaMongo.findAll().stream()
+            return tableMongo.findAll().stream()
                     .map(this::toMesa)
                     .collect(Collectors.toList());
         }
@@ -43,7 +43,7 @@ public class MesaRepo {
     }
 
     public MesasTotalDTO obtenerMesasClientePaginado(int pagina, int cantidadElementos) throws IOException {
-        List<ClientMesaDocument> all = clientMesaMongo.findByVisibleToClientTrueOrderByNombreAsc();
+        List<TableDocument> all = tableMongo.findByVisibleToClientTrueOrderByNombreAsc();
         int totalMesas = all.size();
         if (totalMesas == 0) {
             return new MesasTotalDTO(0, new ArrayList<>());
@@ -130,7 +130,7 @@ public class MesaRepo {
         if (idMesa == null || idMesa.isEmpty()) {
             return -1;
         }
-        List<ClientMesaDocument> all = clientMesaMongo.findAll();
+        List<TableDocument> all = tableMongo.findAll();
         for (int i = 0; i < all.size(); i++) {
             if (idMesa.equals(all.get(i).getId())) {
                 return i;
@@ -143,29 +143,29 @@ public class MesaRepo {
         if (mesa == null || mesa.getId() == null || mesa.getId().isEmpty()) {
             throw new IllegalArgumentException("La mesa o su ID no pueden ser nulos para actualizar.");
         }
-        if (!clientMesaMongo.existsById(mesa.getId())) {
+        if (!tableMongo.existsById(mesa.getId())) {
             throw new IOException("Registro de mesa no encontrado en hoja principal para ID: " + mesa.getId() + " para actualizar.");
         }
-        clientMesaMongo.save(toClientDocument(mesa, clientMesaMongo.findById(mesa.getId()).orElseThrow().isVisibleToClient()));
+        tableMongo.save(toTableDocument(mesa, tableMongo.findById(mesa.getId()).orElseThrow().isVisibleToClient()));
     }
 
     public Optional<Mesa> obtenerMesaPorIdOriginal(String idMesa) throws IOException {
         if (idMesa == null || idMesa.isEmpty()) {
             return Optional.empty();
         }
-        return clientMesaMongo.findById(idMesa).map(this::toMesa);
+        return tableMongo.findById(idMesa).map(this::toMesa);
     }
 
     public Optional<Mesa> obtenerPorIdDesdeHojaCliente(String id) throws IOException {
         if (id == null || id.isEmpty()) {
             return Optional.empty();
         }
-        return clientMesaMongo.findById(id)
-                .filter(ClientMesaDocument::isVisibleToClient)
+        return tableMongo.findById(id)
+                .filter(TableDocument::isVisibleToClient)
                 .map(this::toMesa);
     }
 
-    private Mesa toMesa(ClientMesaDocument d) {
+    private Mesa toMesa(TableDocument d) {
         EstadoMesa estado = EstadoMesa.DISPONIBLE;
         try {
             estado = EstadoMesa.fromEstado(d.getEstado());
@@ -188,8 +188,8 @@ public class MesaRepo {
                 .build();
     }
 
-    private ClientMesaDocument toClientDocument(Mesa mesa, boolean visibleToClient) {
-        return ClientMesaDocument.builder()
+    private TableDocument toTableDocument(Mesa mesa, boolean visibleToClient) {
+        return TableDocument.builder()
                 .id(mesa.getId())
                 .nombre(mesa.getNombre())
                 .estado(mesa.getEstado())

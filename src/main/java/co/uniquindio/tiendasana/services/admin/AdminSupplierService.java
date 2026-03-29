@@ -51,6 +51,13 @@ public class AdminSupplierService {
         supplierRepo.save(d);
     }
 
+    public SupplierResponse activate(String id) {
+        SupplierDocument d = supplierRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Proveedor no encontrado: " + id));
+        d.setActive(true);
+        return toResponse(supplierRepo.save(d));
+    }
+
     private SupplierResponse toResponse(SupplierDocument d) {
         return new SupplierResponse(
                 d.getId(),

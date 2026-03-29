@@ -102,27 +102,14 @@ public final class MongoSeedCli {
                     mesaCliente("seed-mesa-salon-03", "Mesa salón VIP", "Disponible", "Salon", 60000, 8,
                             "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800"));
 
-            for (Document doc : reservationTables) {
-                db.getCollection("reservation_tables").replaceOne(eq("_id", doc.getString("_id")), doc, upsert);
-            }
-
-            List<Document> restaurantTables = List.of(
-                    new Document("_id", "seed-rt-ventana-1").append("capacity", 2)
-                            .append("location", "Ventana").append("active", true).append("status", "AVAILABLE"),
-                    new Document("_id", "seed-rt-salon-1").append("capacity", 4)
-                            .append("location", "Salón principal").append("active", true).append("status", "AVAILABLE"),
-                    new Document("_id", "seed-rt-salon-2").append("capacity", 4)
-                            .append("location", "Salón principal").append("active", true).append("status", "RESERVED"));
-
-            for (Document doc : restaurantTables) {
-                db.getCollection("restaurant_tables").replaceOne(eq("_id", doc.getString("_id")), doc, upsert);
+                        for (Document doc : reservationTables) {
+                                db.getCollection("tables").replaceOne(eq("_id", doc.getString("_id")), doc, upsert);
             }
 
             System.out.println("\n=== Conteos ===");
             System.out.println("accounts:           " + db.getCollection("accounts").countDocuments());
             System.out.println("products:           " + db.getCollection("products").countDocuments());
-            System.out.println("reservation_tables: " + db.getCollection("reservation_tables").countDocuments());
-            System.out.println("restaurant_tables:  " + db.getCollection("restaurant_tables").countDocuments());
+            System.out.println("tables:             " + db.getCollection("tables").countDocuments());
             System.out.println("\nSeed completado.");
             System.out.println("Cliente: cliente.demo@tiendasana.local / Cliente123!");
             System.out.println("Admin:   admin@tiendasana.local / Admin123!");

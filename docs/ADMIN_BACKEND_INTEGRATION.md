@@ -18,8 +18,7 @@ El catálogo de productos que consume el **cliente público** (`/api/public/prod
 | `products`          | `ProductoDocument`           |
 | `suppliers`         | `SupplierDocument`           |
 | `product_lots`      | `ProductLotDocument`         |
-| `restaurant_tables` | `RestaurantTableDocument`    |
-| `reservation_tables` | `ClientMesaDocument` (mesas para reservas del cliente) |
+| `tables`            | `TableDocument` (mesas para reservas catálogo cliente) |
 | `accounts` | `CuentaDocument` |
 | `shopping_carts` | `CarritoComprasDocument` |
 | `product_sales` | `VentaProductoDocument` |
@@ -36,12 +35,14 @@ El catálogo de productos que consume el **cliente público** (`/api/public/prod
 - `POST` — Crear (cuerpo según contrato con campo `"product"`).
 - `PUT /{id}` — Actualizar.
 - `DELETE /{id}` — Desactiva (`active=false`).
+- `PATCH /{id}/activate` — Reactiva (`active=true`).
 
 ### Lotes e inventario — `/api/admin`
 
 - `GET /lots?productId=` — Lista de lotes; filtro opcional por producto.
 - `POST /lots` — Crea lote y **suma** `quantity` al `stockQuantity` del producto.
 - `PUT /lots/{id}` — Actualiza lote y **ajusta** el stock del producto (delta o traslado entre productos).
+- `DELETE /lots/{id}` — Elimina el lote y **resta** su `quantity` del `stockQuantity` del producto (falla si el stock quedaría inconsistente).
 - `GET /inventory` — Lista `{ productId, productName, stockQuantity }`.
 
 ### Productos (admin) — `/api/admin/products`
@@ -54,10 +55,10 @@ El catálogo de productos que consume el **cliente público** (`/api/public/prod
 
 ### Mesas (admin, Mongo) — `/api/admin/tables`
 
-- `GET`, `POST`, `PUT /{id}` — CRUD sobre **`restaurant_tables`**.
+- `GET`, `POST`, `PUT /{id}` — CRUD sobre **`tables`**.
 - `PATCH /{id}/status` — Cuerpo `{ "status": "AVAILABLE" | "RESERVED" | "OCCUPIED" }`.
 
-**Nota:** Las mesas del flujo de **reservas del cliente** (`Mesa`, `MesaServiceImp`) están en **`reservation_tables`**. Las mesas **`restaurant_tables`** son el CRUD operativo del admin; son modelos distintos hasta que se decida unificar IDs o sincronización.
+**Nota:** El panel admin y el flujo público comparten la misma colección **`tables`** mediante `TableDocument`.
 
 ## Cliente público (productos)
 
