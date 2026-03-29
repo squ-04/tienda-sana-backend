@@ -1,6 +1,7 @@
 package co.uniquindio.tiendasana.services.interfaces;
 
 import co.uniquindio.tiendasana.dto.reservadtos.ActualizarReservaDTO;
+import co.uniquindio.tiendasana.dto.reservadtos.CrearReservaDirectaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.CrearReservaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.PaymentResponseReservaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.ReservaItemDTO;
@@ -18,6 +19,11 @@ public interface ReservaService {
      * @return Un mensaje indicando el resultado de la reserva.
      */
     String reservarMesa(CrearReservaDTO crearReservaDTO) throws Exception;
+
+    /**
+     * Crea una reserva directa desde el detalle de mesa sin pasar por el gestor de reservas.
+     */
+    String reservarMesaDirecta(CrearReservaDirectaDTO crearReservaDirectaDTO) throws Exception;
 
     /**
      * Obtiene la información de una reserva por su ID.

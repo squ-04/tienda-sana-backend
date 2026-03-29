@@ -3,6 +3,7 @@ package co.uniquindio.tiendasana.services.implementations;
 import co.uniquindio.tiendasana.dto.EmailDTO;
 import co.uniquindio.tiendasana.dto.gestorReservasdtos.BorrarMesaGestorDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.ActualizarReservaDTO;
+import co.uniquindio.tiendasana.dto.reservadtos.CrearReservaDirectaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.CrearReservaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.PaymentResponseReservaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.ReservaItemDTO;
@@ -51,10 +52,12 @@ public class ReservaServiceImp implements ReservaService {
     public String reservarMesa(CrearReservaDTO crearReservaDTO) throws Exception {
         Reserva reserva = new Reserva();
 
-        reserva.setFechaReserva(LocalDateTime.now());
+        reserva.setFechaReserva(
+            crearReservaDTO.fechaReserva() != null ? crearReservaDTO.fechaReserva() : LocalDateTime.now()
+        );
         reserva.setUsuarioId(crearReservaDTO.emailUsuario());
 
-        Cuenta cuenta = cuentaService.obtenerCuentaPorEmail(crearReservaDTO.emailUsuario());
+        cuentaService.obtenerCuentaPorEmail(crearReservaDTO.emailUsuario());
 
         reserva.setId(UUID.randomUUID().toString());
         reserva.setEstadoReserva(EstadoReserva.PENDIENTE);
@@ -70,6 +73,42 @@ public class ReservaServiceImp implements ReservaService {
 
         Reserva createOrder = reservasRepo.guardarReserva(reserva);
 
+        return createOrder.getId();
+    }
+
+    @Override
+    public String reservarMesaDirecta(CrearReservaDirectaDTO crearReservaDirectaDTO) throws Exception {
+        Reserva reserva = new Reserva();
+
+        reserva.setFechaReserva(crearReservaDirectaDTO.fechaReserva());
+        reserva.setUsuarioId(crearReservaDirectaDTO.emailUsuario());
+        cuentaService.obtenerCuentaPorEmail(crearReservaDirectaDTO.emailUsuario());
+
+        reserva.setId(UUID.randomUUID().toString());
+        reserva.setEstadoReserva(EstadoReserva.PENDIENTE);
+        reserva.setCantidadPersonas(crearReservaDirectaDTO.cantidadPersonas());
+
+        Mesa mesa = mesaService.obtenerMesa(crearReservaDirectaDTO.mesaId());
+        if (!EstadoMesa.DISPONIBLE.getEstado().equalsIgnoreCase(mesa.getEstado())) {
+            throw new IllegalStateException("La mesa seleccionada no se encuentra disponible para reservar");
+        }
+
+        Mesa mesaReservada = new Mesa();
+        mesaReservada.setId(mesa.getId());
+        mesaReservada.setNombre(mesa.getNombre());
+        mesaReservada.setEstado(EstadoMesa.RESERVADA);
+        mesaReservada.setLocalidad(mesa.getLocalidad());
+        mesaReservada.setPrecioReserva(mesa.getPrecioReserva());
+        mesaReservada.setImagen(mesa.getImagen());
+        mesaReservada.setIdReserva(reserva.getId());
+        mesaReservada.setIdGestorReserva("-");
+        mesaReservada.setCapacidad(mesa.getCapacidad());
+
+        List<Mesa> items = List.of(mesaReservada);
+        reserva.setMesas(items);
+        reserva.setValorReserva(calcularTotal(items, crearReservaDirectaDTO.emailUsuario()));
+
+        Reserva createOrder = reservasRepo.guardarReserva(reserva);
         return createOrder.getId();
     }
 
@@ -268,7 +307,11 @@ public class ReservaServiceImp implements ReservaService {
 
                     for (Mesa mesa : reserva.getMesas()){
                         mesaService.cambiarEstadoMesa(mesa.getId(), "Reservada");
-                        gestorReservasService.borrarMesaGestorReservas(new BorrarMesaGestorDTO(reserva.getUsuarioId(), mesa.getId()));
+                        try {
+                            gestorReservasService.borrarMesaGestorReservas(new BorrarMesaGestorDTO(reserva.getUsuarioId(), mesa.getId()));
+                        } catch (Exception ignored) {
+                            // Reserva directa: puede no existir en el gestor y no debe bloquear confirmación/persistencia.
+                        }
                     }
 
                     System.out.println("SE ESTÄ INTENTANDO ENVIAR EL CORREO A " + cuenta.getEmail());

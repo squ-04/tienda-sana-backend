@@ -9,6 +9,7 @@ import co.uniquindio.tiendasana.dto.cuentadtos.InfoCuentaDTO;
 import co.uniquindio.tiendasana.dto.gestorReservasdtos.BorrarMesaGestorDTO;
 import co.uniquindio.tiendasana.dto.jwtdtos.MessageDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.CrearReservaDTO;
+import co.uniquindio.tiendasana.dto.reservadtos.CrearReservaDirectaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.PaymentResponseReservaDTO;
 import co.uniquindio.tiendasana.dto.reservadtos.ReservaItemDTO;
 import co.uniquindio.tiendasana.dto.ventadtos.CrearVentaProductoDTO;
@@ -228,6 +229,12 @@ public class ClienteController {
     @PostMapping("/reserva/create")
     public ResponseEntity<MessageDTO<String>> crearReserva(@Valid @RequestBody CrearReservaDTO crearReservaDTO) throws Exception{
         String reservaId= reservaService.reservarMesa(crearReservaDTO);
+        return ResponseEntity.ok(new MessageDTO<>(false, reservaId));
+    }
+
+    @PostMapping("/reserva/create-direct")
+    public ResponseEntity<MessageDTO<String>> crearReservaDirecta(@Valid @RequestBody CrearReservaDirectaDTO crearReservaDirectaDTO) throws Exception {
+        String reservaId = reservaService.reservarMesaDirecta(crearReservaDirectaDTO);
         return ResponseEntity.ok(new MessageDTO<>(false, reservaId));
     }
 
