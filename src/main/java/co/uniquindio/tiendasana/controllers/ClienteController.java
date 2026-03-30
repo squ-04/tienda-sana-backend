@@ -251,6 +251,27 @@ public class ClienteController {
     }
 
     /**
+     * Controlador para solicitar reembolso de una compra de productos.
+     * Solo aplica cuando el pago está aprobado.
+     */
+    @PostMapping("/venta/refund/{ventaProductoId}")
+    public ResponseEntity<MessageDTO<String>> solicitarReembolsoVenta(@PathVariable String ventaProductoId) throws Exception {
+        try {
+            String emailAutenticado = getAuthenticatedUserEmail();
+            String result = ventaProductoService.solicitarReembolsoVenta(ventaProductoId, emailAutenticado, false);
+            return ResponseEntity.ok(new MessageDTO<>(false, result));
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new MessageDTO<>(true, e.getMessage()));
+        } catch (IllegalAccessException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new MessageDTO<>(true, e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new MessageDTO<>(true, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new MessageDTO<>(true, "Error al solicitar reembolso: " + e.getMessage()));
+        }
+    }
+
+    /**
      * Controlador para cancelar una reserva
      * @param reservaId Id de la reserva a cancelar
      * @return ResponseEntity con el id de la reserva

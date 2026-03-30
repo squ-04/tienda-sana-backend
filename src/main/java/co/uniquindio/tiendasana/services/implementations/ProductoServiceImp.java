@@ -194,6 +194,42 @@ public class ProductoServiceImp implements ProductoService {
 
     @Override
 
+    public void aumentarCantidadProductosStock(String id, int cantidadAReponer) throws Exception {
+
+        if (cantidadAReponer <= 0) {
+
+            throw new IllegalArgumentException("La cantidad a reponer debe ser mayor a cero");
+
+        }
+
+
+
+        ProductoDocument doc = productDocumentRepo.findById(id)
+
+                .orElseThrow(() -> new Exception("Producto no encontrado"));
+
+
+
+        doc.setStockQuantity(doc.getStockQuantity() + cantidadAReponer);
+
+        if (doc.getStockQuantity() > 0) {
+
+            doc.setOutOfStock(false);
+
+        }
+
+
+
+        productDocumentRepo.save(doc);
+
+        System.out.println("Se ha repuesto el stock del producto correctamente");
+
+    }
+
+
+
+    @Override
+
     public ListaProductosDTO filtrarProductos(FiltroProductoDTO filtroProductoDTO) throws Exception {
 
         Predicate<Producto> filtro = getProductoPredicate(filtroProductoDTO);

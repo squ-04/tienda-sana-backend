@@ -24,19 +24,29 @@ import com.mercadopago.client.preference.PreferenceItemRequest;
 import com.mercadopago.client.preference.PreferenceRequest;
 import com.mercadopago.resources.payment.PaymentStatus;
 import com.mercadopago.resources.preference.Preference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import co.uniquindio.tiendasana.repos.VentaProductoRepo;
 import co.uniquindio.tiendasana.services.interfaces.*;
 import com.google.firebase.database.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.velocity.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 public class VentaProductoServiceImp implements VentaProductoService {
+    private static final Logger logger = LoggerFactory.getLogger(VentaProductoServiceImp.class);
     private final ProductoService productoService;
     private final CarritoComprasService carritoComprasService;
     private final EmailService emailService;
@@ -429,6 +439,63 @@ public class VentaProductoServiceImp implements VentaProductoService {
 
     }
 
+    @Override
+    public String solicitarReembolsoVenta(String ventaProductoId, String emailSolicitante, boolean esAdmin) throws Exception {
+        VentaProducto venta = obtenerVentaProducto(ventaProductoId);
+
+        if (!esAdmin) {
+            if (emailSolicitante == null || emailSolicitante.isBlank()) {
+                throw new IllegalArgumentException("No se pudo determinar el usuario solicitante");
+            }
+            if (venta.getEmailUsario() == null || !venta.getEmailUsario().equalsIgnoreCase(emailSolicitante)) {
+                throw new IllegalAccessException("No tienes permisos para reembolsar esta compra");
+            }
+        }
+
+        Pago pago = venta.getPago();
+        if (pago == null) {
+            throw new IllegalStateException("La venta no tiene información de pago");
+        }
+
+        if (isRefundedPayment(pago)) {
+            logger.info("Reembolso idempotente para venta {}. Ya estaba reembolsada.", ventaProductoId);
+            return "La venta ya había sido reembolsada";
+        }
+
+        if (!isApprovedPayment(pago)) {
+            throw new IllegalStateException("Solo se permiten reembolsos para pagos aprobados");
+        }
+
+        String paymentId = pago.getId();
+        if (paymentId == null || paymentId.isBlank() || "-".equals(paymentId)) {
+            throw new IllegalStateException("No existe paymentId para tramitar el reembolso");
+        }
+
+        if (mercadoPagoAccessToken == null || mercadoPagoAccessToken.isBlank()) {
+            throw new IllegalStateException("No se configuró MERCADOPAGO_ACCESS_TOKEN");
+        }
+
+        logger.info("Solicitando reembolso en Mercado Pago. ventaId={}, paymentId={}", ventaProductoId, paymentId);
+        RefundResult refundResult = requestRefundToMercadoPago(paymentId);
+        if (!refundResult.success()) {
+            logger.warn("Fallo de reembolso en MP. ventaId={}, paymentId={}, detalle={}", ventaProductoId, paymentId, refundResult.message());
+            throw new IllegalStateException("No se pudo completar el reembolso en Mercado Pago: " + refundResult.message());
+        }
+
+        for (DetalleVentaProducto detalle : venta.getProductos()) {
+            productoService.aumentarCantidadProductosStock(detalle.getProductoId(), detalle.getCantidad());
+        }
+
+        pago.setStatus("refunded");
+        pago.setStatusDetail("refunded");
+        pago.setDate(LocalDateTime.now());
+        venta.setPago(pago);
+        ventaProductoRepo.actualizarVentaSimple(venta);
+
+        logger.info("Reembolso exitoso. ventaId={}, paymentId={}, stockRepuestoItems={}", ventaProductoId, paymentId, venta.getProductos().size());
+        return "Reembolso aplicado correctamente";
+    }
+
     private String buildFrontendBackUrl(String status) {
         return mercadoPagoFrontendBaseUrl + "/?status=" + status;
     }
@@ -439,6 +506,53 @@ public class VentaProductoServiceImp implements VentaProductoService {
         }
         return baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
     }
+
+    private boolean isApprovedPayment(Pago pago) {
+        String status = pago.getStatus() == null ? "" : pago.getStatus();
+        String detail = pago.getStatusDetail() == null ? "" : pago.getStatusDetail();
+        return "approved".equalsIgnoreCase(status) && "accredited".equalsIgnoreCase(detail);
+    }
+
+    private boolean isRefundedPayment(Pago pago) {
+        String status = pago.getStatus() == null ? "" : pago.getStatus();
+        String detail = pago.getStatusDetail() == null ? "" : pago.getStatusDetail();
+        return "refunded".equalsIgnoreCase(status) || "refunded".equalsIgnoreCase(detail);
+    }
+
+    private RefundResult requestRefundToMercadoPago(String paymentId) {
+        try {
+            String body = "{\"amount\":null}";
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.mercadopago.com/v1/payments/" + paymentId + "/refunds"))
+                    .header("Authorization", "Bearer " + mercadoPagoAccessToken)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
+                    .build();
+
+            HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+            int code = response.statusCode();
+
+            if (code >= 200 && code < 300) {
+                return new RefundResult(true, "OK");
+            }
+
+            String message = "HTTP " + code;
+            try {
+                JsonNode node = new ObjectMapper().readTree(response.body());
+                if (node.has("message")) {
+                    message = node.get("message").asText(message);
+                }
+            } catch (Exception ignored) {
+                // Si no se puede parsear el body, se conserva el mensaje por código HTTP.
+            }
+
+            return new RefundResult(false, message);
+        } catch (Exception ex) {
+            return new RefundResult(false, ex.getMessage());
+        }
+    }
+
+    private record RefundResult(boolean success, String message) {}
 
     /**
      * Metodo para crear un objeto Pago a partir de un objeto Payment

@@ -70,4 +70,14 @@ public interface VentaProductoService {
      */
     void receiveNotificationFromMercadoPago(Map<String, Object> request);
 
+    /**
+     * Solicitar reembolso de una venta de producto.
+     * @param ventaProductoId ID de la venta
+     * @param emailSolicitante Email del solicitante (cliente autenticado)
+     * @param esAdmin true si la solicitud la realiza un administrador
+     * @return Mensaje de resultado
+     * @throws Exception Si la venta no existe, no es reembolsable o falla Mercado Pago
+     */
+    String solicitarReembolsoVenta(String ventaProductoId, String emailSolicitante, boolean esAdmin) throws Exception;
+
 }
