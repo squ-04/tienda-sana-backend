@@ -145,6 +145,19 @@ public class GestorReservasServiceImp implements GestorReservasService {
         if (mesaDTO.id() == null || mesaDTO.id().trim().isEmpty()) {
             throw new IllegalArgumentException("El ID de la Mesa (Softr Record ID) es necesario.");
         }
+
+        GestorReservas gestor = gestorReservasRepo.obtenerGetoresReserva().stream()
+            .filter(g -> g != null && mesaDTO.idGestorReserva().equals(g.getId()))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("Gestor de reservas no encontrado."));
+
+        boolean mesaYaExiste = gestor.getMesas() != null && gestor.getMesas().stream()
+            .anyMatch(m -> m != null && mesaDTO.id().equals(m.getId()));
+
+        if (mesaYaExiste) {
+            throw new IllegalStateException("Esta mesa ya fue agregada al gestor de reservas.");
+        }
+
         System.out.println();
         // 1. Construir el objeto Mesa a partir del DTO.
         Mesa mesaParaGuardarEnHojaGestor = Mesa.builder()
