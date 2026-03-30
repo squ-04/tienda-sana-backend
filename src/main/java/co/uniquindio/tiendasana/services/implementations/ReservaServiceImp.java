@@ -44,15 +44,24 @@ public class ReservaServiceImp implements ReservaService {
     private final CuentaService cuentaService;
     private final ReservasRepo reservasRepo;
     private final long pendingReservationHoldMinutes;
+    private final String mercadoPagoAccessToken;
+    private final String mercadoPagoFrontendBaseUrl;
+    private final String mercadoPagoWebhookBaseUrl;
 
     public ReservaServiceImp(MesaService mesaService, GestorReservasService gestorReservasService, EmailService emailService, CuentaService cuentaService, ReservasRepo reservasRepo,
-                             @Value("${reservas.pending-hold-minutes:15}") long pendingReservationHoldMinutes) {
+                             @Value("${reservas.pending-hold-minutes:15}") long pendingReservationHoldMinutes,
+                             @Value("${mercadopago.access-token:}") String mercadoPagoAccessToken,
+                             @Value("${mercadopago.frontend-base-url:http://localhost:4200}") String mercadoPagoFrontendBaseUrl,
+                             @Value("${mercadopago.webhook-base-url:http://localhost:8080}") String mercadoPagoWebhookBaseUrl) {
         this.mesaService = mesaService;
         this.gestorReservasService = gestorReservasService;
         this.emailService = emailService;
         this.cuentaService = cuentaService;
         this.reservasRepo = reservasRepo;
         this.pendingReservationHoldMinutes = Math.max(pendingReservationHoldMinutes, 1);
+        this.mercadoPagoAccessToken = mercadoPagoAccessToken;
+        this.mercadoPagoFrontendBaseUrl = sanitizeBaseUrl(mercadoPagoFrontendBaseUrl);
+        this.mercadoPagoWebhookBaseUrl = sanitizeBaseUrl(mercadoPagoWebhookBaseUrl);
     }
 
     @Override
@@ -348,19 +357,22 @@ public class ReservaServiceImp implements ReservaService {
                 itemsGateway.add(itemRequest);
             }
 
-            MercadoPagoConfig.setAccessToken("APP_USR-8178646482281064-100513-248819fc76ea7f7577f902e927eaefb7-2014458486");
+                if (mercadoPagoAccessToken == null || mercadoPagoAccessToken.isBlank()) {
+                throw new IllegalStateException("No se configuró MERCADOPAGO_ACCESS_TOKEN");
+                }
+                MercadoPagoConfig.setAccessToken(mercadoPagoAccessToken);
 
             PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                    .success("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=success")
-                    .failure("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=failure")
-                    .pending("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=pending")
+                    .success(buildFrontendBackUrl("success"))
+                    .failure(buildFrontendBackUrl("failure"))
+                    .pending(buildFrontendBackUrl("pending"))
                     .build();
 
             PreferenceRequest preferenceRequest = PreferenceRequest.builder()
                     .backUrls(backUrls)
                     .items(itemsGateway)
                     .metadata(Map.of("id_reserva", reservaGuardar.getId()))
-                    .notificationUrl("https://30cc-152-202-214-200.ngrok-free.app/api/public/reserva/receive-notification")
+                    .notificationUrl(mercadoPagoWebhookBaseUrl + "/api/public/reserva/receive-notification")
                     .build();
 
             PreferenceClient client = new PreferenceClient();
@@ -383,6 +395,17 @@ public class ReservaServiceImp implements ReservaService {
             e.printStackTrace();
             throw new Exception("Error general al procesar el pago de la reserva: " + e.getMessage(), e);
         }
+    }
+
+    private String buildFrontendBackUrl(String status) {
+        return mercadoPagoFrontendBaseUrl + "/?status=" + status;
+    }
+
+    private String sanitizeBaseUrl(String baseUrl) {
+        if (baseUrl == null || baseUrl.isBlank()) {
+            return "";
+        }
+        return baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
     }
 
     @Override

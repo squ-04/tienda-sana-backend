@@ -28,6 +28,7 @@ import co.uniquindio.tiendasana.repos.VentaProductoRepo;
 import co.uniquindio.tiendasana.services.interfaces.*;
 import com.google.firebase.database.annotations.NotNull;
 import org.apache.velocity.exception.ResourceNotFoundException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -42,6 +43,9 @@ public class VentaProductoServiceImp implements VentaProductoService {
     private final CuentaService cuentaService;
     private final PromocionService promocionService;
     private final VentaProductoRepo ventaProductoRepo;
+    private final String mercadoPagoAccessToken;
+    private final String mercadoPagoFrontendBaseUrl;
+    private final String mercadoPagoWebhookBaseUrl;
 
     /**
      * Constructor de la clase VentaProductoServiceImp
@@ -52,7 +56,10 @@ public class VentaProductoServiceImp implements VentaProductoService {
      * @param promocionService Servicio de promociones
      * @param ventaProductoRepo Repositorio de ventas de productos
      */
-    public VentaProductoServiceImp(CuentaService cuentaService, ProductoService productoService, CarritoComprasService carritoComprasService, EmailService emailService, PromocionService promocionService, VentaProductoRepo ventaProductoRepo) {
+    public VentaProductoServiceImp(CuentaService cuentaService, ProductoService productoService, CarritoComprasService carritoComprasService, EmailService emailService, PromocionService promocionService, VentaProductoRepo ventaProductoRepo,
+                                   @Value("${mercadopago.access-token:}") String mercadoPagoAccessToken,
+                                   @Value("${mercadopago.frontend-base-url:http://localhost:4200}") String mercadoPagoFrontendBaseUrl,
+                                   @Value("${mercadopago.webhook-base-url:http://localhost:8080}") String mercadoPagoWebhookBaseUrl) {
         this.cuentaService = cuentaService;
         this.productoService = productoService;
         this.carritoComprasService = carritoComprasService;
@@ -60,6 +67,9 @@ public class VentaProductoServiceImp implements VentaProductoService {
         this.promocionService = promocionService;
 
         this.ventaProductoRepo = ventaProductoRepo;
+        this.mercadoPagoAccessToken = mercadoPagoAccessToken;
+        this.mercadoPagoFrontendBaseUrl = sanitizeBaseUrl(mercadoPagoFrontendBaseUrl);
+        this.mercadoPagoWebhookBaseUrl = sanitizeBaseUrl(mercadoPagoWebhookBaseUrl);
     }
 
     /**
@@ -328,12 +338,15 @@ public class VentaProductoServiceImp implements VentaProductoService {
 
             }
 
-            MercadoPagoConfig.setAccessToken("APP_USR-8178646482281064-100513-248819fc76ea7f7577f902e927eaefb7-2014458486");
+                if (mercadoPagoAccessToken == null || mercadoPagoAccessToken.isBlank()) {
+                throw new IllegalStateException("No se configuró MERCADOPAGO_ACCESS_TOKEN");
+                }
+                MercadoPagoConfig.setAccessToken(mercadoPagoAccessToken);
 
             PreferenceBackUrlsRequest backUrls = PreferenceBackUrlsRequest.builder()
-                    .success("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=success")
-                    .failure("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=failure")
-                    .pending("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/?status=pending")
+                    .success(buildFrontendBackUrl("success"))
+                    .failure(buildFrontendBackUrl("failure"))
+                    .pending(buildFrontendBackUrl("pending"))
                     .build();
 
 
@@ -342,7 +355,7 @@ public class VentaProductoServiceImp implements VentaProductoService {
                     .backUrls(backUrls)
                     .items(itemsGateway)
                     .metadata(Map.of("id_venta", ventaGuardar.getId()))
-                    .notificationUrl("https://abad-2803-9810-51a4-a910-95ae-3eca-e425-fddf.ngrok-free.app/api/public/venta/receive-notification")
+                    .notificationUrl(mercadoPagoWebhookBaseUrl + "/api/public/venta/receive-notification")
                     .build();
 
 
@@ -414,6 +427,17 @@ public class VentaProductoServiceImp implements VentaProductoService {
             e.printStackTrace();
         }
 
+    }
+
+    private String buildFrontendBackUrl(String status) {
+        return mercadoPagoFrontendBaseUrl + "/?status=" + status;
+    }
+
+    private String sanitizeBaseUrl(String baseUrl) {
+        if (baseUrl == null || baseUrl.isBlank()) {
+            return "";
+        }
+        return baseUrl.endsWith("/") ? baseUrl.substring(0, baseUrl.length() - 1) : baseUrl;
     }
 
     /**
